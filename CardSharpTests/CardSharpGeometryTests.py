@@ -3,7 +3,7 @@
 #==============================================================================
 import sys
 
-sys.path.append('../CardSharpSrc/')
+sys.path.append('../CardSharp/')
 import CardSharp as cs
 
 import CardSharpMats as mats
