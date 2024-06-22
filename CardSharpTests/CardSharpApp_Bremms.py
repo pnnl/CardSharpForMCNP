@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import sys
-sys.path.append('../CardSharpSrc/')
+sys.path.append('../CardSharp/')
 import CardSharp as cs
 import CardSharpModelRun as csrun
 import CardSharpMcTallyRead as cstal
