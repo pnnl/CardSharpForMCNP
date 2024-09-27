@@ -9,9 +9,9 @@ c ---source----
 c detector, Rect PPiped macrobody:2, cellNum:0, xMin:-0.20, xMax:0.20, yMin:-3.50, yMax:3.50, zMin:-3.50, zMax:3.50, matName:Void, density:0.00, xShift:10.00, yShift:0.00, zShift:0.00
 c ---detector----
 2 0        -2  *TRCL (10.000000 0.000000 0.000000)  IMP:p=1
-c cone, macrobody:3, cellNum:0, baseX:0.00, baseY:0.00, baseZ:0.00, heightX:0.00, heightY:0.00, heightZ:0.80, radius1:0.60, radius2:0.10, matName:Al, density:0.00
+c cone, macrobody:3, cellNum:0, baseX:0.00, baseY:0.00, baseZ:0.00, heightX:0.00, heightY:0.00, heightZ:0.80, radius1:0.60, radius2:0.10, matName:Aluminum, density:0.00
 c ---cone----
-3 13 -2.7000  -3    IMP:p=1
+3 6 -2.7000  -3    IMP:p=1
 c World cells---Void inside------------------
 c ---World----
 4 0        -4  #1  #2  #3    IMP:p=1
@@ -35,12 +35,15 @@ c =============Surfaces/Macros end: Next line must be completely blank=========
 c =================Data cards=================
 c -----------------Transformations(* for degrees)--
 c -----------------Materials------------------
-c --['Al', 'Air']--
-m13   13027.      1      $ Al  usually 2.7  g/cc
+c --['Aluminum', 'Air']--
+c      Aluminum
+c      AKA: None
+c      rho: 2.698900 g/cc
+m6       13027  -1.000000 $ Al27
 c     Air:  40% relative Humidity at 1 atmosphere, Rivard  AAPM TG-43
 c     Update, Med Phys 31(3):633-674, Table XIV                      
 c     rho:  .0012 g/cc (1.20e-3)                                                  
-m97    1001   -0.0732     $  H
+m412    1001   -0.0732     $  H
        6000   -0.0123     $  C
        7014  -75.0325     $  N
        8016  -23.6077     $  O
@@ -67,12 +70,12 @@ c -- F5 Tally --
 F15:p    $ Point detectors
      -10.00 0.00 0.00 1.00 $ x y z r
 c Energy bins
-E15  0.0100 1.2550 2.5000
+E15  1.0000E-02 1.2550E+00 2.5000E+00
 c -- F1 Tally --
 F11:p         $ pulse height tally
      1 ( 1 1)   $ cellString
 c Energy bins
-E11  0.0000 1.0000 2.0000
+E11  0.0000E+00 1.0000E+00 2.0000E+00
 c -- Debug tally --
 F1011:p 4              $ debug tally with universe surface to see if all particles come out
 c -----------------Physics -------------------
