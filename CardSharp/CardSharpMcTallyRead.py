@@ -65,7 +65,7 @@ def getTallyFromMctal(filepath, tallyNumWtype, objectNum, t_or_d):
   d = None; err = None
   for v in t.vals:
     printIfShow('Object:', v['object'], ' t_or_d:', v['t_or_d'])
-    if v['object'] == objectNum and v['t_or_d'] == t_or_d:      
+    if (objectNum==None or objectNum==v['object']) and v['t_or_d'] == t_or_d:      
       d = v['data']
       err = v['err']
 
@@ -173,8 +173,7 @@ def exploreMctalFile(filepath):
   print('ntal (number of tallies):', mctal.ntal)
   print('tally_n (list of tally nums):', mctal.tally_n)
   print('tallies:', mctal.tallies)
-  return
-  #mctal = Mctal(filepath=filepath, verbose=True)
+  return mctal.tally_n
 
   # Suppose the mctal has two tallyTypes, type 5 and type 15
   # For each tallyType there are multiple tallies or detectors

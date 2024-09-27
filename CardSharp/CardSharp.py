@@ -4,7 +4,7 @@
 import os
 
 import numpy as np
-import CardSharpMats as mats
+import CardSharpMats as csmat
 
 """
 This file provides functions for creating MCNP models.
@@ -34,16 +34,16 @@ def main():
   sn, cn = cd.insertMacroAndCellRpp(name='testRPP', xMinMax=(-1,1), yMinMax=(-20,20), 
                   zMinMax=(-20,20), shift=(10,0,0), matName='Air', density=0.001, macrobodyNum=0, cellNum=0)
 
-  sn, cn = cd.insertMacroAndCellRcc(name='testRCC', base=(0,0,0), axis=(0,0,0), radius=1, 
-                  shift=(0,0,3), matName='Al', density=-.5, macrobodyNum=0, cellNum=0)  
+  sn, cn = cd.insertMacroAndCellRcc(name='testRCC', base=(0,0,0), axis=(0,0,1), radius=1, 
+                  shift=(0,0,3), matName='Aluminum', density=-.5, macrobodyNum=0, cellNum=0)  
   
   snList, cn = cd.insertMacroAndCellRppShell(name='testRppShell', innerXWidth=2,outerXWidth=4, 
                            innerYWidth=8,outerYWidth=10, innerZWidth=6,outerZWidth=8,
-                           shift=(0,0,0), matName='Al', density=-.5, 
+                           shift=(0,0,0), matName='Aluminum', density=-.5, 
                            macrobodyNum1=1, macrobodyNum2=2, cellNum=101) 
 
   sn, cn = cd.insertMacroAndCellSphere(name='testSphere', pos=(1,2,3), radius=10,
-              matName='Al', density=-.5, macrobodyNum=0, cellNum=0)
+              matName='Aluminum', density=-.5, macrobodyNum=0, cellNum=0)
 #############################################################################
 class CardDeck:
   """
@@ -68,6 +68,7 @@ class CardDeck:
     self.collectedPhysicsStrings = ''
     self.collectedOutputControlStrings = ''
 
+    csmat.matClearAllAliases()
 #############################################################################
   # Auto assign universe numbers, although currently only gratings need it?
   def _getNextSN(self):
@@ -261,7 +262,7 @@ class CardDeck:
                      matName='Void', density=0,
                      shift=(0,0,0), rotMatrix=None, 
                      impString='', cellNum=0, uni=0, fill=0, 
-                     latType=None, latIndices=None):
+                     latticeType=None, latticeIndices=None):
     """
     Either use surfaceList and cellComplementList, or use the manualSurfacesList.
   
@@ -288,7 +289,7 @@ class CardDeck:
     if cellNum == 0: cellNum = self._getNextCN()
     
     #cellString = ''
-    matNum, defaultDensity = mats.matLookup(matName)
+    matNum, defaultDensity = csmat.matLookup(matName)
     if matName == 'Void':
       densityStr = '     ' 
     else:
@@ -315,15 +316,15 @@ class CardDeck:
   
     if uni != 0: uniString = 'U=%d'%(uni) 
     if fill != 0:
-      if latType is None:
+      if latticeType is None:
         fillString = 'FILL=%d'%(fill)
       else:
-        latString = 'LAT={:d}'.format(latType)
+        latString = 'LAT={:d}'.format(latticeType)
         if isinstance(fill, list):
           t = ' '.join(str(f) for f in fill)
         else:
           t = '%d'%(fill)
-        fillString = 'FILL= {:d}:{:d} {:d}:{:d} {:d}:{:d} \n      {:s}'.format(*latIndices, t)
+        fillString = 'FILL= {:d}:{:d} {:d}:{:d} {:d}:{:d} \n      {:s}'.format(*latticeIndices, t)
   
     #---------
     trclString = self.getTrclStringDeg(shift=shift, rotMatrix=rotMatrix)
@@ -336,8 +337,8 @@ class CardDeck:
   
     self.collectedCellStrings += cellString
     
-    if uni==0:
-      self.cellNumNameList.append((cellNum, name))
+    #if uni==0:
+    self.cellNumNameList.append((cellNum, name, uni)) # ??? Append uni #
   
     printIfShow(cellString)
     return cellNum
@@ -405,7 +406,8 @@ class CardDeck:
   def insertSurface_PlaneAligned(self, name, axis='X', D=1.0, surfaceNum=0, trNum=None):
     """
     Define a plane surface aligned with X or Y or Z axis
-    PX, PY, PZ. PX is normal to X axis.
+    D refers to: PX, PY, PZ. 
+    PX is normal to X axis.
     """
     if surfaceNum == 0: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -668,7 +670,7 @@ class CardDeck:
                   shift=(0,0,0), rotMatrix=None,
                   macrobodyNum1=0, macrobodyNum2=0, cellNum=0,uni=0):
     """
-    Uses two RCC macros to generate an annulus. Fist one is the outer one.
+    Uses two RCC macros to generate an annulus. FIRST one is the OUTER one.
     As it is currently, the center of the axis won't be at the origin unless
     the user makes it so.
     Any rotation applied by a TRCL will be around the origin.
@@ -870,7 +872,8 @@ class CardDeck:
     """
     name is only for the comment
     Cone has a base pos, height vector, base radius and top radius.
-      
+    radius1 is base radius.
+    
     TRC vx vy vz    hx hy hz   r1 r2
     vertexX, vertexY, vertexZ - are the coordinates of the base
     hx/hy/hz - provide orientation and height of top corner
@@ -974,8 +977,12 @@ class CardDeck:
       # we are using cell complement list (along with worldMacroNum)
       cellsToComplement = None 
       surfaceList = [-worldMacroNum]
-      if len(self.cellNumNameList) > 0: # incase there are no cells other than the universe
-        cellsToComplement = list(zip(*self.cellNumNameList))[0]
+      uniZeroCellList = []
+      for c in self.cellNumNameList:
+        if c[2] == 0:
+          uniZeroCellList.append(c[0])
+      if len(uniZeroCellList) > 0: # incase there are no cells other than the universe
+        cellsToComplement = uniZeroCellList # ??? only uni=0
   
   # 900 124 -0.0012 -900 %s imp:p=1 $ Air inside
   # 999   0          900    imp:p=0 $ Void cell outside
@@ -1022,12 +1029,12 @@ class CardDeck:
     matString = ''
     matString += toMCNP80String('c --%s--'%(matList))
     for mat in matList:
-      matTemplate = mats.matDict[mat][0]
-      matNumber = mats.matDict[mat][1]
+      matTemplate = csmat.matDict[mat][0]
+      matNumber = csmat.matDict[mat][1]
       matString += matTemplate.format(matNumber) + '\n'
-      print('Adding material ', mat, ' as: ', matNumber)
+      print('Adding to deck, material ', mat, ' as: ', matNumber)
   
-    self.collectedMatStrings = matString
+    self.collectedMatStrings += matString
     return  
 #############################################################################
   ### !!!---SOURCE FUNCTIONS----------
@@ -1171,7 +1178,7 @@ SDEF POS=%.2f %.2f %.2f  VEC=%.2f %.2f %.2f DIR=1 ARA=0 ERG=d1 PAR=%s %s $ energ
     """
     assert(len(MeVList) == len(relFq))
     top = """\
-c ----- Source: point isotropic source with biasing tabulated photon energy distribution
+c ----- Source: point source with biasing tabulated photon energy distribution
 c -----Bias angle: %.2f
 SDEF POS=%.2f %.2f %.2f VEC=%.2f %.2f %.2f DIR=d4 ERG=d1 PAR=%s $ energy distribution
 """
@@ -1184,13 +1191,6 @@ SDEF POS=%.2f %.2f %.2f VEC=%.2f %.2f %.2f DIR=d4 ERG=d1 PAR=%s $ energy distrib
   
     self.collectedSrcStrings = sdefString
     return sdefString
-
-#def insertSource_BoxWithAngularAndEnergyDistrib(pos=[0,0,0], radius=.05, 
-#        vec=[1,0,0], coneHalfAngleDeg=1, MeVList=[.3, .5, 1.0, 2.5], 
-#        relFq=[0, .1, .3, .4]):
-#
-#  global collectedSrcStrings
-#  collectedSrcStrings = sdefString
 
   def insertSource_SphereWithAngularBiasingAndEnergyDistrib(self, pos=[0,0,0], radius=.05, 
           vec=[0,1,0], coneHalfAngleDeg=1, MeVList=[.3, .5, 1.0, 2.5], 
@@ -1387,6 +1387,76 @@ SP{extDistNum:d}    0    1         $ Source Probability uniform distribution bet
                       radius=radius, ext=thickness,
                       radDistNum=radDistNum,
                       extDistNum=extDistNum,
+                      dirDistNum=dirDistNum,
+                      ergDistNum=ergDistNum, rejCellString=rejCellString, 
+                      trNumString=trNumString)
+  
+    sdefString = sdefString + dirDistribString + ergDistribString  
+    sdefString = toMCNP80String(sdefString)
+  
+    self.collectedSrcStrings = sdefString
+    return sdefString
+
+  def insertSource_BoxWithAngularAndEnergyDistrib(self,
+                          xRange=[0,1], yRange=[0,1], zRange=[0,1],
+                          vec=[0,1,0], coneHalfAngleDeg=1, 
+                          MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
+                          rejCell=None, eff=0.01, trNum=None):
+    """
+    Page 12 of MCNP primer.
+    Volumetric box source is created using X/Y/Z keywords with each having
+    a distribution that specifies the xrange/yrange/zrange.
+    
+    """
+    assert(len(MeVList) == len(relFq))
+      
+  #  enStr = '  '.join(['{:.2f}'.format(x) for x in MeVList])
+  #  fqStr = '  '.join(['{:.2f}'.format(x) for x in relFq])
+    
+    xDistNum = 1
+    yDistNum = 2
+    zDistNum = 3
+    dirDistNum = 4 # angular biasing distribution of particle initial direction
+    ergDistNum = 5
+    if rejCell == None:
+      rejCellString = ''
+    else:
+      rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
+  
+    #dirDistribString = getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+    dirDistribString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, MeVList=MeVList, relFq=relFq)
+  
+    trNumString = '' if trNum==None else 'TR=%d'%(trNum)
+  
+  #  top = """\
+  #c ----- Source: Disk, tabulated photon energy distribution, disk source
+  #SDEF POS=%.2f %.2f %.2f AXS=%.2f %.2f %.2f RAD=d%d VEC=%d %d %d EXT=d%d  DIR=d%d ERG=d%d PAR=2                   
+  #si1    0   %.4f       $ Source information RAD source radius wrt AXS (.05 is 1 mm dia spot)
+  #sp1   -21  1          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)                                                
+  #si3    0.0  %.4f      $ Source Information EXT source thickness from POS along AXS                                            
+  #sp3    0    1         $ Source Probability uniform distribution between 0 and 1                          
+  #"""
+  #  sdefString = top%(*pos, *axs, radDistNum, *vec, extDistNum, dirDistNum, ergDistNum, radius, thickness) + dirDistribString + ergDistribString
+  #                                          distrib='Discrete', vertString=True)
+  
+    top = """\
+c ----- Source: Box, 
+SDEF PAR=p X=d{xDistNum:d} Y=d{yDistNum:d} Z=d{zDistNum:d} \
+VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} DIR=d{dirDistNum:d} ERG=d{ergDistNum:d} {rejCellString} {trNumString}
+SI{xDistNum:d} {xLo:.4f} {xHi:.4f}       $ Source information d1 x
+SP{xDistNum:d}    0  1          $ Source Prob: constant 1
+SI{yDistNum:d} {yLo:.4f} {yHi:.4f}       $ Source information d1 y
+SP{yDistNum:d}    0  1          $ Source Prob: constant 1
+SI{zDistNum:d} {zLo:.4f} {zHi:.4f}       $ Source information d1 z
+SP{zDistNum:d}    0  1          $ Source Prob: constant 1
+"""
+  #  top = """ """
+    sdefString = top.format(xDistNum=xDistNum, yDistNum=yDistNum, zDistNum=zDistNum,
+                      xLo = xRange[0], xHi = xRange[1],
+                      yLo = yRange[0], yHi = yRange[1],
+                      zLo = zRange[0], zHi = zRange[1],
+                      vecX=vec[0], vecY=vec[1], vecZ=vec[2],
                       dirDistNum=dirDistNum,
                       ergDistNum=ergDistNum, rejCellString=rejCellString, 
                       trNumString=trNumString)
@@ -1609,7 +1679,7 @@ SP%d    0.     0.     1.0      $ Source *probability* for each bin, integrated
   
     eStr = ''
     for e in eList:
-      eStr += '%.4f '%(e)
+      eStr += '%.4E '%(e)
   
     enCardString = f"""\
 c Energy bins
@@ -1728,15 +1798,27 @@ FT{tallyNumWType} {treatmentKeyword} {argsStr}
   def getFXTallySTring(self, tallyNum, tallyType, cellListList, eList=None, mList=None, par='p'):
     """
     Can this function do F1/2/4/6/7 and maybe 8?
+    ??? Clean for all possible cases of the cell type
     """
     tallyNumWType = t = tallyNum*10 + tallyType #'%d5'%(tallyNum)
   
     cellString = ''
     for c in cellListList:
+      # single cell or surface 
       if type(c) is int:
         cellString += '%d '%(c)
-      if type(c) is float:
+      # Surface numbers can be given as 5.1
+      if type(c) is float: 
         cellString += '%.1f '%(c)
+      # When cell is given from another universe, (1<4), it is a string
+      # The string case can take care of the int/float also?
+      if type(c) is str: 
+        cellString += '%s '%(c)
+      # Page 3-19, MCNP 6.1: "Parentheses indicate that the tally is for the union 
+      # of the items within the parentheses."
+      # ??? One level of nesting?
+      # Will work for int/str/nested int/str, but not float which requires a.b with one decimal
+      # ??? recursive?
       elif type(c) in (list, tuple):
         s = '('
         for cc in c:
