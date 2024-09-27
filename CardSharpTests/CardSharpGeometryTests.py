@@ -5,8 +5,7 @@ import sys
 
 sys.path.append('../CardSharp/')
 import CardSharp as cs
-
-import CardSharpMats as mats
+import CardSharpMats as csmat
 
 cs.show = False # Turn off debug prints
 """
@@ -44,7 +43,7 @@ def testGeom0():
   # Universe macro number and all cells within are returned
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Void')
 
-  cd.insertMaterialStrings(['Al'])
+  cd.insertMaterialStrings(['Aluminum'])
   deckStr = cd.assembleDeck(titleCard='Title card: Test 0')
   print(deckStr)
   # Save file ---------------------------------------------------------
@@ -67,7 +66,7 @@ def testGeom1():
 
   # -------------insert cell----------------
   # Auto assigned cell number is returned  
-  cn = cd.insertCellString(name='Cylinder', surfaceList=[-sCyl, -sPL1, sPL2], matName='Al')
+  cn = cd.insertCellString(name='Cylinder', surfaceList=[-sCyl, -sPL1, sPL2], matName='Aluminum')
 
   #--------------insert universe-----------
   # Universe macro number and world/graveyard cell numbers are returned
@@ -78,7 +77,7 @@ def testGeom1():
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Air',
                                                        surfaceList = [cn])
   # -------------insert materials----------  
-  cd.insertMaterialStrings(['Al', 'Air'])
+  cd.insertMaterialStrings(['Aluminum', 'Air'])
   deckStr = cd.assembleDeck(titleCard='Title card: Test 1')
   #print(deckStr)
   # Save file ---------------------------------------------------------
@@ -97,11 +96,14 @@ def testGeom2():
   # insert a material that isn't already in the CardSharp material's library
   # Or in case an application requires a dummy material
   dummyMatString = 'm{}   1  1' # see matString format in CardSharpMats.py for more examples
-  matNum = mats.matInsert('dummy1', dummyMatString, -2.7)
-  print('Successfully inserted mat:', matNum) if matNum != 0 else print('Mat insertino failed')  
+  matNum = csmat.matInsert('dummy1', dummyMatString, -2.7)
+  print('Successfully inserted mat:', matNum) if matNum != 0 else print('Mat insertion failed')  
   #-------------------------------------
   cd = cs.CardDeck()
   cd.setParticlesList(['p', 'e']) # used for Mode card and IMP string
+
+  csmat.matAddAlias('PolyethyleneNonborated', 'Poly')
+  cd.insertMaterialStrings(['Aluminum', 'Tungsten', 'Lead', 'Poly'])  
   #--------------------------------------------------
   # Instantiate a sphere (macro and cell) ---------------------------------
   # For auto assignment of macrobodyNum and cellNum, set them to zero
@@ -114,13 +116,13 @@ def testGeom2():
   plane1sn = cd.insertSurface_PlaneAligned('plane1', axis='X', D=0.7) #, surfaceNum=0)
   plane2sn = cd.insertSurface_PlaneAligned('plane2', axis='X', D=-0.7) #, surfaceNum=0)
 
-  cn = cd.insertCellString(name='sphere minus plane1/plane2', matName='Al', 
+  cn = cd.insertCellString(name='sphere minus plane1/plane2', matName='Aluminum', 
                          density=1, surfaceList=[-sphere_sn, -plane1sn, plane2sn], 
-                         shift=(0,4,0))  
+                         shift=(0,4,0)) # Will generating warning for positive density 
   #-----------------
   sn, cnList = cd.insertMacroAndCellSphereShell(name='Sphere Shell',
                 pos=(0,0,0), radius1=1.0, radius2=0.8,
-                matName='Pb', density=0,
+                matName='Lead', density=0,
                 shift=(0,2,0),
                 macrobodyNum1=0, macrobodyNum2=0, cellNum=0) # default density of mat
   #========================
@@ -133,16 +135,16 @@ def testGeom2():
   xdim = 2; ydim = 2.0; zdim = 1
   snList, cn = cd.insertMacroAndCellRppShell(name='Box shell', macrobodyNum1=0, macrobodyNum2=0, cellNum=0, 
                 innerXWidth=xdim-.5,outerXWidth=xdim, innerYWidth=ydim-.5,outerYWidth=ydim, innerZWidth=zdim-.5,outerZWidth=zdim,
-                matName='W', density=0, shift=(3,3,0) )
+                matName='Tungsten', density=0, shift=(3,3,0) )
   #=========================
   sn, cn = cd.insertMacroAndCellRcc(name='Cylinder', base=(0,0,0), axis=(0,2,0), radius=1,
-                            matName='Cu', density=0,
+                            matName='Copper', density=0,
                             shift=(6,0,0), macrobodyNum=0, cellNum=0)
   #-----------------
   sn, cnList = cd.insertMacroAndCellRccShell(name='Cyl Shell',
                 base1=(0,0,0), axis1=(0,2,0), radius1=1.0,
                 base2=(0,0,0), axis2=(0,2,0), radius2=0.8,
-                matName='Pb', density=0,
+                matName='Lead', density=0,
                 shift=(6,3,0),
                 macrobodyNum1=0, macrobodyNum2=0, cellNum=0) # default density of mat
 
@@ -178,11 +180,7 @@ def testGeom2():
   
   #==========UNIVERSE==============
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=100, worldMat='Air')
-  cd.insertMaterialStrings(['dummy1', 'C', 'Al', 'Cu', 'W', 'Pb', 'Air', 'CarbonSteel', 
-                            'SS304', 'Poly', 'LaBr', 'Teflon', 'MuMetal', 'UF6Gas', 
-                            'UOFDep', 'CZT', 'FR4PCB', 'Polycarb', 'ZrO2', 
-                            'Acrylic', 'NaI', 'EarthsCrust', 'Concrete', 'DryWall'])
-
+  
   deckStr = cd.assembleDeck(titleCard='Title card: Test 2')
 #  outputStr = assembleDeck(titleCard, cellString='', macroString='', matString='', trString='', 
 #                 srcString='', tallyString='', physicsString='', outputControlString='')
@@ -204,6 +202,9 @@ def testGeom3():
   cd = cs.CardDeck()
   cd.setParticlesList(['p', 'e'])
 
+  csmat.matAddAlias('SteelStainless304', 'SS304')
+  csmat.matAddAlias('PolyethyleneNonborated', 'Poly')
+  cd.insertMaterialStrings(['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly'])
   #--------------------------------------------------
   # Surfaces (and macros) are independent of universes
   # First define some surfaces to create some cells in uni=1 which fully define a 
@@ -226,12 +227,12 @@ def testGeom3():
 
   # insert uncut sphere cell in uni=1
   cn1 = cd.insertCellString(name='sphere uncut', surfaceList=[-msph],
-                         matName='Pb', density=0, 
+                         matName='Lead', density=0, 
                          impString='', cellNum=0, uni=1)
 
   # insert cut sphere cell in uni=1
   cn2 = cd.insertCellString(name='sphere cut by two planes and shifted',  
-                        surfaceList=[-msph, -mp1, mp2], matName='Pb', density=0, 
+                        surfaceList=[-msph, -mp1, mp2], matName='Lead', density=0, 
                          shift=(7,0,0), impString='', cellNum=0, uni=1)
   # rpp-----------------------------------------------------------
   # an rpp shaped cell with cn1 and cn2 removed
@@ -261,7 +262,6 @@ def testGeom3():
   # universe-----------------------------------------------------------
   worldMacroNum, (cn1, cn2) = cd.insertWorldMacroAndCell(pos=(0,0,0),
                             radius=100, worldMat='Air')
-  cd.insertMaterialStrings(['Al', 'Cu', 'Pb', 'W', 'Air', 'SS304', 'Poly'])
 
   deckStr = cd.assembleDeck(titleCard='Title card: Test 3')
 #  outputStr = assembleDeck(titleCard, cellString='', macroString='', matString='', trString='', 
@@ -279,12 +279,16 @@ def testGeom4():
   """
   cd = cs.CardDeck()
   cd.setParticlesList(['p', 'e'])
+
+  csmat.matAddAlias('SteelStainless304', 'SS304')
+  csmat.matAddAlias('PolyethyleneNonborated', 'Poly')
+  cd.insertMaterialStrings(['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly'])  
   #---------------------------------
   # Define lattice cell in uni=1
   # Universe is basically a container and it should fully define the volume to be filled.
   # UNI=1 contains lead sphere, in an RPP shaped air region
   msph, cn1 = cd.insertMacroAndCellSphere(name='sphere', pos=(0,0,0), radius=3,
-                              matName='Pb', uni=1)
+                              matName='Lead', uni=1)
 #  mp1 = cd.insertSurface_PlaneAligned('plane1', surfaceNum=0, ori='X', D=2.0)
 #  mp2 = cd.insertSurface_PlaneAligned('plane2', surfaceNum=0, ori='X', D=-2.0)
   mrpp = cd.insertMacroRpp(name='rpp', xMinMax=(-5,5), yMinMax=(-5,5), zMinMax=(-5,5))
@@ -297,8 +301,8 @@ def testGeom4():
   cn = cd.insertCellString(name='rpp_lattice', surfaceList=[-mrpp], # surfaces giving boundary of one cell
                            matName='Void', density=0, # this material is completely ignored
                            impString='', 
-                           cellNum=0, uni=2, latType=1, 
-                           latIndices=(-1,1,-1,1,-1,1),
+                           cellNum=0, uni=2, latticeType=1, 
+                           latticeIndices=(-1,1,-1,1,-1,1),
                            fill=[1]*27) # fill with uni=1
   #----------------------------
   # Now define a RPP surface to bring the lattice universe into uni=0 (the real world where particles run)
@@ -310,7 +314,6 @@ def testGeom4():
   # universe-----------------------------------------------------------
   worldMacroNum, (cn1, cn2) = cd.insertWorldMacroAndCell(pos=(0,0,0),
                             radius=200, worldMat='Air')
-  cd.insertMaterialStrings(['Al', 'Cu', 'Pb', 'W', 'Air', 'SS304', 'Poly'])
   #=============Add for debugging by running MCNP===========
 #  srcToOrigin = 50; #detToOrigin = 50
 #  #detWidth = 5; detNumPixels = 100 
@@ -361,12 +364,16 @@ def testGeom5():
   """
   cd = cs.CardDeck()
   cd.setParticlesList(['p', 'e'])
+
+  csmat.matAddAlias('SteelStainless304', 'SS304')
+  csmat.matAddAlias('PolyethyleneNonborated', 'Poly')
+  cd.insertMaterialStrings(['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly'])  
   #---------------------------------
   # Define lattice cell in uni=1
   # Universe is basically a container and it should fully define the volume to be filled.
   # UNI=1 contains lead sphere, in an Hexagonal prism shaped air region
   mCyl, cn1 = cd.insertMacroAndCellRcc(name='Cyl', base=(0,0,-3), axis=(0,0,6),
-                                       radius=0.5, matName='Pb', uni=1)
+                                       radius=0.5, matName='Lead', uni=1)
   
   # Insert hexagon bounding planes for cell
   mpTuple = insertHexagonBoundingPlanes(cd, hexSide=1.0)
@@ -381,8 +388,8 @@ def testGeom5():
   cn = cd.insertCellString(name='hex_lattice', surfaceList=[*mpTuple], # surfaces giving boundary of one cell
                            matName='Void', density=0, # this material is completely ignored
                            impString='', 
-                           cellNum=0, uni=2, latType=2,
-                           latIndices=(-2,2,-2,2,0,0),
+                           cellNum=0, uni=2, latticeType=2,
+                           latticeIndices=(-2,2,-2,2,0,0),
                            fill=[1]*25) # fill with uni=1
   #----------------------------
   # Now define a RPP surface to bring the lattice universe into uni=0 (the real world where particles run)
@@ -394,7 +401,6 @@ def testGeom5():
   # universe-----------------------------------------------------------
   worldMacroNum, (cn1, cn2) = cd.insertWorldMacroAndCell(pos=(0,0,0),
                             radius=200, worldMat='Air')
-  cd.insertMaterialStrings(['Al', 'Cu', 'Pb', 'W', 'Air', 'SS304', 'Poly'])
   #===========================
   srcToOrigin = 50; #detToOrigin = 50
   #detWidth = 5; detNumPixels = 100 

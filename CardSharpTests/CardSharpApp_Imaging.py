@@ -88,7 +88,7 @@ def main():
 #  tallyFilename = 'test_manual.im'  
 #  imagingAppUsingManualStrings(modelFolder, modelFilename)
   #---------------------------
-  return
+  #return
   # if the MCNP paths above are correct, comment out the return
   ret = csrun.runMcnpModel(modelFolder, modelFilename, 
                      mcnpCodePath=mcnpCodePath, mcnpDataPath=mcnpDataPath,
@@ -107,6 +107,8 @@ def imagingApp(modelFolder, modelFilename):
   """
   cd = cs.CardDeck()
   cd.setParticlesList(['p'])
+
+  cd.insertMaterialStrings(['Aluminum', 'Air'])
       
   srcToOrigin = 10; detToOrigin = 10
   detWidth = 5; detNumPixels = 100 
@@ -122,15 +124,13 @@ def imagingApp(modelFolder, modelFilename):
   # object being imaged
   sn, coneCn = cd.insertMacroAndCellCone(name='cone',
                 base=(0,0,0), height=(0,0,.8), radius1=.6, radius2=.1,
-                matName='Al', density=0,
+                matName='Aluminum', density=0,
                 shift=(0,0,0))
   
   # universe-----------------------------------------------------------
   #uniMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, uniMat='Void')
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, worldMat='Void')
   
-  cd.insertMaterialStrings(['Al', 'Air'])
-
 #  srcString = cd.insertSource_PointIsotropicWithEnergyDistrib(pos=[-srcToOrigin,0,0], MeVList=[0, .2, .21], relFq=[0, .5, .5], distrib='Discrete')
 #  trNum = cd.insertTRString(shift=(0,0,0), rotMatrix=None)
   srcString = cd.insertSource_SphereWithAngularBiasingAndEnergyDistrib(pos=[-srcToOrigin,0,0],

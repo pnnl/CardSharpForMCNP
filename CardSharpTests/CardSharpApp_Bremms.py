@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append('../CardSharp/')
 import CardSharp as cs
+import CardSharpMats as csmat
 import CardSharpModelRun as csrun
 import CardSharpMcTallyRead as cstal
 
@@ -46,7 +47,7 @@ def main():
   tallyFilename = 'bremms.im'
   
   bremmsModel(modelFolder, modelFilename, binSize=binSize) 
-  return
+  #return
   #-------------------------------------------------------
   # if the MCNP paths above are correct, comment out the return
   ret = csrun.runMcnpModel(modelFolder, modelFilename, 
@@ -68,11 +69,15 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   for the final Universe cell generation.
   """
   cd = cs.CardDeck()
-  
+  cd.setParticlesList(modeParticles)
+  #===========MATERIALS START==============================
+  csmat.matAddAlias('Tungsten', 'W')
+  cd.insertMaterialStrings(['W'])
+  #===========MATERIALS END==============================
+ 
   universeRadius = 70
   srcToOrigin = 5
   detToOrigin = 40
-  cd.setParticlesList(modeParticles)
   #--------------------------------------------------
   # instantiate source debug cell, tally debug cell, target, optional filter
   # and the electron source
@@ -117,11 +122,6 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
 
   #===========GEOMETRY END==============================
   
-  #===========MATERIALS START==============================
-  #matString = cd.insertMaterialStrings(['Al', 'Cu', 'Pb', 'W', 'Air', 'SS304', 'Poly', 'ZrO2'])
-  cd.insertMaterialStrings(['W', 'C'])
-  #===========MATERIALS END==============================
-
   #===========SOURCE START==============================
   # Point source with angular biasing
   cd.insertSource_PointWithAngularBiasingAndEnergyDistrib(pos=[0,-srcToOrigin,0], vec=[0,1,0], 
