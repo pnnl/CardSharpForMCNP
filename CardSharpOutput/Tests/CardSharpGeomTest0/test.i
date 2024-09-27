@@ -20,8 +20,11 @@ c =============Surfaces/Macros end: Next line must be completely blank=========
 c =================Data cards=================
 c -----------------Transformations(* for degrees)--
 c -----------------Materials------------------
-c --['Al']--
-m13   13027.      1      $ Al  usually 2.7  g/cc
+c --['Aluminum']--
+c      Aluminum
+c      AKA: None
+c      rho: 2.698900 g/cc
+m6       13027  -1.000000 $ Al27
 c -----------------Source---------------------
 c -----------------Tally----------------------
 c -----------------Physics -------------------
