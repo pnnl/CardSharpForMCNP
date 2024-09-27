@@ -4,10 +4,10 @@ c (cell #, material #, density, macrobody, importance)
 c density: negative is g/cc, positive is atoms/barn-cm                        
 c -----------------------------------------------------------------
 c ---Cylinder----
-1 13 -2.7000  -1  -2  3    IMP:p,e=1
+1 6 -2.7000  -1  -2  3    IMP:p,e=1
 c World cells---Air inside------------------
 c ---World----
-2 97 -0.0012  1  -4    IMP:p,e=1
+2 412 -0.0012  1  -4    IMP:p,e=1
 c ---Graveyard----
 3 0        4    IMP:p,e=0
 c =============Cells end: Next line must be completely blank==================
@@ -28,12 +28,15 @@ c =============Surfaces/Macros end: Next line must be completely blank=========
 c =================Data cards=================
 c -----------------Transformations(* for degrees)--
 c -----------------Materials------------------
-c --['Al', 'Air']--
-m13   13027.      1      $ Al  usually 2.7  g/cc
+c --['Aluminum', 'Air']--
+c      Aluminum
+c      AKA: None
+c      rho: 2.698900 g/cc
+m6       13027  -1.000000 $ Al27
 c     Air:  40% relative Humidity at 1 atmosphere, Rivard  AAPM TG-43
 c     Update, Med Phys 31(3):633-674, Table XIV                      
 c     rho:  .0012 g/cc (1.20e-3)                                                  
-m97    1001   -0.0732     $  H
+m412    1001   -0.0732     $  H
        6000   -0.0123     $  C
        7014  -75.0325     $  N
        8016  -23.6077     $  O
