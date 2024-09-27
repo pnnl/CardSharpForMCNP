@@ -3,11 +3,11 @@ c ====================Cells======================
 c (cell #, material #, density, macrobody, importance)                      
 c density: negative is g/cc, positive is atoms/barn-cm                        
 c -----------------------------------------------------------------
-c Cyl, macrobody:1, cellNum:0, baseX:0.00, baseY:0.00, baseZ:-3.00, axisX:0.00, axisY:0.00, axisZ:6.00, radius:0.50, matName:Pb, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c Cyl, macrobody:1, cellNum:0, baseX:0.00, baseY:0.00, baseZ:-3.00, axisX:0.00, axisY:0.00, axisZ:6.00, radius:0.50, matName:Lead, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Cyl----
-1 82 -11.3500  -1    IMP:p,e=1 U=1
+1 189 -11.3500  -1    IMP:p,e=1 U=1
 c ---hex_cell----
-2 97 -0.0012  -2  -3  -4  -5  -6  -7  1    IMP:p,e=1 U=1
+2 412 -0.0012  -2  -3  -4  -5  -6  -7  1    IMP:p,e=1 U=1
 c ---hex_lattice----
 3 0        -2  -3  -4  -5  -6  -7   LAT=2 IMP:p,e=1 U=2 FILL= -2:2 -2:2 0:0
       1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
@@ -15,7 +15,7 @@ c ---hex_lattice_to_Uni----
 4 0        -8  -9  -10  -11  -12  -13  -14  15    IMP:p,e=1  FILL=2
 c World cells---Air inside------------------
 c ---World----
-5 97 -0.0012  -16  #4    IMP:p,e=1
+5 412 -0.0012  -16  #4    IMP:p,e=1
 c ---Graveyard----
 6 0        16    IMP:p,e=0
 c =============Cells end: Next line must be completely blank==================
@@ -96,39 +96,72 @@ c ---Hex6, shift: 0.00 0.00 0.00
 *TR12 0.000 0.000 0.000  60.000 30.000 90.000   150.000 60.000 90.000   &
          90.000 90.000 0.000
 c -----------------Materials------------------
-c --['Al', 'Cu', 'Pb', 'W', 'Air', 'SS304', 'Poly']--
-m13   13027.      1      $ Al  usually 2.7  g/cc
-m29   029063.80c -0.692    $ Cu usually 8.941  g/cc
-      029065.80c -0.308
-m82   82208.      1      $ Pb usually 11.4  g/cc
-m74   74182.70c   26.5    $ W (Tungsten) usually 19.3 g/cc
-      74183.70c   14.31
-      74184.70c   30.64
-      74186.70c   28.43
+c --['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly']--
+c      Aluminum
+c      AKA: None
+c      rho: 2.698900 g/cc
+m6       13027  -1.000000 $ Al27
+c      Copper
+c      AKA: None
+c      rho: 8.960000 g/cc
+m112       29063  -0.684792 $ Cu63
+       29065  -0.315208 $ Cu65
+c      Lead
+c      AKA: None
+c      rho: 11.350000 g/cc
+m189       82204  -0.013782 $ Pb204
+       82206  -0.239575 $ Pb206
+       82207  -0.220761 $ Pb207
+       82208  -0.525964 $ Pb208
+c      Tungsten
+c      AKA: None
+c      rho: 19.300000 g/cc
+m369       74180  -0.001175 $ W180
+       74182  -0.262273 $ W182
+       74183  -0.142407 $ W183
+       74184  -0.306585 $ W184
+       74186  -0.287570 $ W186
 c     Air:  40% relative Humidity at 1 atmosphere, Rivard  AAPM TG-43
 c     Update, Med Phys 31(3):633-674, Table XIV                      
 c     rho:  .0012 g/cc (1.20e-3)                                                  
-m97    1001   -0.0732     $  H
+m412    1001   -0.0732     $  H
        6000   -0.0123     $  C
        7014  -75.0325     $  N
        8016  -23.6077     $  O
       18000   -1.2743     $  Ar
-c    SS304L
-c    8.0 g/cc
-c    ref:  Metals Handbook, p 15.2
-m83       6000 -0.0003  $  C-nat
-          7014 -0.001   $  N-14 (nat)
-         14000 -0.01    $  Si-nat
-         15031 -0.00045 $  P-nat
-         16000 -0.0003  $  S-nat
-         24000 -0.19    $  Cr-nat
-         25055 -0.02    $  Mn-55 (nat)
-         28000 -0.10    $  Ni-nat
-         26000 -0.67795 $  Fe-nat (remainder)
-c     Polyethylene (C2H4)n by atomic percent... Need to confirm. 
-c     rho:  0.93 g/cc
-m84    6000   0.333338     $  C
-       1001   0.666662     $  H
+c      Steel, Stainless 304
+c      AKA: None
+c      rho: 8.030000 g/cc
+m331       6012  -0.000791 $ C12
+       6013  -0.000009 $ C13
+       25055  -0.020000 $ Mn55
+       15031  -0.000450 $ P31
+       16032  -0.000284 $ S32
+       16033  -0.000002 $ S33
+       16034  -0.000014 $ S34
+       14028  -0.009187 $ Si28
+       14029  -0.000483 $ Si29
+       14030  -0.000330 $ Si30
+       24050  -0.007930 $ Cr50
+       24052  -0.159029 $ Cr52
+       24053  -0.018380 $ Cr53
+       24054  -0.004661 $ Cr54
+       28058  -0.063838 $ Ni58
+       28060  -0.025437 $ Ni60
+       28061  -0.001124 $ Ni61
+       28062  -0.003643 $ Ni62
+       28064  -0.000958 $ Ni64
+       26054  -0.038585 $ Fe54
+       26056  -0.628103 $ Fe56
+       26057  -0.014765 $ Fe57
+       26058  -0.001999 $ Fe58
+c      Polyethylene, Non-borated
+c      AKA: None
+c      rho: 0.930000 g/cc
+m275       1001  -0.143686 $ H1
+       1002  -0.000033 $ H2
+       6012  -0.846366 $ C12
+       6013  -0.009919 $ C13
 c -----------------Source---------------------
 c -----------------Tally----------------------
 c -----------------Physics -------------------
