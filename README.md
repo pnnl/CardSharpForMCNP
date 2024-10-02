@@ -5,6 +5,8 @@ CardSharp is a python library for the creation of MCNP6 input decks.
 
 The library supports geometry generation with automatic assignment of surface numbers, cell numbers, transform numbers and material numbers along with MCNP Universes and FILL feature. Rectangular and Hexagonal Lattices are also supported. 
 
+**The PNNL materials compendium with more than 400 materials is included.**
+
 Support for a good selection of common sources and tallies is also provided. Cards or features which are currently not supported in the library can also be inserted as raw strings into the output stream. 
 
 Combining Python features like descriptively named variables, functions and for loops with library functions provides an intuitive and parametric way to create, modify and maintain complicated geometries and simulation models. The generated card deck also has human readable comments which makes it easy to read and relate back to the python source. Some support for running MCNP, reading tallies and plotting is also planned.
