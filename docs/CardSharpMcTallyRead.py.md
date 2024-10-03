@@ -1,23 +1,29 @@
 # Module: CardSharpMcTallyRead.py
-This file is an abstraction layer for whatever code will be used to parse mctal files. Currently mctal.py.
+This file is an abstraction layer for whatever code will be used to parse
+mctal files. Currently mctal.py.
 
-From the MCNP manual: A MCTAL file contains the tally data of one dump of a RUNTPE file. Page 6-29.
+From the MCNP manual:
+A MCTAL file contains the tally data of one dump of a RUNTPE file. Page 6-29.
 
 A tally in MCNP can have 9 possible dimensions.
 
 - facet f The facet of the tally, cell, surface, point number.
-- direct/flagged d The flagged/unflagged contribution for cell/surface tallies OR the                   direct/scattered contribution for point detectors (this dimension never                   exceeds 2).
-- user u The user bins established by use of an FT tally input or by use of a         TALLYX routine.
+- direct/flagged d The flagged/unflagged contribution for cell/surface tallies OR the
+                  direct/scattered contribution for point detectors (this dimension never
+                  exceeds 2).
+- user u The user bins established by use of an FT tally input or by use of a
+        TALLYX routine.
 - segment s The segmenting bins established by use of an FS tally input.
 - multiplier m The multiplier bins established by use of an FM tally input.
 - cosine c The cosine bins established by use of an C tally input.
 - energy e The energy bins established by use of an E tally input.
 - time t The time bins established by use of a T tally input.
 - perturbation pert The perturbation number established by use of PERT inputs.
+
 -----------------
 -----------------
 ## Function: getTallyFromMctal
-Args: (filepath,tallyNumWtype,objectNum,t_or_d).
+(filepath, tallyNumWtype, objectNum, t_or_d)
 
 tallyNumWtype - tally number with type. For tally numbers 15, 25, the tally type is 5.
 objectNum corresponds to a facet. (cell, surface, point ???).
@@ -38,23 +44,27 @@ t_or_d = 1 is direct.
 
 Start of energy bins is always zero. don't return that.
 Last bin is total, DON'T return that either.
+
 -----------------
 ## Function: getRadiographyTallyFromMctal
-Args: (filepath,tallyNumWtype,t_or_d).
+(filepath, tallyNumWtype, t_or_d)
 
 t_or_d = 0: # Total, with scatter.
 t_or_d = 1: # Direct, no scatter.
    If the tally has spectral bins, is there a total bin???
 Do I need separate methods for tallies with and without energy bins?
+
 -----------------
 ## Function: exploreMctalFile
-Args: (filepath).
+(filepath)
 
 Use this function to explore the contents of a tally file whose structure is not known.
 
 Needs to be fixed to work for all tally files.
+
 -----------------
 ## Function: printIfShow
-Args: ().
+(*args, **kwargs)
+
 
 

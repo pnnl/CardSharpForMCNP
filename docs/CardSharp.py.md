@@ -5,14 +5,17 @@ See the test scripts in the CardSharpTests folder for usage.
 Most refereces to MCNP manual are to version 6.1. Some to 5.1 Vol II.
 The two have a different style in terms of upper/lower case.
 
-MOST ARGUMENTS TO THE FUNCTIONS HAVE SENSIBLE DEFAULT VALUES.
+MOST ARGUMENTS TO THE FUNCTIONS HAVE SENSIBLE DEFAULT VALUES AND CAN BE IGNORED.
+
 -----------------
 -----------------
 ## Class: CardDeck
 Class representing an MCNP input deck/file.
-Instantiate an object of this class, then call methods to add surfaces, cell, materials, source, tallies, physics and output control cards. Finally write out the deck.
+Instantiate an object of this class, then call methods to add surfaces, cell, materials,
+source, tallies, physics and output control cards. Finally write out the deck.
+
 ### Method: CardDeck::insertCellString
-Args: (name, surfaceList, cellComplementList, manualSurfacesString, matName, density, shift, rotMatrix, impString, cellNum, uni, fill, latticeType, latticeIndices).
+(self, name, surfaceList=None, cellComplementList=None, manualSurfacesString=None, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', cellNum=0, uni=0, fill=0, latticeType=None, latticeIndices=None)
 
 This function is used to insert a cell using surfaces and cell that have already been defined.
 
@@ -25,93 +28,86 @@ Either use surfaceList and cellComplementList, or use the manualSurfacesList.
 The rotMatrix and shift add a TRCL string.
 
 By default all cells are instantiated with an importance string based on the particles list set before the call to the cell function.
-If a cell needs a different importance string from the default, use this option: impString: It should look like this: 'imp:p,e=1' 
-latType - 1 (RPP) latType - 2 (Hexagonal prism) latIndices - Range specifying Imin/Imax, Jmin/Jmax, Kmin/Kmax of the lattice range fill can be a single universe number or a list of universes in case of a lattice
+If a cell needs a different importance string from the default, use this option: impString: It should look like this: 'imp:p,e=1'  .
+
+latType - 1 (RPP).
+latType - 2 (Hexagonal prism).
+latIndices - Range specifying Imin/Imax, Jmin/Jmax, Kmin/Kmax of the lattice range.
+fill can be a single universe number or a list of universes in case of a lattice.
+
 ### Method: CardDeck::insertSurface_CylinderAligned
-Args: (name, axis, offset, radius, surfaceNum, trNum).
+(self, name, axis='X', offset=(0,0,0), radius=1.0, surfaceNum=0, trNum=None)
 
 Define a cylinder parallel to one of the three axes.
 If parallel to X axes, the YZ offsets are used.
 If parallel to Y axes, the XZ offsets are used and so on.
 
+The trNum can be obtained by first calling insertTRString.
+The same trNum can be used for multiple objects.
+
+In general, instantiate surfaces/cells at the origin and then apply TR/TRCL to rotate/translate.
+In all the geometry functions name is used only for the descriptive comment.
+
 Returns assigned surface number.
+
 ### Method: CardDeck::insertSurface_Plane
-Args: (name, A, B, C, D, surfaceNum, trNum).
+(self, name, A=1.0, B=1.0, C=1.0, D=1.0, surfaceNum=0, trNum=None)
 
 Define a plane surface aligned with equation: Ax + By + Cz -D = 0.
 Can also add a transform.
 
 Returns assigned surface number.    
+
 ### Method: CardDeck::insertSurface_PlaneAligned
-Args: (name, axis, D, surfaceNum, trNum).
+(self, name, axis='X', D=1.0, surfaceNum=0, trNum=None)
 
 Define a plane surface aligned with X or Y or Z axis.
 D refers to: PX, PY, PZ.  PX is normal to X axis.
 
 Returns assigned surface number.    
+
 ### Method: CardDeck::insertMacroSphere
-Args: (name, pos, radius, macrobodyNum, trNum).
+(self, name, pos=(0,0,0), radius=1, macrobodyNum=0, trNum=None)
 
-name is only for the comment.
-In general, instantiate surfaces/cells at the origin and then apply TR/TRCL to rotate/translate.
-
+Insert a sphere macro at the given position and radius.
 Returns assigned surface number.
+
 ### Method: CardDeck::insertMacroAndCellSphere
-Args: (name, pos, radius, matName, density, shift, rotMatrix, macrobodyNum, cellNum, uni).
+(self, name, pos=(0,0,0), radius=1, matName='Void', density=0, shift=(0,0,0), macrobodyNum=0, cellNum=0, uni=0)
 
 Insert a sphere macro and a cell based on that macro.
-Also includes a comment string.
 Sphere is different from other macrobodies in not ever needing an orientation matrix.
 
 Returns assigned surface number and cell number.
+
 ### Method: CardDeck::insertMacroAndCellSphereShell
-Args: (name, pos, radius1, radius2, matName, density, shift, rotMatrix, macrobodyNum1, macrobodyNum2, cellNum, uni).
+(self, name, pos=(0,0,0), radius1=2, radius2=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, macrobodyNum1=0, macrobodyNum2=0, cellNum=0,uni=0)
 
 Uses two sphere macros to generate a shell.
 
-Returns a list of the assigned macro numbers and the assigned cell number.
-### Method: CardDeck::insertMacroRhpHex
-Args: (name, base, axis, r, macrobodyNum, trNum).
+Returns a list of the two assigned macro numbers and the assigned cell number.
 
-From MCNP manual: RHP v1 v2 v3   h1 h2 h3  r1 r2 r3  s1 s2 s3  t1 t2 t3.
-RHP/HEX's side surface should be orthogonal to top/bottom.
-For RHP, acceptable numbers of arguments is {7, 9, 15}.
-Only the 9 arguments is currently supported in CardSharp. This means that only regular hexagonal base is supported.
-
-Returns assigned surface number.
-### Method: CardDeck::insertMacroAndCellRhpHex
-Args: (name, base, axis, r, matName, density, shift, rotMatrix, macrobodyNum, cellNum, uni).
-
-Generates a RHP macro and a cell based on that macro.
-Returns assigned surface number and cell number.    
-### Method: CardDeck::insertMacroAndCellRhpHexShell
-Args: (name, base1, axis1, r1, base2, axis2, r2, matName, density, shift, rotMatrix, macrobodyNum1, macrobodyNum2, cellNum, uni).
-
-Uses two RHP macros to generate a shell.
-
-Returns a list of the assigned macro numbers and the assigned cell number.
 ### Method: CardDeck::insertMacroRcc
-Args: (name, base, axis, radius, macrobodyNum, trNum).
+(self, name, base=(0,0,0), axis=(0,0,1), radius=1, macrobodyNum=0, trNum=None)
 
-name is only for the comment.
 From MCNP manual: RCC vx vy vz hx hy hz r.
 vx/vy/vz - coordinates of center of base.
 hx/hy/hz - provide orientation and height of top (not the coordinates of center of top).
            If the base is at 0,0,0 the hx/hy/hz would be the coordinates of top?
 
-But rotations generally need to be around the center of axis.
-
 Returns assigned surface number.    
+
 ### Method: CardDeck::insertMacroAndCellRcc
-Args: (name, base, axis, radius, matName, density, shift, rotMatrix, macrobodyNum, cellNum, uni).
+(self, name, base=(0,0,0), axis=(0,0,1), radius=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, macrobodyNum=0, cellNum=0, uni=0)
 
 Generates a RCC Right Circular Cylinder macro and a cell based on that macro.
 axisX/axisY/axisZ together given orientation and height of cyl.
-The cylinder is first instantiated at 0/0/0 and then moved by xShift/yShift/zShift Also includes a comment string.
 
+The cylinder is first instantiated at base, then optionally rotate by rotMatrix, then optionally moved by xShift/yShift/zShift 
 Returns assigned surface number and cell number.
+
 ### Method: CardDeck::insertMacroAndCellRccShell
-Args: (name, base1, axis1, radius1, base2, axis2, radius2, matName, density, shift, rotMatrix, macrobodyNum1, macrobodyNum2, cellNum, uni).
+(self, name, base1=(0,0,0), axis1=(0,0,1), radius1=2, base2=(0,0,0), axis2=(0,0,1), radius2=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, macrobodyNum1=0, macrobodyNum2=0, cellNum=0,uni=0)
 
 Uses two RCC macros to generate an annulus. FIRST one is the OUTER one.
 As it is currently, the center of the axis won't be at the origin unless the user makes it so.
@@ -122,28 +118,54 @@ xShift,yShift,zShift translates the annulus or RccShell
 The position can come from TRCL while instantiating the cell.
 
 Returns a list of the assigned macro numbers and the assigned cell number.
+
 ### Method: CardDeck::insertMacroRpp
-Args: (name, xMinMax, yMinMax, zMinMax, macrobodyNum, trNum).
+(self, name, xMinMax, yMinMax, zMinMax, macrobodyNum=0, trNum=None)
 
 name is only for the comment.
 xMinMax, yMinMax, zMinMax are tuples giving the upper/lower bounds of the RPP.
 
 Returns assigned surface number.    
+
 ### Method: CardDeck::insertMacroAndCellRpp
-Args: (name, xMinMax, yMinMax, zMinMax, matName, density, shift, rotMatrix, macrobodyNum, cellNum, uni).
+(self, name, xMinMax, yMinMax, zMinMax, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, macrobodyNum=0, cellNum=0, uni=0)
 
 Generates a RPP Rect Parallelopipded macro and a cell based on that macro.
-Also includes a comment string.
 
 Returns assigned surface number and cell number.    
+
 ### Method: CardDeck::insertMacroAndCellRppShell
-Args: (name, innerXWidth, outerXWidth, innerYWidth, outerYWidth, innerZWidth, outerZWidth, matName, density, shift, rotMatrix, macrobodyNum1, macrobodyNum2, cellNum, uni).
+(self, name, innerXWidth,outerXWidth, innerYWidth,outerYWidth, innerZWidth,outerZWidth, matName, density=0, shift=(0,0,0), rotMatrix=None, macrobodyNum1=0, macrobodyNum2=0, cellNum=0, uni=0)
 
 Inserts two RPP macros to generate shell.
 
 Returns a list of the assigned macro numbers and the assigned cell number.
+
+### Method: CardDeck::insertMacroRhpHex
+(self, name, base=(0,0,0), axis=(0,0,1), r=(0,1,0), macrobodyNum=0, trNum=None)
+
+From MCNP manual: RHP v1 v2 v3   h1 h2 h3  r1 r2 r3  s1 s2 s3  t1 t2 t3.
+RHP/HEX's side surface should be orthogonal to top/bottom.
+For RHP, acceptable numbers of arguments is {7, 9, 15}.
+Only the 9 arguments version is currently supported in CardSharp. This means that only regular hexagonal base is supported.
+
+Returns assigned surface number.
+
+### Method: CardDeck::insertMacroAndCellRhpHex
+(self, name, base=(0,0,0), axis=(0,0,1), r=(0,1,0), matName='Void', density=0, shift=(0,0,0), rotMatrix=None, macrobodyNum=0, cellNum=0, uni=0)
+
+Generates a RHP macro and a cell based on that macro.
+Returns assigned surface number and cell number.    
+
+### Method: CardDeck::insertMacroAndCellRhpHexShell
+(self, name, base1=(0,0,0), axis1=(0,0,1), r1=(0,1,0), base2=(0,0,0), axis2=(0,0,1), r2=(0,1,0), matName='Void', density=0, shift=(0,0,0), rotMatrix=None, macrobodyNum1=0, macrobodyNum2=0, cellNum=0, uni=0)
+
+Uses two RHP macros to generate a shell.
+
+Returns a list of the assigned macro numbers and the assigned cell number.
+
 ### Method: CardDeck::insertMacroWedge
-Args: (name, vertex, base1, base2, height, macrobodyNum, trNum).
+(self, name, vertex=(0,0,0), base1=(1,0,0), base2=(0,1,0), height=(0,0,1), macrobodyNum=0, trNum=None)
 
 name is only for the comment Wedge has a right angled triangle as base and a right angled prism above it.
    From MCNP manual: WED vx vy vz v1x v1y v1z v2x v2y v2z v3x v3y v3z.
@@ -156,17 +178,18 @@ hx/hy/hz - provide orientation and height of top corner.
 But rotations generally need to be around the center of axis.
 
 Returns assigned surface number.
+
 ### Method: CardDeck::insertMacroAndCellWedge
-Args: (name, vertex, base1, base2, height, matName, density, shift, rotMatrix, macrobodyNum, cellNum, uni).
+(self, name, vertex=(0,0,0), base1=(1,0,0), base2=(0,1,0), height=(0,0,1), matName='Void', density=0, shift=(0,0,0), rotMatrix=None, macrobodyNum=0, cellNum=0, uni=0)
 
 Generates a WED wedge macro and a cell based on that macro.
 
 The wedge is first instantiated at 0/0/0 and then moved by xShift/yShift/zShift.
-Also includes a comment string.
 
 Returns assigned surface number and cell number.    
+
 ### Method: CardDeck::insertMacroCone
-Args: (name, base, height, radius1, radius2, macrobodyNum, trNum).
+(self, name, base=(0,0,0), height=(0,0,1), radius1=2, radius2=1, macrobodyNum=0, trNum=None)
 
 name is only for the comment.
 Cone has a base pos, height vector, base radius and top radius.
@@ -179,17 +202,18 @@ hx/hy/hz - provide orientation and height of top corner.
 r1 > r2 (base radius and top radius).
 
 Returns assigned surface number.    
+
 ### Method: CardDeck::insertMacroAndCellCone
-Args: (name, base, height, radius1, radius2, matName, density, shift, rotMatrix, macrobodyNum, cellNum, uni).
+(self, name, base=(0,0,0), height=(0,0,1), radius1=2, radius2=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, macrobodyNum=0, cellNum=0, uni=0)
 
 Generates a TRC truncated right angle cone macro and a cell based on that macro.
 
 The cone is first instantiated at 0/0/0, then optionally rotated by rotMatrix and then moved by shift.
-Also includes a comment string.
 
 Returns assigned surface number and cell number.    
+
 ### Method: CardDeck::insertWorldMacroAndCell
-Args: (pos, radius, surfaceList, worldMat, worldDensity, worldMacroNum, worldCellNum, graveyardCellNum).
+(self, pos=(0,0,0), radius=50, surfaceList=None, worldMat='Void', worldDensity=0, worldMacroNum=0, worldCellNum=0, graveyardCellNum=0)
 
 This function inserts a macro to define the world/graveyard.
 This can be done using using automatic cell complement.  If you would like to define the world without using complements, just provide a surfaceList which contains all the surfaces whose outside defines the world.
@@ -200,34 +224,40 @@ Define the world cell using a sphere macro.
 The outside of sphere is the graveyard cell and will be void.
 The inside of sphere with complement(#) of the cell list is the inside of the world.
 *** WARNING: The complement operator # assumes the following number is a cell number, but If the # is omitted, the cell number will be treated as a macro/surface number leading to unexpected results if such a macro/surface exists!!!
+
 ### Method: CardDeck::printCellNumNameList
-Args: ().
+(self)
 
 Prints out a list of all the cell numbers/names in the deck.
 Automatically called when the World macro/cell is instantiated since it is usually the last one to be instantiated.
+
 ### Method: CardDeck::insertTRString
-Args: (name, shift, rotMatrix, trNum).
+(self, name, shift=(0,0,0), rotMatrix=None, trNum=0)
 
 Used by insertMacro functions to insert a TRanslate/Rotate string.
 The rotation happens before the translate.
+
 ### Method: CardDeck::getTrString
-Args: (shift, rotMatrix, trNum).
+(self, shift=(0,0,0), rotMatrix=None, trNum=0)
 
 The provided rotMatrix should be in cosines.
+
 ### Method: CardDeck::getTrStringDeg
-Args: (shift, rotMatrix, trNum).
+(self, shift=(0,0,0), rotMatrix=None, trNum=0)
 
 The provided rotMatrix should be in degrees.
+
 ### Method: CardDeck::getTrclStringDeg
-Args: (shift, rotMatrix).
+(self, shift=(0,0,0), rotMatrix=None)
 
 Make as small a TRCL string as will do the job.
 Used with commands that insert CELL.
 TRCL does not have a trNum and has parentheses.
 
 The provided rotMatrix should be in degrees.  
+
 ### Method: CardDeck::getRotationMatrix
-Args: (rotationAxis, angleDeg).
+(self, rotationAxis='Z', angleDeg=0)
 
 The rotation matrix in degrees, expects angles between 0-180 degrees!
 At least the note says so, but the example shows -45!
@@ -235,45 +265,53 @@ This rotation matrix is in terms of cosines only, no sines.
 
 Does MCNP multiply with the matrix on the left or right?
 Seems like it does it with matrix on right!
+
 ### Method: CardDeck::getRotationMatrixArbitraryAxis
-Args: (axis, angleDeg).
+(self, axis, angleDeg)
 
 axis is a tuple (x,y,z).
 angleDeg is in degrees.
+
 ### Method: CardDeck::insertMaterialStrings
-Args: (matList).
+(self, matList)
 
 These go in the data card section.
+
 ### Method: CardDeck::insertSource_PointIsotropicWithEnergyDistrib
-Args: (pos, MeVList, relFq, distrib, par, trNum).
+(self, pos=[0,0,0], MeVList=[0, .3, .5, 1.0, 2.5], relFq=[0, .2, .1, .3, .4], distrib='Discrete', par='P', trNum=None)
 
 First entry on SP card has to be zero for Continuous only ???
+
 ### Method: CardDeck::insertSource_PointMonoDirWithEnergyDistrib
-Args: (pos, vec, MeVList, relFq, distrib, par, trNum).
+(self, pos=[0,0,0], vec=[0,1,0], MeVList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], distrib='Histogram', par='P', trNum=None)
 
 Does not work???
 Point source which is also monodirectional... has problems? Mainly with F5  kind of tallies???
 With DIR=1, ARA is required.
 Page 3-52: Area of surface (required only for direct contributions to point  detectors from plane surface source.) 
 Since this is a point source, I am setting ARA to zero ???
+
 ### Method: CardDeck::insertSource_PointWithAngularBiasingAndEnergyDistrib
-Args: (pos, vec, coneHalfAngleDeg, MeVList, relFq, distrib, par).
+(self, pos=[0,0,0], vec=[0,1,0], coneHalfAngleDeg=25.8, MeVList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], distrib='Histogram',par='P')
 
 Source is still isotropic but with Angular biasing???
 So the values will be the same as with isotropic?
 coneHalfAngleDeg - Between 0 and 180 deg.
+
 ### Method: CardDeck::insertSource_SphereWithAngularBiasingAndEnergyDistrib
-Args: (pos, radius, vec, coneHalfAngleDeg, MeVList, relFq, rejCell, eff, trNum).
+(self, pos=[0,0,0], radius=.05, vec=[0,1,0], coneHalfAngleDeg=1, MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None)
 
 This uses the POS, RAD for particle origin while the cylinder also uses the AXS and EXT.
 
 Both use VEC and DIR for emission direction.
+
 ### Method: CardDeck::insertSource_CylinderMonoDirMonoEnergy
-Args: (pos, radius, axs, thickness, vec, MeV, trNum).
+(self, pos=[0,0,0], radius=.05, axs=[0,1,0], thickness=.1, vec=[0,1,0], MeV=1, trNum=None)
 
 Pencil beam, mono energetic.
+
 ### Method: CardDeck::insertSource_CylinderWithAngularBiasingAndEnergyDistrib
-Args: (pos, radius, axs, thickness, vec, coneHalfAngleDeg, MeVList, relFq, rejCell, eff, trNum).
+(self, pos=[0,0,0], radius=.05, axs=[0,1,0], thickness=.1, vec=[0,1,0], coneHalfAngleDeg=1, MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None)
 
 Can be used to create a disk source, pencil source with very small coneHalfAngle This is a volume source. The emission cone is along the cylinder axis.
 
@@ -302,14 +340,16 @@ DIR - the cosine of the angle between VEC and UUU, VVV, WWW
 If DIR is set to a constant like 1 for monodirectional, be careful with  point detectors. They don't work with constant DIR.
 DIR provides control over polar angle. The azimuthal angle is always 0-360.
 This means that cone beam is easy, fan beam is not.
+
 ### Method: CardDeck::insertSource_BoxWithAngularAndEnergyDistrib
-Args: (xRange, yRange, zRange, vec, coneHalfAngleDeg, MeVList, relFq, rejCell, eff, trNum).
+(self, xRange=[0,1], yRange=[0,1], zRange=[0,1], vec=[0,1,0], coneHalfAngleDeg=1, MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None)
 
 Page 12 of MCNP primer.
 Volumetric box source is created using X/Y/Z keywords with each having.
 a distribution that specifies the xrange/yrange/zrange.
+
 ### Method: CardDeck::insertSource_SphSurfaceWithCCC
-Args: (surNum, MeVList, relFq, trNum).
+(self, surNum=0, MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], trNum=None)
 
 To use this source, first define an emitting surface and optionally a cookie cutting cell for rejection.
 
@@ -323,11 +363,13 @@ Can't do a constant DIR=1 because point detectors don't like that.
 
 ------------------ Intent was to create a fan source from a cylindrical surface emitting normally.  That would mean all the particles will seem to come from the axis of the cylinder.
 For a cylinder with very small height and part of the curved surface used, the  emission will look like a FAN beam?   
-??? For the cylidrical surface source, MCNP gives an error "dir specified but vec absent" vec is supposed to be the normal to the surface, but does not work for cylindrical, as it does for sphere. The manual hints at this.
+??? For the cylidrical surface source, MCNP gives an error "dir specified but vec absent"
+vec is supposed to be the normal to the surface, but does not work for cylindrical, as it does for sphere. The manual hints at this.
 
 See Example 9 from MCNP manual 6.1  
+
 ### Method: CardDeck::getEnergyDistributionString
-Args: (distNum, MeVList, relFq, distrib, vertString).
+(self, distNum, MeVList, relFq, distrib='Discrete', vertString=True)
 
 From MCNP primer by Shultis, Faw.
 Point Isotropic Source with Discrete Energy Photons.
@@ -338,8 +380,9 @@ How to add the A/L in the vertical/column mode?
 If no A or L is used, what is the default?
 Vertical with J to pad the second column??? Page 2-9 L blank : Error L J     : Error L D     : Works, D is the default #  SI1   SP1     A     J?
    .3     0    .5    .2   1.0    .3   2.5    .5
+
 ### Method: CardDeck::getAngularBiasingString
-Args: (distNum, coneHalfAngleDeg).
+(self, distNum, coneHalfAngleDeg)
 
   ??? Biasing speeds up convergence, but the results are the same as for   ??? a isotropic source.
   ??? For an anisotropic source, see getAngularDirectingString.
@@ -360,36 +403,42 @@ Args: (distNum, coneHalfAngleDeg).
    si4   -1.00   0.9    1.0     $ for DIR, histogram of cosine bin, two bins.
 sp4    0.     0.95   0.05    $ fraction solid angle for each bin.
 sb4    0.     0.     1.0     $ Source bias for each bin.
+
 ### Method: CardDeck::getAngularRestrictingString
-Args: (distNum, coneHalfAngleDeg).
+(self, distNum, coneHalfAngleDeg)
 
 The biasing string, biases an isotropic source.
 The Restricting string, is creating an anisotropic source.
 Primarily the difference between biasing vs restricting seems to only be in the absolute value of the tally since the tally is per photon.
+
 ### Method: CardDeck::getTallyEnergyCardArb
-Args: (tallyNumWType, eList).
+(self, tallyNumWType, eList)
 
 E card. Arbitrary energy bins.
 If all tallies in a problem have the same energy group structure, a single  card may be used, with En replaced by E0.
 tallyNumWType can be 0 for the E0 card.
+
 ### Method: CardDeck::insertTallyE0Card
-Args: (eList).
+(self, eList)
 
 An E0 card can be used to set up a default energy-bin structure for all tallies.  A specific En card will override the default structure for tally n.
+
 ### Method: CardDeck::getTallyEnergyMultiplierCard
-Args: (tallyNumWType, mList).
+(self, tallyNumWType, mList)
 
 EM card.
 Can be used with uniform energy bins or arbitrary energy bins?
 This multiplies each energy bin by the given scalar.
 Different from FM card.
 The energy bins are the same as used on the energy card.
+
 ### Method: CardDeck::testGetTallySpecialTreatmentFTCard
-Args: ().
+(self)
 
 GEB and SCX on the same FT card???
+
 ### Method: CardDeck::insertTallySpecialTreatmentFTCard
-Args: (tallyNumWType, treatmentKeyword).
+(self, tallyNumWType, treatmentKeyword, *args)
 
 FT card can do many things ... Page 3-224, 225. CURRENTLY NOT USED.
 SCX, GEB, ICD, SCD, INC, TAG.
@@ -411,37 +460,44 @@ GEB a b c (fwhm = a + b*sqrt(E + c*E*E) where E is the energy of the particle).
 ------------------ INC - Bin by number of collisions that have occured in the track.
 Use FUn card to specify the details.
 ------------------   TAG - Tally tagging allows the user to separate a tally into components based  on how and where the scoring particle was produced. Page 3-235 Use FUn card to specify the details.
+
 ### Method: CardDeck::getFXTallySTring
-Args: (tallyNum, tallyType, cellListList, eList, mList, par).
+(self, tallyNum, tallyType, cellListList, eList=None, mList=None, par='p')
 
 Can this function do F1/2/4/6/7 and maybe 8?
 ??? Clean for all possible cases of the cell type.
+
 ### Method: CardDeck::insertF1Tally
-Args: (tallyNum, cellListList, eList, mList, par).
+(self, tallyNum, cellListList, eList=None, mList=None, par='p')
 
 Current integrated over a surface. Units: particles.
+
 ### Method: CardDeck::insertF2Tally
-Args: (tallyNum, cellListList, eList, mList, par).
+(self, tallyNum, cellListList, eList=None, mList=None, par='p')
 
 Flux averaged over a surface. Units: particles/cm2.
 Depends on material behind the surface!!! Why?
+
 ### Method: CardDeck::insertF4Tally
-Args: (tallyNum, cellListList, eList, mList, par).
+(self, tallyNum, cellListList, eList=None, mList=None, par='p')
 
 Flux averaged over a CELL. Units: particles/cm2 Depends on material in the cell.
+
 ### Method: CardDeck::insertF6Tally
-Args: (tallyNum, cellListList, eList, mList, par).
+(self, tallyNum, cellListList, eList=None, mList=None, par='p')
 
 Energy deposition averaged over a CELL. Units: particles/cm2.
 Depends on material in the cell.
+
 ### Method: CardDeck::insertF7Tally
-Args: (tallyNum, cellListList, eList, mList, par).
+(self, tallyNum, cellListList, eList=None, mList=None, par='n')
 
 Fission energy deposition averaged over a CELL. Units: particles/cm2.
 Only for neutrons.
 ??? Need to create a test case.
+
 ### Method: CardDeck::insertF8Tally
-Args: (tallyNum, cellListList, eList, mList, par).
+(self, tallyNum, cellListList, eList=None, mList=None, par='p,e')
 
 For pulse-height tallies photons/electrons are a special case: F8:P,E is the same  as F8:P and F8:E. Also, F8 tallies may have particle combinations such as F8:N,H.   
 Pulse height tally in a cell. Energy deposited.
@@ -462,8 +518,9 @@ The zero bin will catch non-analog knock-on electron negative scores. The epsilo
 Tally type 8 has many options. The standard F8 tally is a pulse-height tally  and the energy bins are no longer the energies of scoring events, but rather  the energy balance of all events in a history. In conjunction with the FT8 card  (Section 3.3.5.18), the F8 tally can be an anticoincidence pulse-height tally,  a neutron coincidence capture tally, or a residual nuclei production tally.
 
 F8 tallies always tally both p and e.
+
 ### Method: CardDeck::insertF5Tally
-Args: (tallyNum, pos, r, eList, mList, par).
+(self, tallyNum, pos=(100,0,0), r=0, eList=None, mList=None, par='p')
 
 Flux at a point or ring detector. Units: particles/cm2.
 Tally 5 is only available for neutrons and photons.
@@ -474,8 +531,9 @@ in the tally. But this can be done with separate F5 tallies so ignoring for now.
 The radius of the sphere of exclusion, +/-roi, should be about 1/8 to 1/2 mean.
 free path for particles of average energy at the sphere and *ZERO* in a void.
 The exclusion sphere must not encompass more than one material. MCNP6 cannot  verify this and the consequences may be wrong answers.
+
 ### Method: CardDeck::insertFIR5Tally
-Args: (tallyNum, pos, normVec, sMin, sMax, sbins, tMin, tMax, tbins, eList, mList, par).
+(self, tallyNum=0, pos=(100,0,0), normVec=(1,0,0), sMin=-0.02, sMax=0.02, sbins=40, tMin=-0.02, tMax=0.02, tbins=60, eList=None, mList=None, par='p')
 
 Tally 5 is only available for neutrons and photons.
 With Arbitrary width energy multiplier bins.
@@ -495,38 +553,46 @@ With equally spaced energy multiplier bins.
 FIR5 tally, Flux Image? Radiography at given position with given orientation.
 Remember, the orientation vector that MCNP needs is from the source position.
 This function takes a regular normal vector (from origin) and adds to position vector.
-### Method: CardDeck::getFIR5Tally
-Args: (t, pos, normVec, sMin, sMax, sbins, tMin, tMax, tbins, eList, mList, par).
 
-    
+### Method: CardDeck::getFIR5Tally
+(self, t, pos, normVec, sMin, sMax, sbins, tMin, tMax, tbins, eList, mList, par)
+
+Used by insertFIR5Tally.
+
 ### Method: CardDeck::insertDebugTallyString
-Args: (worldMacroNum).
+(self, worldMacroNum)
 
 Debug tally needs the worldMacroNum. (Works off surface, not cell).
 This is a specific use of the F1 tally?
+
 ### Method: CardDeck::setParticlesList
-Args: (p).
+(self, p=['p', 'e'])
 
 Set particles to transport in the MCNP simulation.
-### Method: CardDeck::getModeString
-Args: ().
 
 MODE N - neutron transport only (default).
      N P - neutron and neutron-induced photon transport.
      P - photon transport only.
      E - electron transport only.
      P E - photon and electron transport.
-     N P E - neutron, neutron-induced photon, and electron transport.        Note: Particles separated by space.
-### Method: CardDeck::getImpString
-Args: (imp).
+     N P E - neutron, neutron-induced photon, and electron transport.        Note: Particles are separated by space.
 
-Get importance strng based on the particles set in particle list.
+### Method: CardDeck::getModeString
+(self)
+
+Generate mode string from the particlesList attribute and return it.
+
+### Method: CardDeck::getImpString
+(self, imp=1)
+
+Get importance string based on the particles set in particle list.
 Used while inserting cells.
 IMP:p,e=1
-### Method: CardDeck::insertPhysicsCard
-Args: (nocoh, ides, nodop, cutn, cutp, cute).
 
-This should have been named getPhysiscsCards since it returns mode and phy string.
+### Method: CardDeck::insertPhysicsCard
+(self, nocoh=0, ides=0, nodop=0, cutn=0.0, cutp=0.001, cute=0.001)
+
+This should have been named insertPhysiscsAndModeCards since it returns mode and phy string.
 
 MCNP5 5.1 Vol II Page 5-2 There are three possible physics treatments for photons. The first is the explicit p,e treatment (MODE P E) where photons generate electrons, which are tracked and generate photons (ad infinitum). This is the most accurate model but is costly in terms of run time.  
 The second physics treatment is MODE P only that uses the default thick target bremsstrahlung (TTB) model where electrons are generated in the direction of the incident photon and are immediately annihilated after generating bremsstrahlung photons.  
@@ -539,28 +605,33 @@ PHYS:p  emcpf  ides  nocoh  ispn  nodop Default: 100    0      0     0     0   e
 PHYS:e EMAX IDES IPHOT IBAD ISTRG BNUM XNUM RNOK ENUM NUMB Defaults: EMAX = 100 MeV;            IDES, IPHOT, IBAD, ISTRG = 0;           BNUM, XNUM, RNOK, ENUM = 1.,            NUMB = 0   emax - upper limit for electron energy in MeV   IDES = 0/1 = photons will/will not produce electrons.
   IPHOT = 0/1 = electrons will/will not produce photons.
    10 options
+
 ### Method: CardDeck::insertOutputControlCards
-Args: (nps, debugN, notrn).
+(self, nps=1000, debugN=None, notrn=False)
 
 1) Tally Prnt Increment.
 2) Dump to RUNTPE increment.  3) Create MCTAL file.
 4) Max No. of Dumps on RUNTPE.  5) Controls Rendezvous points.
    Random number generator does not repeat when period is exceeded, but longer period generation (gen2,3) are preferred. Page 3-328 (6.1) 
 ??? Use PRDMP to enble MCTAL output and RUNTPE size write intermittent dumps? vs DBCN
+
 ### Method: CardDeck::insertIntoCellSection
-Args: (s).
+(self, s)
 
 Use this function to insert manually generated/unsupported cards into the  cell section.
+
 ### Method: CardDeck::insertIntoMacroSection
-Args: (s).
+(self, s)
 
 Use this function to insert manually generated/unsupported cards into the macros/surfaces section.
+
 ### Method: CardDeck::insertIntoMaterialSection
-Args: (s).
+(self, s)
 
 Use this function to insert manually generated/unsupported cards into the data section.
+
 ### Method: CardDeck::assembleDeck
-Args: (titleCard, macroString, cellString, trString, matString, srcString, tallyString, physicsString, outputControlString).
+(self, titleCard, macroString='Auto', cellString='Auto', trString='Auto', matString='Auto', srcString='Auto', tallyString='Auto', physicsString='Auto', outputControlString='Auto')
 
 All the arguments are optional since they will be generated from the information collected from calling the relevant methods.
 
@@ -575,21 +646,34 @@ cellList -  A list of integers that are the cellNums.
             The cellNums will be used to make a universe cell.
 
 matString, trString, srcString, tallyString, physicsString, outputControlString go into data section.
+
 ### Method: CardDeck::saveDeck
-Args: (modelFolder, modelFilename, deckStr).
+(self, modelFolder, modelFilename, deckStr)
 
 Save all the cards to an MCNP input deck (file).
+
 -----------------
 ## Function: findLongestLineLen
-Args: (multilineString).
+(multilineString)
 
 Find longest line in a multi line string.
 Ignore $ comments at the end of a line to determine line length.
+
 -----------------
 ## Function: toMCNP80String
-Args: (multilineString).
+(multilineString)
 
 Convert a given multi line string to MCNP compatible strings with no lines longer than 80 characters.
+
 -----------------
 ## Function: testToMCNP80String
-Args: ().
+()
+
+
+
+-----------------
+## Function: printIfShow
+(*args, **kwargs)
+
+Alternative to regular print so that debug prints can be turned on/off using a global variable for the file/module.
+
