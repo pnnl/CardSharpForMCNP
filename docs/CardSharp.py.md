@@ -25,6 +25,10 @@ The possible combinations with unions, intersections, complement, complement of 
 
 Either use surfaceList and cellComplementList, or use the manualSurfacesList.
 
+matName is the key to a material in the materials dictionary.
+density can be left at 0 to indicate using the default density from the dictionary.
+If you do specify density, pay attention to sign. MCNP uses negative values to mean g/cc.
+
 The rotMatrix and shift add a TRCL string.
 
 By default all cells are instantiated with an importance string based on the particles list set before the call to the cell function.
@@ -122,7 +126,6 @@ Returns a list of the assigned macro numbers and the assigned cell number.
 ### Method: CardDeck::insertMacroRpp
 (self, name, xMinMax, yMinMax, zMinMax, macrobodyNum=0, trNum=None)
 
-name is only for the comment.
 xMinMax, yMinMax, zMinMax are tuples giving the upper/lower bounds of the RPP.
 
 Returns assigned surface number.    
@@ -167,7 +170,7 @@ Returns a list of the assigned macro numbers and the assigned cell number.
 ### Method: CardDeck::insertMacroWedge
 (self, name, vertex=(0,0,0), base1=(1,0,0), base2=(0,1,0), height=(0,0,1), macrobodyNum=0, trNum=None)
 
-name is only for the comment Wedge has a right angled triangle as base and a right angled prism above it.
+Wedge has a right angled triangle as base and a right angled prism above it.
    From MCNP manual: WED vx vy vz v1x v1y v1z v2x v2y v2z v3x v3y v3z.
 vertexX, vertexY, vertexZ - are the coordinates of the rt angle vertex of base.
 v1x/v1y/v1z - vector of one of the two rt angled sides of the base.
@@ -191,7 +194,6 @@ Returns assigned surface number and cell number.
 ### Method: CardDeck::insertMacroCone
 (self, name, base=(0,0,0), height=(0,0,1), radius1=2, radius2=1, macrobodyNum=0, trNum=None)
 
-name is only for the comment.
 Cone has a base pos, height vector, base radius and top radius.
 radius1 is base radius.
 
