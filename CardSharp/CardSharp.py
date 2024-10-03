@@ -1,19 +1,20 @@
 # Cardsharp for MCNP
 # @author: Nikhil Deshmukh
 #==============================================================================
-import os
+"""
+This file provides a class/methods for creating MCNP decks.
+See the test scripts in the CardSharpTests folder for usage.
 
+Most refereces to MCNP manual are to version 6.1. Some to 5.1 Vol II.
+The two have a different style in terms of upper/lower case.
+
+MOST ARGUMENTS TO THE FUNCTIONS HAVE SENSIBLE DEFAULT VALUES.
+"""
+
+import os
 import numpy as np
 import CardSharpMats as csmat
 
-"""
-This file provides functions for creating MCNP models.
-
-Most refereces to MCNP manual are to version 6.1. Some to 5.1 Vol II
-The two have a different style in terms of upper/lower case.
-
-See the test scripts in the CardSharpTests folder for usage.
-"""
 #############################################################################
 show = False
 identityRotMatrix = (0,90,90,   90,0,90,   90,90,0)
@@ -48,6 +49,8 @@ def main():
 class CardDeck:
   """
   Class representing an MCNP input deck/file.
+  Instantiate an object of this class, then call methods to add surfaces, cell, materials,
+  source, tallies, physics and output control cards. Finally write out the deck.
   """
   def __init__(self):
 
@@ -83,153 +86,6 @@ class CardDeck:
     self.nextTrNum += 1
     return self.nextTrNum
 #############################################################################
-  ### !!!----------MISC FUNCTIONS----------
-  def insertTRString(self, name, shift=(0,0,0), rotMatrix=None, trNum=0):
-    """
-    Used by insertMacro functions.
-    """  
-    if trNum == 0: trNum = self._getNextTRN()
-    
-    descrStr = '%s, shift: %.2f %.2f %.2f'%(name, *shift)
-    trString = toMCNP80String('c ---%s'%(descrStr))  
-   
-    trTemplate = '*TR%d %.3f %.3f %.3f  %.3f %.3f %.3f   %.3f %.3f %.3f   %.3f %.3f %.3f\n' # * for degree
-  #  if shift[0]==0 and shift[1]==0 and shift[2]==0 and rotMatrix is None:
-  #    trString = ''
-    if rotMatrix is None:
-      s = '*TR%d  %.3f %.3f %.3f'%(trNum, *shift,)
-    else:
-      s = trTemplate%(trNum, *shift, *rotMatrix)
-  
-    trString += toMCNP80String(s)
-  
-    self.collectedTrStrings += trString
-    return trNum
-
-# The following get functions could be kept outside the class
-# Do not depend on the object properties
-# Kept here for a simpler interface
-# Unlike the insert functions, the get functions do not add anything to the deck.
-  def getTrString(self, shift=(0,0,0), rotMatrix=None, trNum=0):
-    """
-    The provided rotMatrix should be in cosines.
-    """
-    trStringDeg = self.getTrStringDeg(shift, rotMatrix, trNum)
-    trString = trStringDeg.replace('*TR', 'TR')
-    return trString
-
-  def getTrStringDeg(self, shift=(0,0,0), rotMatrix=None, trNum=0):
-    """
-    The provided rotMatrix should be in degrees.
-    """
-    trclTemplate = '*TR%d  %.3f %.3f %.3f  %.3f %.3f %.3f   %.3f %.3f %.3f   %.3f %.3f %.3f' # * for degree
-    if shift[0]==0 and shift[1]==0 and shift[2]==0 and rotMatrix is None:
-      trclString = ''
-    elif rotMatrix is None:
-      trclString = '*TR%d  %.6f %.6f %.6f'%(*shift,)
-    else:
-      trclString = trclTemplate%(trNum, *shift, *rotMatrix)
-  
-    return trclString
-
-  def getTrclStringDeg(self, shift=(0,0,0), rotMatrix=None):
-    """ 
-    Make as small a TRCL string as will do the job.
-    Used with commands that insert CELL.
-    TRCL does not have a trNum and has parentheses.
-  
-    The provided rotMatrix should be in degrees.  
-    """
-    trclTemplate = '*TRCL (%.3f %.3f %.3f  %.3f %.3f %.3f   %.3f %.3f %.3f   %.3f %.3f %.3f)' # * for degree
-
-    if shift[0]==0 and shift[1]==0 and shift[2]==0 and rotMatrix is None:
-      trclString = ''
-    elif rotMatrix is None:
-      trclString = '*TRCL (%.6f %.6f %.6f)'%(*shift,)
-    else:
-      trclString = trclTemplate%(*shift, *rotMatrix)
-  
-    return trclString
-
-  def getRotationMatrix(self, rotationAxis='Z', angleDeg=0):
-    """
-    The rotation matrix in degrees, expects angles between 0-180 degrees!!!
-    At least the note says so, but the example shows -45!!!
-    This rotation matrix is in terms of cosines only, no sines
-    
-    Does MCNP multiply with the matrix on the left or right?
-    Seems like it does it with matrix on right!!!
-    """
-    #print('theta: ', theta)
-    theta = angleDeg
-    if theta == 0:
-      return np.array(identityRotMatrix)
-  
-    """
-    # cos(-theta) = cos(theta)
-    # cos(180+theta) = -cos(theta)
-    #sin(-theta) = -sin(theta)
-    #cos(90-theta) = cos(theta-90) = sin(theta)
-    #cos(90+theta) = -sin(theta)
-    """
-    if rotationAxis == 'X':
-      m = [ 0,          90,         90,  
-           90,       theta, (90+theta), 
-           90,  (theta-90),     theta]
-    elif rotationAxis == 'Y':
-      m = [theta,      90,  (theta-90),  
-              90,       0,          90,  
-        90+theta,      90,      theta]
-    elif rotationAxis == 'Z':
-      m = [     theta, 90+theta, 90,  
-           (theta-90),    theta, 90,  
-                   90,       90,  0]
-  
-    # Bring angles between 0-180
-    for i in range(9):
-      if m[i]>360:
-        m[i] -= 360
-      if m[i]<0:
-        m[i]=-m[i]
-      if m[i]>180:
-        m[i] = 360-m[i]
-        
-    m = np.array(m)
-    #m = m.reshape((3,3)).transpose()
-    
-    return np.array(m)
-
-  def getRotationMatrixArbitraryAxis(self, axis, angleDeg):
-    """
-    axis is a tuple (x,y,z)
-    angleDeg is in degrees.
-    """
-    axis = np.array(axis)
-    mag = np.sqrt(np.sum(axis**2)) 
-    if np.isclose(mag, 0) or angleDeg == 0: 
-      return np.cos(np.deg2rad(identityRotMatrix))
-    
-    axis = axis / mag  
-    ux, uy, uz = axis
-  
-    cosT = np.cos(np.deg2rad(angleDeg))
-    sinT = np.sin(np.deg2rad(angleDeg))
-  
-    R11 = cosT + ux*ux*(1-cosT)
-    R12 = ux*uy*(1-cosT) - uz*sinT
-    R13 = ux*uz*(1-cosT) + uy*sinT
-    
-    R21 = uy*ux*(1-cosT) + uz*sinT
-    R22 = cosT + uy*uy*(1-cosT)
-    R23 = uy*uz*(1-cosT) - ux*sinT
-    
-    R31 = uz*ux*(1-cosT) - uy*sinT
-    R32 = uz*uy*(1-cosT) + ux*sinT
-    R33 = cosT + uz*uz*(1-cosT)
-  
-    m = np.array([R11,R12,R13,  R21,R22,R23,  R31,R32,R33])
-  
-    return m
 
 #############################################################################
   ### !!!----------GEOMETRY FUNCTIONS----------
@@ -242,21 +98,6 @@ class CardDeck:
 #  Why not assume it is at origin? Then use TRCL to translate?
 #  Granted, the sphere has no orientation, but the RPP does?
 
-# insertCellString returns cellNum
-# All insertMacroXXXX return macroNum
-# All insertCellXXXX return macroNum/macroNumlist and cellNum
-  def insertIntoCellSection(self, s):
-    """ """
-    self.collectedCellStrings += toMCNP80String(s)
-    
-  def insertIntoMacroSection(self, s):
-    """ """
-    self.collectedMacroStrings += toMCNP80String(s)
-
-  def insertIntoMaterialSection(self, s):
-    """ """
-    self.collectedMatStrings += toMCNP80String(s)
-
   def insertCellString(self, name, surfaceList=None, cellComplementList=None,
                      manualSurfacesString=None,
                      matName='Void', density=0,
@@ -264,15 +105,18 @@ class CardDeck:
                      impString='', cellNum=0, uni=0, fill=0, 
                      latticeType=None, latticeIndices=None):
     """
-    Either use surfaceList and cellComplementList, or use the manualSurfacesList.
+    This function is used to insert a cell using surfaces and cell that have
+    already been defined.
   
     surfaceList simply supports positive/negative surfaces. The complement list 
     is a list of cells which get subtracted.
   
     The possible combinations with unions, intersections, complement,
-    complement of unions and so on are too many.  If the user wants to that, they 
-    can enter the string manually.
-    -------------    
+    complement of unions and so on are too many.  If the user wants to do that, 
+    they can enter the string manually.
+
+    Either use surfaceList and cellComplementList, or use the manualSurfacesList.
+
     The rotMatrix and shift add a TRCL string.
     
     By default all cells are instantiated with an importance string based on
@@ -280,7 +124,7 @@ class CardDeck:
     If a cell needs a different importance string from the default, use this
     option:
     impString: It should look like this: 'imp:p,e=1'
-    ----------
+
     latType - 1 (RPP)
     latType - 2 (Hexagonal prism)
     latIndices - Range specifying Imin/Imax, Jmin/Jmax, Kmin/Kmax of the lattice range
@@ -342,14 +186,15 @@ class CardDeck:
   
     printIfShow(cellString)
     return cellNum
-  ### !!!-----Shapes----------
-  # def insertSurface_PlaneGeneral(): # P
-  # def insertSurface_RHexPrism(): # RHP
+  ### !!!-----SURFACES----------
+
   def insertSurface_CylinderAligned(self, name, axis='X', offset=(0,0,0), radius=1.0, surfaceNum=0, trNum=None):
     """
     Define a cylinder parallel to one of the three axes.
     If parallel to X axes, the YZ offsets are used.
     If parallel to Y axes, the XZ offsets are used and so on.
+
+    Returns assigned surface number.
     """
     if surfaceNum == 0: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -382,8 +227,10 @@ class CardDeck:
   
   def insertSurface_Plane(self, name, A=1.0, B=1.0, C=1.0, D=1.0, surfaceNum=0, trNum=None):
     """
-    Define a plane surface aligned with equation: Ax + By + Cz -D = 0
+    Define a plane surface aligned with equation: Ax + By + Cz -D = 0.
     Can also add a transform.
+
+    Returns assigned surface number.    
     """
     if surfaceNum == 0: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -405,9 +252,11 @@ class CardDeck:
 
   def insertSurface_PlaneAligned(self, name, axis='X', D=1.0, surfaceNum=0, trNum=None):
     """
-    Define a plane surface aligned with X or Y or Z axis
+    Define a plane surface aligned with X or Y or Z axis.
     D refers to: PX, PY, PZ. 
     PX is normal to X axis.
+
+    Returns assigned surface number.    
     """
     if surfaceNum == 0: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -427,13 +276,15 @@ class CardDeck:
     return surfaceNum
 
 #############################################################################
-  ### !!!-----
+  ### !!!-----MACRO SURFACES------
   def insertMacroSphere(self, name, pos=(0,0,0), radius=1, 
                         macrobodyNum=0, trNum=None):
     """
-    name is only for the comment
+    name is only for the comment.
     In general, instantiate surfaces/cells at the origin and then apply
-    TRCL to rotate/translate
+    TR/TRCL to rotate/translate.
+    
+    Returns assigned surface number.
     """
     if macrobodyNum == 0: macrobodyNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -462,6 +313,8 @@ class CardDeck:
     Also includes a comment string.
     Sphere is different from other macrobodies in not ever needing an orientation
     matrix.
+    
+    Returns assigned surface number and cell number.
     """
     # ----macro--------
     macrobodyNum = self.insertMacroSphere(name=name, pos=pos,
@@ -487,6 +340,9 @@ class CardDeck:
                   shift=(0,0,0), rotMatrix=None,
                   macrobodyNum1=0, macrobodyNum2=0, cellNum=0,uni=0):
     """
+    Uses two sphere macros to generate a shell.
+    
+    Returns a list of the assigned macro numbers and the assigned cell number.
     """
     # ----macro--------    
     macrobodyNum1 = self.insertMacroSphere(name=name, pos=pos,
@@ -517,11 +373,13 @@ class CardDeck:
   def insertMacroRhpHex(self, name, base=(0,0,0), axis=(0,0,1), r=(0,1,0),
                      macrobodyNum=0, trNum=None):
     """
-    RHP v1 v2 v3   h1 h2 h3  r1 r2 r3  s1 s2 s3  t1 t2 t3
-    RHP/HEX's side surface should be orthogonal to top/bottom
+    From MCNP manual: RHP v1 v2 v3   h1 h2 h3  r1 r2 r3  s1 s2 s3  t1 t2 t3.
+    RHP/HEX's side surface should be orthogonal to top/bottom.
     For RHP, acceptable numbers of arguments is {7, 9, 15}.
     Only the 9 arguments is currently supported in CardSharp. This means
     that only regular hexagonal base is supported.
+
+    Returns assigned surface number.
     """
     if macrobodyNum == 0: macrobodyNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -548,6 +406,7 @@ class CardDeck:
                  macrobodyNum=0, cellNum=0, uni=0):
     """
     Generates a RHP macro and a cell based on that macro.
+    Returns assigned surface number and cell number.    
     """
     # ----macro--------
     macrobodyNum = self.insertMacroRhpHex(name=name, base=base, axis=axis, 
@@ -575,6 +434,8 @@ class CardDeck:
                  macrobodyNum1=0, macrobodyNum2=0, cellNum=0, uni=0):
     """
     Uses two RHP macros to generate a shell.
+
+    Returns a list of the assigned macro numbers and the assigned cell number.
     """
     # ----macro--------
     macrobodyNum1 = self.insertMacroRhpHex(name=name,
@@ -607,13 +468,15 @@ class CardDeck:
   def insertMacroRcc(self, name, base=(0,0,0), axis=(0,0,1), radius=1, 
                      macrobodyNum=0, trNum=None):
     """
-    name is only for the comment
-    RCC vx vy vz hx hy hz r
-    vx/vy/vz - coordinates of center of base
-    hx/hy/hz - provide orientation and height of top (not the coordinates of center of top)
+    name is only for the comment.
+    From MCNP manual: RCC vx vy vz hx hy hz r.
+    vx/vy/vz - coordinates of center of base.
+    hx/hy/hz - provide orientation and height of top (not the coordinates of center of top).
                If the base is at 0,0,0 the hx/hy/hz would be the coordinates of top?
     
     But rotations generally need to be around the center of axis.
+
+    Returns assigned surface number.    
     """
     if macrobodyNum == 0: macrobodyNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -643,6 +506,8 @@ class CardDeck:
     axisX/axisY/axisZ together given orientation and height of cyl.
     The cylinder is first instantiated at 0/0/0 and then moved by xShift/yShift/zShift
     Also includes a comment string.
+    
+    Returns assigned surface number and cell number.
     """
     # ----macro--------
     macrobodyNum = self.insertMacroRcc(name=name, base=base, axis=axis, 
@@ -679,6 +544,8 @@ class CardDeck:
     xShift,yShift,zShift translates the annulus or RccShell
     
     The position can come from TRCL while instantiating the cell.
+
+    Returns a list of the assigned macro numbers and the assigned cell number.
     """
     # ----macro--------    
     macrobodyNum1 = self.insertMacroRcc(name=name, base=base1, axis=axis1,
@@ -714,7 +581,10 @@ class CardDeck:
   # That's just my choice
   def insertMacroRpp(self, name, xMinMax, yMinMax, zMinMax, macrobodyNum=0, trNum=None):
     """
-    name is only for the comment
+    name is only for the comment.
+    xMinMax, yMinMax, zMinMax are tuples giving the upper/lower bounds of the RPP.
+
+    Returns assigned surface number.    
     """
     if macrobodyNum == 0: macrobodyNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -741,6 +611,8 @@ class CardDeck:
     """
     Generates a RPP Rect Parallelopipded macro and a cell based on that macro.
     Also includes a comment string.
+
+    Returns assigned surface number and cell number.    
     """
     # ----macro--------
     macrobodyNum = self.insertMacroRpp(name=name, xMinMax=xMinMax, yMinMax=yMinMax, 
@@ -766,7 +638,9 @@ class CardDeck:
                                shift=(0,0,0), rotMatrix=None, 
                                macrobodyNum1=0, macrobodyNum2=0, cellNum=0, uni=0):
     """
-    Space between two RPPs with the same center.
+    Inserts two RPP macros to generate shell.
+
+    Returns a list of the assigned macro numbers and the assigned cell number.
     """
     # ----macro--------  
     #c surface/macrobody number, transformation number optional, rpp, xmin/xmax,    ymin/ymax, zmin/zmax'
@@ -807,14 +681,16 @@ class CardDeck:
     name is only for the comment
     Wedge has a right angled triangle as base and a right angled prism above it.
       
-    WED vx vy vz v1x v1y v1z v2x v2y v2z v3x v3y v3z
-    vertexX, vertexY, vertexZ - are the coordinates of the rt angle vertex of base
-    v1x/v1y/v1z - vector of one of the two rt angled sides of the base
-    v2x/v2y/v2z = vector of the second of the two rt angled sides of the base
-    hx/hy/hz - provide orientation and height of top corner
-               If the base is at 0,0,0 the hx/hy/hz would be the coordinates of top corner
+    From MCNP manual: WED vx vy vz v1x v1y v1z v2x v2y v2z v3x v3y v3z.
+    vertexX, vertexY, vertexZ - are the coordinates of the rt angle vertex of base.
+    v1x/v1y/v1z - vector of one of the two rt angled sides of the base.
+    v2x/v2y/v2z = vector of the second of the two rt angled sides of the base.
+    hx/hy/hz - provide orientation and height of top corner.
+               If the base is at 0,0,0 the hx/hy/hz would be the coordinates of top corner.
     
     But rotations generally need to be around the center of axis.
+
+    Returns assigned surface number.
     """
     if macrobodyNum == 0: macrobodyNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -843,8 +719,10 @@ class CardDeck:
     """
     Generates a WED wedge macro and a cell based on that macro.
   
-    The wedge is first instantiated at 0/0/0 and then moved by xShift/yShift/zShift
+    The wedge is first instantiated at 0/0/0 and then moved by xShift/yShift/zShift.
     Also includes a comment string.
+    
+    Returns assigned surface number and cell number.    
     """
     # ----macro--------
     macrobodyNum = self.insertMacroWedge(name=name, 
@@ -865,20 +743,24 @@ class CardDeck:
                                impString=impString, cellNum=cellNum, uni=uni)
   
     return macrobodyNum, cellNum
+  
+    # Add wedge shell when needed.
 #############################################################################
   ### !!!-----
   def insertMacroCone(self, name, base=(0,0,0), height=(0,0,1), radius1=2, radius2=1,
                     macrobodyNum=0, trNum=None):
     """
-    name is only for the comment
+    name is only for the comment.
     Cone has a base pos, height vector, base radius and top radius.
     radius1 is base radius.
     
-    TRC vx vy vz    hx hy hz   r1 r2
-    vertexX, vertexY, vertexZ - are the coordinates of the base
-    hx/hy/hz - provide orientation and height of top corner
-               If the base is at 0,0,0 the hx/hy/hz would be the coordinates of top corner
-    r1 > r2 (base radius and top radius)  
+    From MCNP manual: TRC vx vy vz    hx hy hz   r1 r2.
+    vertexX, vertexY, vertexZ - are the coordinates of the base.
+    hx/hy/hz - provide orientation and height of top corner.
+               If the base is at 0,0,0 the hx/hy/hz would be the coordinates of top corner.
+    r1 > r2 (base radius and top radius).
+
+    Returns assigned surface number.    
     """
     if macrobodyNum == 0: macrobodyNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
@@ -909,6 +791,8 @@ class CardDeck:
     The cone is first instantiated at 0/0/0, then optionally rotated by rotMatrix and
     then moved by shift.
     Also includes a comment string.
+
+    Returns assigned surface number and cell number.    
     """
     # ----macro--------
     macrobodyNum = self.insertMacroCone(name=name, 
@@ -930,6 +814,7 @@ class CardDeck:
   
     return macrobodyNum, cellNum
 
+    # Add cone shell when needed.
 #############################################################################
   ### !!!-----
   # ??? another function or parameter option to describe the world without
@@ -1015,17 +900,170 @@ class CardDeck:
     return worldMacroNum, (cn1, cn2)
 
   def printCellNumNameList(self):
-    """ """
+    """
+    Prints out a list of all the cell numbers/names in the deck.
+    Automatically called when the World macro/cell is instantiated since it is
+    usually the last one to be instantiated.
+    """
     print('---------Cell List------------')
     numName = sorted(self.cellNumNameList, key=lambda tup: tup[0])
     for n in numName:
       print(n)
     print('------------------------------')
+  ### !!!----------TRANSLATE ROTATE FUNCTIONS----------
+  def insertTRString(self, name, shift=(0,0,0), rotMatrix=None, trNum=0):
+    """
+    Used by insertMacro functions to insert a TRanslate/Rotate string.
+    The rotation happens before the translate.
+    """  
+    if trNum == 0: trNum = self._getNextTRN()
+    
+    descrStr = '%s, shift: %.2f %.2f %.2f'%(name, *shift)
+    trString = toMCNP80String('c ---%s'%(descrStr))  
+   
+    trTemplate = '*TR%d %.3f %.3f %.3f  %.3f %.3f %.3f   %.3f %.3f %.3f   %.3f %.3f %.3f\n' # * for degree
+  #  if shift[0]==0 and shift[1]==0 and shift[2]==0 and rotMatrix is None:
+  #    trString = ''
+    if rotMatrix is None:
+      s = '*TR%d  %.3f %.3f %.3f'%(trNum, *shift,)
+    else:
+      s = trTemplate%(trNum, *shift, *rotMatrix)
+  
+    trString += toMCNP80String(s)
+  
+    self.collectedTrStrings += trString
+    return trNum
+
+# The following get functions could be kept outside the class
+# Do not depend on the object properties
+# Kept here for a simpler interface
+# Unlike the insert functions, the get functions do not add anything to the deck.
+  def getTrString(self, shift=(0,0,0), rotMatrix=None, trNum=0):
+    """
+    The provided rotMatrix should be in cosines.
+    """
+    trStringDeg = self.getTrStringDeg(shift, rotMatrix, trNum)
+    trString = trStringDeg.replace('*TR', 'TR')
+    return trString
+
+  def getTrStringDeg(self, shift=(0,0,0), rotMatrix=None, trNum=0):
+    """
+    The provided rotMatrix should be in degrees.
+    """
+    trclTemplate = '*TR%d  %.3f %.3f %.3f  %.3f %.3f %.3f   %.3f %.3f %.3f   %.3f %.3f %.3f' # * for degree
+    if shift[0]==0 and shift[1]==0 and shift[2]==0 and rotMatrix is None:
+      trclString = ''
+    elif rotMatrix is None:
+      trclString = '*TR%d  %.6f %.6f %.6f'%(*shift,)
+    else:
+      trclString = trclTemplate%(trNum, *shift, *rotMatrix)
+  
+    return trclString
+
+  def getTrclStringDeg(self, shift=(0,0,0), rotMatrix=None):
+    """ 
+    Make as small a TRCL string as will do the job.
+    Used with commands that insert CELL.
+    TRCL does not have a trNum and has parentheses.
+  
+    The provided rotMatrix should be in degrees.  
+    """
+    trclTemplate = '*TRCL (%.3f %.3f %.3f  %.3f %.3f %.3f   %.3f %.3f %.3f   %.3f %.3f %.3f)' # * for degree
+
+    if shift[0]==0 and shift[1]==0 and shift[2]==0 and rotMatrix is None:
+      trclString = ''
+    elif rotMatrix is None:
+      trclString = '*TRCL (%.6f %.6f %.6f)'%(*shift,)
+    else:
+      trclString = trclTemplate%(*shift, *rotMatrix)
+  
+    return trclString
+
+  def getRotationMatrix(self, rotationAxis='Z', angleDeg=0):
+    """
+    The rotation matrix in degrees, expects angles between 0-180 degrees!
+    At least the note says so, but the example shows -45!
+    This rotation matrix is in terms of cosines only, no sines.
+    
+    Does MCNP multiply with the matrix on the left or right?
+    Seems like it does it with matrix on right!
+    """
+    #print('theta: ', theta)
+    theta = angleDeg
+    if theta == 0:
+      return np.array(identityRotMatrix)
+  
+    """
+    # cos(-theta) = cos(theta)
+    # cos(180+theta) = -cos(theta)
+    #sin(-theta) = -sin(theta)
+    #cos(90-theta) = cos(theta-90) = sin(theta)
+    #cos(90+theta) = -sin(theta)
+    """
+    if rotationAxis == 'X':
+      m = [ 0,          90,         90,  
+           90,       theta, (90+theta), 
+           90,  (theta-90),     theta]
+    elif rotationAxis == 'Y':
+      m = [theta,      90,  (theta-90),  
+              90,       0,          90,  
+        90+theta,      90,      theta]
+    elif rotationAxis == 'Z':
+      m = [     theta, 90+theta, 90,  
+           (theta-90),    theta, 90,  
+                   90,       90,  0]
+  
+    # Bring angles between 0-180
+    for i in range(9):
+      if m[i]>360:
+        m[i] -= 360
+      if m[i]<0:
+        m[i]=-m[i]
+      if m[i]>180:
+        m[i] = 360-m[i]
+        
+    m = np.array(m)
+    #m = m.reshape((3,3)).transpose()
+    
+    return np.array(m)
+
+  def getRotationMatrixArbitraryAxis(self, axis, angleDeg):
+    """
+    axis is a tuple (x,y,z).
+    angleDeg is in degrees.
+    """
+    axis = np.array(axis)
+    mag = np.sqrt(np.sum(axis**2)) 
+    if np.isclose(mag, 0) or angleDeg == 0: 
+      return np.cos(np.deg2rad(identityRotMatrix))
+    
+    axis = axis / mag  
+    ux, uy, uz = axis
+  
+    cosT = np.cos(np.deg2rad(angleDeg))
+    sinT = np.sin(np.deg2rad(angleDeg))
+  
+    R11 = cosT + ux*ux*(1-cosT)
+    R12 = ux*uy*(1-cosT) - uz*sinT
+    R13 = ux*uz*(1-cosT) + uy*sinT
+    
+    R21 = uy*ux*(1-cosT) + uz*sinT
+    R22 = cosT + uy*uy*(1-cosT)
+    R23 = uy*uz*(1-cosT) - ux*sinT
+    
+    R31 = uz*ux*(1-cosT) - uy*sinT
+    R32 = uz*uy*(1-cosT) + ux*sinT
+    R33 = cosT + uz*uz*(1-cosT)
+  
+    m = np.array([R11,R12,R13,  R21,R22,R23,  R31,R32,R33])
+  
+    return m
 #############################################################################
   ### !!!---MATERIAL FUNCTIONS----------
-
   def insertMaterialStrings(self, matList):
-    """  These go in the data card section.  """
+    """
+    These go in the data card section.
+    """
     matString = ''
     matString += toMCNP80String('c --%s--'%(matList))
     for mat in matList:
@@ -1039,11 +1077,11 @@ class CardDeck:
 #############################################################################
   ### !!!---SOURCE FUNCTIONS----------
   """    
-  Only one SDEF card in a deck...
-  The SDEF card is an extended source of weirdness...
+  Only one SDEF card in a deck.
+  The SDEF card is an extended source of weirdness.
   There are 24 different keyword/value sets that can go on the SDEF line:
   Equals sign between key and value is optional.
-  MCNP 6.1 Page 3-122
+  MCNP 6.1 Page 3-122.
 
   If SDEF is not enough, look for SOURCE and SRCDX routine.
 
@@ -1322,8 +1360,8 @@ SP{extDistNum:d}    0    1         $ Source Probability uniform distribution bet
     source particles.
   
     Page 3-121
-    XXX, YYY, ZZZ (the position of the particle),
-    UUU, VVV, WWW (the direction of the flight of the particle)
+    XXX, YYY, ZZZ (the position of the particle).
+    UUU, VVV, WWW (the direction of the flight of the particle).
     
     POS - Reference point for position sampling in vector notation.
     RAD - radial distance of the position from POS or AXS.
@@ -1404,9 +1442,8 @@ SP{extDistNum:d}    0    1         $ Source Probability uniform distribution bet
                           rejCell=None, eff=0.01, trNum=None):
     """
     Page 12 of MCNP primer.
-    Volumetric box source is created using X/Y/Z keywords with each having
+    Volumetric box source is created using X/Y/Z keywords with each having.
     a distribution that specifies the xrange/yrange/zrange.
-    
     """
     assert(len(MeVList) == len(relFq))
       
@@ -1588,14 +1625,14 @@ SP%d    %s $ relative frequency of each energy
     ??? For an anisotropic source, see getAngularDirectingString.
     
     MCNP Primer page 13.
-    SI - source information
-    SP - source probability
-    SB - source biasing
+    SI - source information.
+    SP - source probability.
+    SB - source biasing.
     
-    Cosine(180): -1
-     Cosine(90):  0
-     Cosine(25): .9
-      Cosine(0):  1
+    Cosine(180): -1.
+     Cosine(90):  0.
+     Cosine(25): .9.
+      Cosine(0):  1.
       
     This example first defines .05 of particles in the front 25.8 degrees and 
     the remaining .95 going backwards. This makes it isotropic.
@@ -1607,17 +1644,17 @@ SP%d    %s $ relative frequency of each energy
   
     Then we bias the forward bin.
     With this conical source, tally normalization is per source particle in 
-    4*pi steradians
+    4*pi steradians.
     
-  si4   -1.00   0.9    1.0     $ for DIR, histogram of cosine bin, two bins
-  sp4    0.     0.95   0.05    $ fraction solid angle for each bin
-  sb4    0.     0.     1.0     $ Source bias for each bin
+  si4   -1.00   0.9    1.0     $ for DIR, histogram of cosine bin, two bins.
+  sp4    0.     0.95   0.05    $ fraction solid angle for each bin.
+  sb4    0.     0.     1.0     $ Source bias for each bin.
   """
     
     angularBiasingString = """\
-SI%d   -1.00   %.18f   1.0     $ for DIR, histogram of cosine bin, two bins, coneHalfAngleDeg=%.2f
-SP%d    0.     %.18f   %.18f   $ fraction solid angle for each bin
-SB%d    0.     0.     1.0      $ Source bias for each bin
+SI%d   -1.00   %.18f   1.0     $ for DIR, histogram of cosine bin, two bins, coneHalfAngleDeg=%.2f.
+SP%d    0.     %.18f   %.18f   $ fraction solid angle for each bin.
+SB%d    0.     0.     1.0      $ Source bias for each bin.
 """
   
     cosTheta = np.cos(np.deg2rad(coneHalfAngleDeg))
@@ -1669,10 +1706,9 @@ SP%d    0.     0.     1.0      $ Source *probability* for each bin, integrated
 
   def getTallyEnergyCardArb(self, tallyNumWType, eList):
     """
-    E card
-    Arbitrary energy bins.
-    If all tallies in a problem have the same energy group structure, a single card may be used, with En
-    replaced by E0.
+    E card. Arbitrary energy bins.
+    If all tallies in a problem have the same energy group structure, a single 
+    card may be used, with En replaced by E0.
     tallyNumWType can be 0 for the E0 card.
     """
     t = tallyNumWType
@@ -1690,8 +1726,8 @@ E{t}  {eStr}
 
   def insertTallyE0Card(self, eList):
     """
-    An E0 card can be used to set up a default energy-bin structure for all tallies. A
-    specific En card will override the default structure for tally n.
+    An E0 card can be used to set up a default energy-bin structure for all tallies. 
+    A specific En card will override the default structure for tally n.
     """
     
     e0String = self.getTallyEnergyCardArb(tallyNumWType=0, eList=eList)
@@ -1751,23 +1787,23 @@ EM{t}  {mStr}
   
   def insertTallySpecialTreatmentFTCard(self, tallyNumWType, treatmentKeyword, *args):
     """  
-    FT card can do many things ... Page 3-224, 225. CURRENTLY NOT USED
-    SCX, GEB, ICD, SCD, INC, TAG
+    FT card can do many things ... Page 3-224, 225. CURRENTLY NOT USED.
+    SCX, GEB, ICD, SCD, INC, TAG.
     
     ??? It seems that GEB and SCX can go on the same FT card. Do all special 
     treatments go on one FT card?
     
     SCX - 
     With parameters: 15  SCX 2 we get tallies binned by source bin.
-    FT15 SCX 2
+    FT15 SCX 2.
     15 is the tally this card applies to.
-    2 is the number from a source distribution like SI2
+    2 is the number from a source distribution like SI2.
     ------------------
-    GEB - Gaussian Energy Broadening
-    With parameters: 15 GEB 1 2 3 we get 
-    FT15 GEB 1 2 3 
-    GEB a b c (fwhm = a + b*sqrt(E + c*E*E) where E is the energy of the particle)
-              (The energy stored is sampled from a Gaussian with this FWHM)
+    GEB - Gaussian Energy Broadening.
+    With parameters: 15 GEB 1 2 3 we get.
+    FT15 GEB 1 2 3.
+    GEB a b c (fwhm = a + b*sqrt(E + c*E*E) where E is the energy of the particle).
+              (The energy stored is sampled from a Gaussian with this FWHM).
               Then it will be tallied into the correct bin???
     ------------------
     ICD - The ICD keyword allows the user to create a separate bin for each cell, 
@@ -1798,7 +1834,7 @@ FT{tallyNumWType} {treatmentKeyword} {argsStr}
   def getFXTallySTring(self, tallyNum, tallyType, cellListList, eList=None, mList=None, par='p'):
     """
     Can this function do F1/2/4/6/7 and maybe 8?
-    ??? Clean for all possible cases of the cell type
+    ??? Clean for all possible cases of the cell type.
     """
     tallyNumWType = t = tallyNum*10 + tallyType #'%d5'%(tallyNum)
   
@@ -1863,7 +1899,7 @@ F{t}:{par}         $ pulse height tally
   
   def insertF2Tally(self, tallyNum, cellListList, eList=None, mList=None, par='p'):
     """
-    Flux averaged over a surface. Units: particles/cm2
+    Flux averaged over a surface. Units: particles/cm2.
     Depends on material behind the surface!!! Why?
     """
     tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=2, cellListList=cellListList, eList=eList, mList=mList, par=par)
@@ -1883,7 +1919,7 @@ F{t}:{par}         $ pulse height tally
   
   def insertF6Tally(self, tallyNum, cellListList, eList=None, mList=None, par='p'):
     """
-    Energy deposition averaged over a CELL. Units: particles/cm2
+    Energy deposition averaged over a CELL. Units: particles/cm2.
     Depends on material in the cell.
     """
     tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=6, cellListList=cellListList, eList=eList, mList=mList, par=par)
@@ -1893,10 +1929,9 @@ F{t}:{par}         $ pulse height tally
   
   def insertF7Tally(self, tallyNum, cellListList, eList=None, mList=None, par='n'):
     """
-    Fission energy deposition averaged over a CELL. Units: particles/cm2
+    Fission energy deposition averaged over a CELL. Units: particles/cm2.
     Only for neutrons.
-    Filling with UF6 gas did not work??? 
-    How do you enable fission? For what duration?
+    ??? Need to create a test case.
     """
     tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=7, cellListList=cellListList, eList=eList, mList=mList, par=par)
   
@@ -1955,13 +1990,13 @@ F{t}:{par}         $ pulse height tally
   
   def insertF5Tally(self, tallyNum, pos=(100,0,0), r=0, eList=None, mList=None, par='p'):
     """
-    Flux at a point or ring detector. Units: particles/cm2
-    Tally 5 is only available for neutrons and photons
+    Flux at a point or ring detector. Units: particles/cm2.
+    Tally 5 is only available for neutrons and photons.
     The F5 tally needs a point and an radius of sphere of exclusion.
-    Actually, it can take a list of points and radii which show as separate objects 
+    Actually, it can take a list of points and radii which show as separate objects.
     in the tally. But this can be done with separate F5 tallies so ignoring for now.
     
-    The radius of the sphere of exclusion, +/-roi, should be about 1/8 to 1/2 mean 
+    The radius of the sphere of exclusion, +/-roi, should be about 1/8 to 1/2 mean.
     free path for particles of average energy at the sphere and *ZERO* in a void.
     The exclusion sphere must not encompass more than one material. MCNP6 cannot 
     verify this and the consequences may be wrong answers.
@@ -1992,6 +2027,24 @@ F{t}:{par}    $ Point detectors
                      sMin=-0.02, sMax=0.02, sbins=40, tMin=-0.02, tMax=0.02, tbins=60,
                      eList=None, mList=None, par='p'):
     """
+    Tally 5 is only available for neutrons and photons.
+    With Arbitrary width energy multiplier bins.
+  
+    pos - Tuple with x/y/z, Center of detector surface.
+    xNorm/yNorm/zNorm - Actually norm->pos should be outward.
+    s/t specify the extent from the center and numPixels in the rows/cols.
+    sMin=-detWidth/2, sMax=detWidth/2, sbins=detNumPixels.
+    tMin=-detWidth/2, tMax=detWidth/2, tbins=detNumPixels.
+    
+    eList: e1 e2 e3  (first bin from 0 to e1, total three bins).
+    mList: m1 2 m3.
+  
+    Tally 5 is only available for neutrons and photons.
+    With equally spaced energy multiplier bins.
+    
+    FIR5 tally, Flux Image? Radiography at given position with given orientation.
+    Remember, the orientation vector that MCNP needs is from the source position.
+    This function takes a regular normal vector (from origin) and adds to position vector.
     """
     tallyNumWType = t = tallyNum*10 + 5 #'%d5'%(tallyNum)
   
@@ -2007,24 +2060,6 @@ F{t}:{par}    $ Point detectors
                      sMin, sMax, sbins, tMin, tMax, tbins,
                      eList, mList, par):
     """
-    Tally 5 is only available for neutrons and photons  
-    With Arbitrary width energy multiplier bins.
-  
-    xPos/yPos/zPos - Center of detector surface
-    xNorm/yNorm/zNorm - Actually norm->pos should be outward
-    s/t specify the extent from the center and numPixels in the rows/cols
-    sMin=-detWidth/2, sMax=detWidth/2, sbins=detNumPixels, 
-    tMin=-detWidth/2, tMax=detWidth/2, tbins=detNumPixels,
-    
-    eList: e1 e2 e3  (first bin from 0 to e1, total three bins)
-    mList: m1 2 m3
-  
-    Tally 5 is only available for neutrons and photons
-    With equally spaced energy multiplier bins.
-    
-    FIR5 tally, Flux Image? Radiography at given position with given orientation.
-    Remember, the orientation vector that MCNP needs is from the source position.
-    This function takes a regular normal vector (from origin) and adds to position vector.
     """
     xPos, yPos, zPos = pos
     xNorm,yNorm,zNorm = normVec
@@ -2055,7 +2090,7 @@ C{t}   {tMin:.3f} {tbins-1}i {tMax:.3f}  $ T axis, tmin, bins-1, tmax numCols
 
   def insertDebugTallyString(self, worldMacroNum):
     """
-    Debug tally needs the worldMacroNum. (Works off surface, not cell?)
+    Debug tally needs the worldMacroNum. (Works off surface, not cell).
     This is a specific use of the F1 tally?
     """
     debugTallyString = \
@@ -2072,26 +2107,30 @@ F1011:p %d              $ debug tally with universe surface to see if all partic
 
   # convenience function, global variable can be set directly
   def setParticlesList(self, p=['p', 'e']):
+    """
+    Set particles to transport in the MCNP simulation.
+    """
     self.particlesList = p
   
   def getModeString(self):
     """
-    MODE N — neutron transport only (default)
-         N P — neutron and neutron-induced photon transport
-         P — photon transport only
-         E — electron transport only
-         P E — photon and electron transport
-         N P E — neutron, neutron-induced photon, and electron transport  
-         Note: Particles separated by space
+    MODE N - neutron transport only (default).
+         N P - neutron and neutron-induced photon transport.
+         P - photon transport only.
+         E - electron transport only.
+         P E - photon and electron transport.
+         N P E - neutron, neutron-induced photon, and electron transport.  
+         Note: Particles separated by space.
     """
     s = ' '.join(self.particlesList)
     s = 'MODE %s'%(s)
     return s
   
   def getImpString(self, imp=1):
-    """ 
-    IMP:p,e=1 
-    Used with cells.
+    """
+    Get importance strng based on the particles set in particle list.
+    Used while inserting cells.
+    IMP:p,e=1
     """
     if self.particlesList == None:
       print('*** Particle list is not set ***')
@@ -2174,10 +2213,10 @@ PHYS:e 100 {ides} 0 0 0 1 1 1 1 0
 
   def insertOutputControlCards(self, nps=1000, debugN=None, notrn=False):
     """
-    1) Tally Prnt Increment, 
-    2) Dump to RUNTPE increment, 
-    3) Create MCTAL file
-    4) Max No. of Dumps on RUNTPE, 
+    1) Tally Prnt Increment.
+    2) Dump to RUNTPE increment. 
+    3) Create MCTAL file.
+    4) Max No. of Dumps on RUNTPE. 
     5) Controls Rendezvous points.
       
     Random number generator does not repeat when period is exceeded, but longer
@@ -2209,13 +2248,42 @@ PHYS:e 100 {ides} 0 0 0 1 1 1 1 0
   
     self.collectedOutputControlStrings = outputControlString
     return outputControlString  
+
+#############################################################################
+  def insertIntoCellSection(self, s):
+    """
+    Use this function to insert manually generated/unsupported cards into the 
+    cell section.
+    """
+    self.collectedCellStrings += toMCNP80String(s)
+    
+  def insertIntoMacroSection(self, s):
+    """
+    Use this function to insert manually generated/unsupported cards into the
+    macros/surfaces section.
+    """
+    self.collectedMacroStrings += toMCNP80String(s)
+
+  def insertIntoMaterialSection(self, s):
+    """
+    Use this function to insert manually generated/unsupported cards into the
+    data section.
+    """
+    self.collectedMatStrings += toMCNP80String(s)
 #############################################################################
   def assembleDeck(self, titleCard, macroString='Auto', cellString='Auto', trString='Auto', matString='Auto',  
                    srcString='Auto', tallyString='Auto', physicsString='Auto', outputControlString='Auto'):
     """
+    All the arguments are optional since they will be generated from the information
+    collected from calling the relevant methods.
+    
+    Only provide those that you are manually generating.
+    The strings provided here will overwrite the ones that would otherwise be 
+    generated internally.
+    
     This function takes multiple multi-line strings and combines them into
     a multiline string, following MCNP rules.
-    The incoming strings should be multiline, wrapped to 80 characters with &.
+    The provided strings should be multiline, wrapped to 80 characters with &.
     
     cellString - A multi string representation of all cells (not universe cell)
     macroString - A multi string representation of all macros used by the cells (not universe macro).
@@ -2313,7 +2381,9 @@ c -----------------Output Control-------------
     return outputStr
 
   def saveDeck(self, modelFolder, modelFilename, deckStr):
-    """ """
+    """
+    Save all the cards to an MCNP input deck (file).
+    """
     if not os.path.exists(modelFolder):
       os.makedirs(modelFolder)
       
@@ -2323,7 +2393,10 @@ c -----------------Output Control-------------
 #############################################################################
 maxStringLen = 78 # new MCNP allows upto 126? ... but not VisEd
 def findLongestLineLen(multilineString):
-  """ """
+  """
+  Find longest line in a multi line string.
+  Ignore $ comments at the end of a line to determine line length.
+  """
   lenList = []
   strList = multilineString.splitlines()
   
@@ -2346,6 +2419,8 @@ def findLongestLineLen(multilineString):
   
 def toMCNP80String(multilineString):
   """
+  Convert a given multi line string to MCNP compatible strings with no lines
+  longer than 80 characters.
   """
   printIfShow('Before fixing:')
   findLongestLineLen(multilineString)

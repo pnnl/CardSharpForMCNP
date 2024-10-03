@@ -1,36 +1,116 @@
 # Cardsharp for MCNP
 # @author: Nikhil Deshmukh
 #==============================================================================
-import sys
-from pathlib import Path
 
 """
 This file provides support for materials.
 
-Material composition: positive - atomic fraction. With negative sign, weight fraction, 
-Don't need to be normalized.
-Cell densities: negative g/cc. positive 10^24 atoms/cm3 (i.e., atoms/b-cm).
-
-Atomic fraction materials
-ZAID – 1000*(atomic number) + mass number
-
-To add more materials, add the material string and make an entry in the dictionary.
-Don't put any ZAID in first five columns.
 """
 
+import sys
+from pathlib import Path
+
+#############################################################################
+def matSearch(partialName='Carbon'):
+  """
+  Use this function to find materials that you need for your deck. It takes a
+  partial name and looks for possible matches to the materials in the dictionary.
+  It looks for a match in keys as well as the material description since it contains 
+  alternate names.
+  """
+  global matDict
+  
+  matKeys = matDict.keys()
+  print('Possible matches:------------')
+  for k in matKeys:
+    if partialName.lower() in k.lower() or partialName.lower() in matDict[k][0].lower():
+      print('Mat key: ', k)
+      print('Mat num/density: ', matDict[k][1], matDict[k][2])
+      print('--------------------------')
+  print('Done')
+#############################################################################
+def matClone(key, newDensity):
+  """
+  If an application requires an existing material with a different density,
+  you can specify the density for each cell that you use it in. Or clone the
+  material.
+  """
+  global matDict
+  
+  pass
+#############################################################################
+def matAddAlias(keyStr, aliasStr):
+  """
+  Some of the material names in the dictionary/PNNL compendium are very long and
+  cumbersome. This is a convenience function for creating simple aliases to the 
+  long name.
+  """
+  if aliasStr in matDict.keys():
+    print('Error: The alias provided already exists in the dict.')
+    sys.exit(0)
+  if aliasStr in matDict.aliases.keys():
+    print('Error: The alias provided already exists as an alias.')
+    sys.exit(0)
+    
+  matDict.add_alias(keyStr, aliasStr)
+#############################################################################
+def matClearAllAliases():
+  """
+  Remove all aliases. This is mainly needed if you are generating multiple MCNP
+  decks from one scrip invocation, and the different decks use different aliases.
+  """
+  global matDict
+  matDict.clearAllAliases()
+#############################################################################
+def matLookup(matKey):
+  """
+  Use this function to lookup a specific material in the dictionary by it's key.
+  """
+  global matDict
+
+  if matKey == 'Void':
+    return 0, 0
+  else:
+    try:
+      matNum = matDict[matKey][1]
+      density = matDict[matKey][2]
+      print('Material Lookup, key:'+matKey, ', MatNum/density:', matNum, density)
+
+    except IndexError as e:
+      print(e)
+      sys.exit(1)
+    return matNum, density    
 #############################################################################
 def matInsert(key, matString, defaultDensity, matNum=0):
   """
-  The key and matNum have to be unique.
-  defaultDensity must be in g/cc, and a negative number.
-  ??? Don't make user put a negative number.
-  matString must be a valid MCNP material string, can be multiline.
-  See material strings above for examples.
+  Insert material into the material dictionary from which materials can be
+  inserted into the MCNP card deck. More than 400 materials are already included, 
+  so this function is only needed if the material you want is not already in the
+  material dictionary. See matSearch.
+  
+  The key is what the material will be identified by for insertion into the deck
+  and has to be unique.
 
+  defaultDensity must be in g/cc, and a negative number. (MCNP convention)
+
+  matNum is what MCNP identifies a material by and has to be unique.
   If matNum is 0, an unused material number will be assigned and returned.
   If a matNum is provided, it will be checked for uniqueness and if it is
   unique it will be returned. If it is not unique, 0 will be returned and the
   material won't be inserted.
+  
+  matString must be a valid MCNP material string, can be multiline.
+  See material strings examples in the provided material files.
+
+  Material composition: positive - atomic fraction. With negative sign, weight fraction, 
+  Don't need to be normalized.
+  Cell densities: negative g/cc. positive 10^24 atoms/cm3 (i.e., atoms/b-cm).
+  
+  Atomic fraction materials
+  ZAID - 1000*(atomic number) + mass number
+  
+  To add more materials, add the material string and make an entry in the dictionary.
+  Don't put any ZAID in first five columns.  
   """
   global matDict
   
@@ -56,69 +136,11 @@ def matInsert(key, matString, defaultDensity, matNum=0):
       else: # user matNum is valid
         matDict[key] = [matString, matNum, defaultDensity]
         return matNum
-
-#############################################################################
-def matClone(key, newDensity):
-  """
-  If an application requires an existing material with a different density,
-  you can specify the density for each cell that you use it in. Or clone the
-  material.
-  """
-  global matDict
-  
-  pass
-
-def matAddAlias(keyStr, aliasStr):
-  """
-  """
-  if aliasStr in matDict.keys():
-    print('Error: The alias provided already exists in the dict.')
-    sys.exit(0)
-  if aliasStr in matDict.aliases.keys():
-    print('Error: The alias provided already exists as an alias.')
-    sys.exit(0)
-    
-  matDict.add_alias(keyStr, aliasStr)
-
-def matClearAllAliases():
-  """ """
-  global matDict
-  matDict.clearAllAliases()
-  
-def matLookup(matKey):
-  """ """
-  global matDict
-
-  if matKey == 'Void':
-    return 0, 0
-  else:
-    try:
-      matNum = matDict[matKey][1]
-      density = matDict[matKey][2]
-      print('Material Lookup, key:'+matKey, ', MatNum/density:', matNum, density)
-
-    except IndexError as e:
-      print(e)
-      sys.exit(1)
-    return matNum, density    
-
-def matSearch(partialName='Carbon'):
-  """
-  To find possible matches to a material in the dictionary.
-  Look in keys and description since it contains alternate names.
-  """
-  global matDict
-  
-  matKeys = matDict.keys()
-  print('Possible matches:------------')
-  for k in matKeys:
-    if partialName.lower() in k.lower() or partialName.lower() in matDict[k][0].lower():
-      print('Mat key: ', k)
-      print('Mat num/density: ', matDict[k][1], matDict[k][2])
-      print('--------------------------')
-  print('Done')
 #############################################################################
 class AliasDict(dict):
+  """
+  This class supports adding aliases to the keys in a dictionary.
+  """
   def __init__(self, *args, **kwargs):
     dict.__init__(self, *args, **kwargs)
     self.aliases = {}
@@ -130,9 +152,11 @@ class AliasDict(dict):
     return dict.__setitem__(self, self.aliases.get(key, key), value)
 
   def add_alias(self, key, alias):
+    """ Add an alias to an existing item """
     self.aliases[alias] = key
 
   def clearAllAliases(self):
+    """ Clear all aliases in the dictionary. The original items are retained."""
     self.aliases = {}
         
 matDict = AliasDict({}) # 'matKey': [matString,       matNum, -matDensity],

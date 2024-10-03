@@ -1,16 +1,36 @@
 # Cardsharp for MCNP
 # @author: Nikhil Deshmukh
 #==============================================================================
+"""
+This file is an abstraction layer for whatever code will be used to parse
+mctal files. Currently mctal.py.
+
+From the MCNP manual:
+A MCTAL file contains the tally data of one dump of a RUNTPE file. Page 6-29.
+
+A tally in MCNP can have 9 possible dimensions.
+
+- facet f The facet of the tally, cell, surface, point number.
+- direct/flagged d The flagged/unflagged contribution for cell/surface tallies OR the
+                  direct/scattered contribution for point detectors (this dimension never
+                  exceeds 2).
+- user u The user bins established by use of an FT tally input or by use of a
+        TALLYX routine.
+- segment s The segmenting bins established by use of an FS tally input.
+- multiplier m The multiplier bins established by use of an FM tally input.
+- cosine c The cosine bins established by use of an C tally input.
+- energy e The energy bins established by use of an E tally input.
+- time t The time bins established by use of a T tally input.
+- perturbation pert The perturbation number established by use of PERT inputs.
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 import os
 from mctal import Mctal
 show = False
-"""
-This file is an abstraction layer for whatever code will be used to parse
-mctal files.
-"""
 #############################################################################
 def main():
   """  """
@@ -18,28 +38,13 @@ def main():
 #############################################################################
 def getTallyFromMctal(filepath, tallyNumWtype, objectNum, t_or_d):
   """
-  tallyNumWtype - tally number with type. For tally nums15, 25, the tally type
+  tallyNumWtype - tally number with type. For tally numbers 15, 25, the tally type
   is 5.
-  objectNum is facet? surface or cell num???
-  #--------------------  
-  A tally in MCNP can have 9 possible dimensions.
+  objectNum corresponds to a facet. (cell, surface, point ???).
 
-  - facet f The facet of the tally, cell, surface, point number
-  - direct/flagged d The flagged/unflagged contribution for cell/surface tallies OR the
-                    direct/scattered contribution for point detectors (this dimension never
-                    exceeds 2)
-  - user u The user bins established by use of an FT tally input or by use of a
-          TALLYX routine
-  - segment s The segmenting bins established by use of an FS tally input
-  - multiplier m The multiplier bins established by use of an FM tally input
-  - cosine c The cosine bins established by use of an C tally input
-  - energy e The energy bins established by use of an E tally input
-  - time t The time bins established by use of a T tally input
-  - perturbation pert The perturbation number established by use of PERT inputs
-  #--------------------  
   A given tally can have multiple tally objects in it, say corresponding
   to different points. These are t.object_bins.
-  For each object, there are two possible tallies. t_or_d
+  For each object, there are two possible tallies. t_or_d.
   For each of t or d, there is 'data' or 'err'.
   
   And each object can have a single bin or a spectrum!!! ???
@@ -50,8 +55,8 @@ def getTallyFromMctal(filepath, tallyNumWtype, objectNum, t_or_d):
   t.vals[0]/t.vals[1] would be the t/d of the first.
   t.vals[2]/t.vals[3] wold be the t/d of the second.
   
-  t_or_d = 0 is total
-  t_or_d = 1 is direct
+  t_or_d = 0 is total.
+  t_or_d = 1 is direct.
   
   Start of energy bins is always zero. don't return that.
   Last bin is total, DON'T return that either.
@@ -78,8 +83,8 @@ def getTallyFromMctal(filepath, tallyNumWtype, objectNum, t_or_d):
  
 def getRadiographyTallyFromMctal(filepath, tallyNumWtype, t_or_d):
   """  
-  t_or_d = 0: # Total, with scatter
-  t_or_d = 1: # Direct, no scatter
+  t_or_d = 0: # Total, with scatter.
+  t_or_d = 1: # Direct, no scatter.
     
   If the tally has spectral bins, is there a total bin???
   Do I need separate methods for tallies with and without energy bins?
@@ -159,11 +164,10 @@ def getRadiographyTallyFromMctal(filepath, tallyNumWtype, t_or_d):
 #############################################################################
 def exploreMctalFile(filepath):
   """
-  A MCTAL file contains the tally data of one dump of a RUNTPE file.
-  Page 6-29.
+  Use this function to explore the contents of a tally file whose structure
+  is not known.
   
-  This function goes through all the tallyTypes in the mctally file
-  Then through all tallies of each type and so on.
+  Needs to be fixed to work for all tally files.
   """
   mctal = Mctal(filepath=filepath, verbose=True)
   print('filepath:', mctal.filepath)
