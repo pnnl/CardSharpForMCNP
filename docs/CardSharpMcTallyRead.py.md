@@ -23,7 +23,7 @@ A tally in MCNP can have 9 possible dimensions.
 -----------------
 -----------------
 ## Function: getTallyFromMctal
-(filepath, tallyNumWtype, objectNum, t_or_d)
+(filepath, tallyNumWtype, objectNum, t_or_d):
 
 tallyNumWtype - tally number with type. For tally numbers 15, 25, the tally type is 5.
 objectNum corresponds to a facet. (cell, surface, point ???).
@@ -47,7 +47,7 @@ Last bin is total, DON'T return that either.
 
 -----------------
 ## Function: getRadiographyTallyFromMctal
-(filepath, tallyNumWtype, t_or_d)
+(filepath, tallyNumWtype, t_or_d):
 
 t_or_d = 0: # Total, with scatter.
 t_or_d = 1: # Direct, no scatter.
@@ -56,7 +56,7 @@ Do I need separate methods for tallies with and without energy bins?
 
 -----------------
 ## Function: exploreMctalFile
-(filepath)
+(filepath):
 
 Use this function to explore the contents of a tally file whose structure is not known.
 
@@ -64,7 +64,7 @@ Needs to be fixed to work for all tally files.
 
 -----------------
 ## Function: printIfShow
-(*args, **kwargs)
+(*args, **kwargs):
 
 
 
