@@ -11,6 +11,28 @@ import sys
 from pathlib import Path
 
 #############################################################################
+class AliasDict(dict):
+  """
+  This class supports adding aliases to the keys in a dictionary.
+  """
+  def __init__(self, *args, **kwargs):
+    dict.__init__(self, *args, **kwargs)
+    self.aliases = {}
+
+  def __getitem__(self, key):
+    return dict.__getitem__(self, self.aliases.get(key, key))
+
+  def __setitem__(self, key, value):
+    return dict.__setitem__(self, self.aliases.get(key, key), value)
+
+  def add_alias(self, key, alias):
+    """ Add an alias to an existing item """
+    self.aliases[alias] = key
+
+  def clearAllAliases(self):
+    """ Clear all aliases in the dictionary. The original items are retained."""
+    self.aliases = {}
+#############################################################################
 def matSearch(partialName='Carbon'):
   """
   Use this function to find materials that you need for your deck. It takes a
@@ -29,15 +51,15 @@ def matSearch(partialName='Carbon'):
       print('--------------------------')
   print('Done')
 #############################################################################
-def matClone(key, newDensity):
+def matClone(oldKey, newKey, newDensity, matNum=0):
   """
   If an application requires an existing material with a different density,
   you can specify the density for each cell that you use it in. Or clone the
   material.
   """
   global matDict
-  
-  pass
+  matString = matDict[oldKey][0]
+  matInsert(newKey, matString=matString, defaultDensity=newDensity, matNum=matNum)
 #############################################################################
 def matAddAlias(keyStr, aliasStr):
   """
@@ -112,7 +134,7 @@ def matInsert(key, matString, defaultDensity, matNum=0):
   To add more materials, add the material string and make an entry in the dictionary.
   Don't put any ZAID in first five columns.  
   """
-  global matDict
+  global matDict, nextMatNum
   
   matString = matString.strip() # In case user puts extra new lines which can signal end of MCNP deck
   if key in matDict:
@@ -120,15 +142,13 @@ def matInsert(key, matString, defaultDensity, matNum=0):
     #sys.exit(0)
     return 0
   else:
-    currMatNumList = [matDict[k][1] for k in matDict.keys()]
     if matNum == 0: # auto assign
-      if len(currMatNumList) == 0:
-        newMatNum = 1
-      else:
-        newMatNum = max(currMatNumList) + 1
+      newMatNum = nextMatNum
+      nextMatNum += 1
       matDict[key] = [matString, newMatNum, defaultDensity]
       return newMatNum
     else: # matNum is non zero
+      currMatNumList = [matDict[k][1] for k in matDict.keys()]
       if matNum in currMatNumList:
         print('Mat num already in dict: ', matNum)
         #sys.exit(0)
@@ -136,33 +156,25 @@ def matInsert(key, matString, defaultDensity, matNum=0):
       else: # user matNum is valid
         matDict[key] = [matString, matNum, defaultDensity]
         return matNum
-#############################################################################
-class AliasDict(dict):
+
+def reloadMatsDict():
   """
-  This class supports adding aliases to the keys in a dictionary.
+  This loads the material dict when the module is imported.
+  If for some reason the materials dictionary needs to be reloaded, we use
+  the same function and hence the name.
+  Reloading can be needed if certain material numbers need to be avoided.
   """
-  def __init__(self, *args, **kwargs):
-    dict.__init__(self, *args, **kwargs)
-    self.aliases = {}
+  global matDict
+  matDict = AliasDict({})
+  
+  thisFileFolder = Path(__file__).parent
+  exec(open(thisFileFolder / "./matCompendiumIsotopic.py").read())
+  exec(open(thisFileFolder / "./matDataAdditional.py").read())
 
-  def __getitem__(self, key):
-    return dict.__getitem__(self, self.aliases.get(key, key))
-
-  def __setitem__(self, key, value):
-    return dict.__setitem__(self, self.aliases.get(key, key), value)
-
-  def add_alias(self, key, alias):
-    """ Add an alias to an existing item """
-    self.aliases[alias] = key
-
-  def clearAllAliases(self):
-    """ Clear all aliases in the dictionary. The original items are retained."""
-    self.aliases = {}
+matDict = None # AliasDict({}) # 'matKey': [matString,       matNum, -matDensity],
+nextMatNum = 1 # auto incremented to generate next material number
+reloadMatsDict()
         
-matDict = AliasDict({}) # 'matKey': [matString,       matNum, -matDensity],
-thisFileFolder = Path(__file__).parent
-exec(open(thisFileFolder / "./matCompendiumIsotopic.py").read())
-exec(open(thisFileFolder / "./matDataAdditional.py").read())
 #############################################################################
 def main():
   """  
@@ -191,6 +203,9 @@ def main():
   print('Pass') if matNum != 0 else print('Fail')
 
   matNum = matInsert('dummy', dummyString, 2.7, 13) # should Fail, existing matNum
+  print('Pass') if matNum != 0 else print('Fail')
+  
+  matNum = matClone('Air', 'NewAir', newDensity=-0.002)
   print('Pass') if matNum != 0 else print('Fail')
   
   # Test search  

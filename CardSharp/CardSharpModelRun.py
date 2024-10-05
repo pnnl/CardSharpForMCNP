@@ -26,8 +26,8 @@ def runMcnpModel(folder, filename, mcnpCodePath="C:/MY_MCNP/MCNP_CODE/bin/",
   but you can pass in the paths as arguments to this function and it should
   work for both Windows and Unix.
   
-  set PATH=c:\MY_MCNP\MCNP_CODE\bin\;%PATH%
-  set DATAPATH=C:\MY_MCNP\MCNP_DATA
+  "set PATH=c:\\MY_MCNP\\MCNP_CODE\\bin\\;%PATH%"
+  "set DATAPATH=C:\\MY_MCNP\\MCNP_DATA"
   
   If filename is ex.i, then files named ex.io/im/ir WILL BE DELETED before
   a new run is started.

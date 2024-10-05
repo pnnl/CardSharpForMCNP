@@ -169,6 +169,7 @@ def exploreMctalFile(filepath):
   
   Needs to be fixed to work for all tally files.
   """
+  print('exploreMctalFile:')
   mctal = Mctal(filepath=filepath, verbose=True)
   print('filepath:', mctal.filepath)
   print('title:', mctal.title)
@@ -201,7 +202,7 @@ def exploreMctalFile(filepath):
     print('t.objects:', t.objects)
     #print('t.particles:', t.particles)
     #print('t.particles_shorthand:', t.particles_shorthand)
-    print('t.what_particles():', t.what_particles())
+    #print('t.what_particles():', t.what_particles())
     #print('t.vals:', t.vals)
     print('Len of t.vals:', len(t.vals))
 
