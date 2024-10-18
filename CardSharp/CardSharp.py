@@ -1155,13 +1155,14 @@ class CardDeck:
   FCELL: Function of cell
   FPOS: Function of position
   """
+  ### !!!----Point sources
   def insertSource_PointIsotropicWithEnergyDistrib(self, pos=[0,0,0], 
-            MeVList=[0, .3, .5, 1.0, 2.5], relFq=[0, .2, .1, .3, .4], 
+            eList=[0, .3, .5, 1.0, 2.5], relFq=[0, .2, .1, .3, .4], 
             distrib='Discrete', par='P', trNum=None):
     """
     First entry on SP card has to be zero for Continuous only ???
     """
-    assert(len(MeVList) == len(relFq))
+    assert(len(eList) == len(relFq))
     trNumString = '' if trNum==None else 'TR=%d'%(trNum)    
 
     top = """\
@@ -1169,7 +1170,7 @@ c ----- Source:
 SDEF POS=%.2f %.2f %.2f ERG=d1 PAR=%s %s $ energy distribution
 """
     #----------------------------------------------------------
-    ergString = self.getEnergyDistributionString(distNum=1, MeVList=MeVList, relFq=relFq, 
+    ergString = self.getEnergyDistributionString(distNum=1, eList=eList, relFq=relFq, 
                                             distrib=distrib, vertString=True)
   
     sdefString = top%(*pos, par, trNumString) + ergString
@@ -1178,7 +1179,7 @@ SDEF POS=%.2f %.2f %.2f ERG=d1 PAR=%s %s $ energy distribution
     return sdefString
 
   def insertSource_PointMonoDirWithEnergyDistrib(self, pos=[0,0,0], vec=[0,1,0], 
-            MeVList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], distrib='Histogram', 
+            eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], distrib='Histogram', 
             par='P',  trNum=None):
     """
     Does not work???
@@ -1190,8 +1191,8 @@ SDEF POS=%.2f %.2f %.2f ERG=d1 PAR=%s %s $ energy distribution
     
     Since this is a point source, I am setting ARA to zero ???
     """
-    assert(len(MeVList) == len(relFq))
-    trNumString = '' if trNum==None else 'TR=%d'%(trNum)    
+    assert(len(eList) == len(relFq))
+    trNumString = '' if trNum==None else 'TR=%d'%(trNum)  
     
     top = """\
 c ----- Source: point mono directional source with tabulated photon energy distribution
@@ -1199,7 +1200,7 @@ SDEF POS=%.2f %.2f %.2f  VEC=%.2f %.2f %.2f DIR=1 ARA=0 ERG=d1 PAR=%s %s $ energ
 """
     # ??? Change to using .format
     #----------------------------------------------------------
-    ergString = self.getEnergyDistributionString(distNum=1, MeVList=MeVList, relFq=relFq, 
+    ergString = self.getEnergyDistributionString(distNum=1, eList=eList, relFq=relFq, 
                                             distrib=distrib, vertString=True)
   
     sdefString = top%(*pos, *vec, par, trNumString) + ergString
@@ -1209,14 +1210,14 @@ SDEF POS=%.2f %.2f %.2f  VEC=%.2f %.2f %.2f DIR=1 ARA=0 ERG=d1 PAR=%s %s $ energ
     return sdefString
 
   def insertSource_PointWithAngularBiasingAndEnergyDistrib(self, pos=[0,0,0], vec=[0,1,0], 
-          coneHalfAngleDeg=25.8, MeVList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], 
+          coneHalfAngleDeg=25.8, eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], 
           distrib='Histogram',par='P'):
     """
     Source is still isotropic but with Angular biasing???
     So the values will be the same as with isotropic?
     coneHalfAngleDeg - Between 0 and 180 deg.
     """
-    assert(len(MeVList) == len(relFq))
+    assert(len(eList) == len(relFq))
     top = """\
 c ----- Source: point source with biasing tabulated photon energy distribution
 c -----Bias angle: %.2f
@@ -1224,26 +1225,28 @@ SDEF POS=%.2f %.2f %.2f VEC=%.2f %.2f %.2f DIR=d4 ERG=d1 PAR=%s $ energy distrib
 """
     angularBiasingString = self.getAngularBiasingString(4, coneHalfAngleDeg)
     
-    ergString = self.getEnergyDistributionString(distNum=1, MeVList=MeVList, relFq=relFq, 
+    ergString = self.getEnergyDistributionString(distNum=1, eList=eList, relFq=relFq, 
                                             distrib=distrib, vertString=True)
   
     sdefString = top%(coneHalfAngleDeg, *pos,*vec,par) + angularBiasingString + ergString
   
     self.collectedSrcStrings = sdefString
     return sdefString
-
-  def insertSource_SphereWithAngularBiasingAndEnergyDistrib(self, pos=[0,0,0], radius=.05, 
-          vec=[0,1,0], coneHalfAngleDeg=1, MeVList=[.3, .5, 1.0, 2.5], 
-          relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None):
+  ### !!!---Volumetric sources
+  def insertSource_SphereWithAngularBiasingAndEnergyDistrib(self, 
+                          pos=[0,0,0], radius=.05, 
+                          vec=[0,1,0], coneHalfAngleDeg=1, 
+                          eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
+                          rejCell=None, eff=0.01, trNum=None):
     """
     This uses the POS, RAD for particle origin while the cylinder also uses
     the AXS and EXT.
     
     Both use VEC and DIR for emission direction.
     """
-    assert(len(MeVList) == len(relFq))
+    assert(len(eList) == len(relFq))
       
-  #  enStr = '  '.join(['{:.2f}'.format(x) for x in MeVList])
+  #  enStr = '  '.join(['{:.2f}'.format(x) for x in eList])
   #  fqStr = '  '.join(['{:.2f}'.format(x) for x in relFq])
     
     radDistNum = 1
@@ -1255,7 +1258,7 @@ SDEF POS=%.2f %.2f %.2f VEC=%.2f %.2f %.2f DIR=d4 ERG=d1 PAR=%s $ energy distrib
     else:
       rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
     dirDistribString = self.getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, MeVList=MeVList, relFq=relFq)
+    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq)
   
     trNumString = '' if trNum==None else 'TR=%d'%(trNum)
   
@@ -1281,6 +1284,237 @@ sp{radDistNum:d}   -21  1          $ Source Prob: sampling 0 is constant for lin
     self.collectedSrcStrings = sdefString
     return sdefString
 
+
+  def insertSource_CylinderWithAngularBiasingAndEnergyDistrib(self,
+                          pos=[0,0,0], radius=.05, 
+                          axs=[0,1,0], thickness=.1, 
+                          vec=[0,1,0], coneHalfAngleDeg=1, 
+                          eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
+                          rejCell=None, eff=0.01, trNum=None):
+    """
+    Can be used to create a disk source, pencil source with very small coneHalfAngle
+    This is a volume source. The emission cone is along the cylinder axis.
+    
+    Thickness goes to EXT: it is the height of the cylinder or thickness of disk
+    conHalfAngle goes to DIR: 
+      
+    Actually EXT and RAD would only create a surface source at that distance
+    unless a distribution with 0 as the lower range is used.
+    Get the user to provide a second radius and extent value?
+    
+    The distribution numbers are hard coded, for eg energy is dist 2.
+    
+    To make this a Bremstrahlung spectrum, change the en/fq lists.
+    The vertical entry format starting indicated by # is used for ease of 
+    entry/debug.
+    
+    The source variables VEC,DIR,SUR,NORM are used to determine the initial 
+    direction of source-particle flight.
+    
+    The source variables SUR, POS, RAD, EXT, AXS, X, Y, Z, and CCC are used in 
+    various combinations to determine (x,y,z) of the starting positions of the 
+    source particles.
+  
+    Page 3-121
+    XXX, YYY, ZZZ (the position of the particle).
+    UUU, VVV, WWW (the direction of the flight of the particle).
+    
+    POS - Reference point for position sampling in vector notation.
+    RAD - radial distance of the position from POS or AXS.
+    AXS - reference vector for EXT and RAD in vector notation.
+    EXT - for a volume source is the distance from POS along AXS.
+        - for a surface source is the cosine of angle from AXS
+  
+    VEC - Reference vector for DIR in vector notation.
+    DIR - the cosine of the angle between VEC and UUU, VVV, WWW
+  
+    If DIR is set to a constant like 1 for monodirectional, be careful with 
+    point detectors. They don't work with constant DIR.
+    DIR provides control over polar angle. The azimuthal angle is always 0-360.
+    This means that cone beam is easy, fan beam is not.
+    """
+    assert(len(eList) == len(relFq))
+      
+  #  enStr = '  '.join(['{:.2f}'.format(x) for x in eList])
+  #  fqStr = '  '.join(['{:.2f}'.format(x) for x in relFq])
+    
+    radDistNum = 1
+    extDistNum = 2
+    dirDistNum = 3 # angular biasing distribution of particle initial direction
+    ergDistNum = 4
+    if rejCell == None:
+      rejCellString = ''
+    else:
+      rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
+  
+    #dirDistribString = getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+    dirDistribString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq)
+  
+    trNumString = '' if trNum==None else 'TR=%d'%(trNum)
+  
+  #  top = """\
+  #c ----- Source: Disk, tabulated photon energy distribution, disk source
+  #SDEF POS=%.2f %.2f %.2f AXS=%.2f %.2f %.2f RAD=d%d VEC=%d %d %d EXT=d%d  DIR=d%d ERG=d%d PAR=2                   
+  #si1    0   %.4f       $ Source information RAD source radius wrt AXS (.05 is 1 mm dia spot)
+  #sp1   -21  1          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)                                                
+  #si3    0.0  %.4f      $ Source Information EXT source thickness from POS along AXS                                            
+  #sp3    0    1         $ Source Probability uniform distribution between 0 and 1                          
+  #"""
+  #  sdefString = top%(*pos, *axs, radDistNum, *vec, extDistNum, dirDistNum, ergDistNum, radius, thickness) + dirDistribString + ergDistribString
+  #                                          distrib='Discrete', vertString=True)
+  
+    top = """\
+c ----- Source: Disk, 
+SDEF PAR=p POS={posX:.2f} {posY:.2f} {posZ:.2f} RAD=d{radDistNum:d} \
+AXS={axsX:.2f} {axsY:.2f} {axsZ:.2f} EXT=d{extDistNum:d} \
+VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} DIR=d{dirDistNum:d} ERG=d{ergDistNum:d} {rejCellString} {trNumString}
+SI{radDistNum:d}    0   {radius:.4f}       $ Source information d1 RAD source radius wrt AXS (.05 is 1 mm dia spot)
+SP{radDistNum:d}   -21  1          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)
+SI{extDistNum:d}    0.0  {ext:.4f}      $ Source Information d3 EXT source thickness from POS along AXS
+SP{extDistNum:d}    0    1         $ Source Probability uniform distribution between 0 and 1
+"""
+  #  top = """ """
+    sdefString = top.format(posX=pos[0], posY=pos[1], posZ=pos[2],
+                      axsX=axs[0], axsY=axs[1], axsZ=axs[2],
+                      vecX=vec[0], vecY=vec[1], vecZ=vec[2],
+                      radius=radius, ext=thickness,
+                      radDistNum=radDistNum,
+                      extDistNum=extDistNum,
+                      dirDistNum=dirDistNum,
+                      ergDistNum=ergDistNum, rejCellString=rejCellString, 
+                      trNumString=trNumString)
+  
+    sdefString = sdefString + dirDistribString + ergDistribString  
+    sdefString = toMCNP80String(sdefString)
+  
+    self.collectedSrcStrings = sdefString
+    return sdefString
+
+  def insertSource_BoxWithAngularAndEnergyDistrib(self,
+                          xRange=[0,1], yRange=[0,1], zRange=[0,1],
+                          vec=[0,1,0], coneHalfAngleDeg=1, 
+                          eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
+                          rejCell=None, eff=0.01, trNum=None):
+    """
+    Page 12 of MCNP primer.
+    Volumetric box source is created using X/Y/Z keywords with each having.
+    a distribution that specifies the xrange/yrange/zrange.
+    """
+    assert(len(eList) == len(relFq))
+      
+  #  enStr = '  '.join(['{:.2f}'.format(x) for x in eList])
+  #  fqStr = '  '.join(['{:.2f}'.format(x) for x in relFq])
+    
+    xDistNum = 1
+    yDistNum = 2
+    zDistNum = 3
+    dirDistNum = 4 # angular biasing distribution of particle initial direction
+    ergDistNum = 5
+    if rejCell == None:
+      rejCellString = ''
+    else:
+      rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
+  
+    #dirDistribString = getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+    dirDistribString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq)
+  
+    trNumString = '' if trNum==None else 'TR=%d'%(trNum)
+  
+  #  top = """\
+  #c ----- Source: Disk, tabulated photon energy distribution, disk source
+  #SDEF POS=%.2f %.2f %.2f AXS=%.2f %.2f %.2f RAD=d%d VEC=%d %d %d EXT=d%d  DIR=d%d ERG=d%d PAR=2                   
+  #si1    0   %.4f       $ Source information RAD source radius wrt AXS (.05 is 1 mm dia spot)
+  #sp1   -21  1          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)                                                
+  #si3    0.0  %.4f      $ Source Information EXT source thickness from POS along AXS                                            
+  #sp3    0    1         $ Source Probability uniform distribution between 0 and 1                          
+  #"""
+  #  sdefString = top%(*pos, *axs, radDistNum, *vec, extDistNum, dirDistNum, ergDistNum, radius, thickness) + dirDistribString + ergDistribString
+  #                                          distrib='Discrete', vertString=True)
+  
+    top = """\
+c ----- Source: Box, 
+SDEF PAR=p X=d{xDistNum:d} Y=d{yDistNum:d} Z=d{zDistNum:d} \
+VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} DIR=d{dirDistNum:d} ERG=d{ergDistNum:d} {rejCellString} {trNumString}
+SI{xDistNum:d} {xLo:.4f} {xHi:.4f}       $ Source information d1 x
+SP{xDistNum:d}    0  1          $ Source Prob: constant 1
+SI{yDistNum:d} {yLo:.4f} {yHi:.4f}       $ Source information d1 y
+SP{yDistNum:d}    0  1          $ Source Prob: constant 1
+SI{zDistNum:d} {zLo:.4f} {zHi:.4f}       $ Source information d1 z
+SP{zDistNum:d}    0  1          $ Source Prob: constant 1
+"""
+  #  top = """ """
+    sdefString = top.format(xDistNum=xDistNum, yDistNum=yDistNum, zDistNum=zDistNum,
+                      xLo = xRange[0], xHi = xRange[1],
+                      yLo = yRange[0], yHi = yRange[1],
+                      zLo = zRange[0], zHi = zRange[1],
+                      vecX=vec[0], vecY=vec[1], vecZ=vec[2],
+                      dirDistNum=dirDistNum,
+                      ergDistNum=ergDistNum, rejCellString=rejCellString, 
+                      trNumString=trNumString)
+  
+    sdefString = sdefString + dirDistribString + ergDistribString  
+    sdefString = toMCNP80String(sdefString)
+  
+    self.collectedSrcStrings = sdefString
+    return sdefString
+
+  ### !!!---Special case
+  def insertSource_SphSurfaceWithCCC(self, surNum=0,
+                          eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
+                          trNum=None):
+    """
+    To use this source, first define an emitting surface and optionally a cookie
+    cutting cell for rejection.
+
+    Don't use for imaging?
+    Simplest solution for fan beam is to use the cone beam and use only the middle
+    of the detector?
+    
+    For a surface source, spherical surface is easier to understand, cylindrical is not.
+    The norm of the surface decides the VEC, but the spread around the VEC, ie DIR 
+    is not mono directional by default. So a DIR distribution is needed.
+    Can't do a constant DIR=1 because point detectors don't like that.
+      
+    EFF is needed in case ccc rejection is too high
+    With all of this, it works as a fan source, but still the convergence seems very
+    slow, as if no variance reduction techniques that MCNP is known for were used. 
+    The picture builds from individual dots. Not a good source for imaging?
+  
+    ------------------
+    Intent was to create a fan source from a cylindrical surface emitting normally. 
+    That would mean all the particles will seem to come from the axis of the cylinder.
+    For a cylinder with very small height and part of the curved surface used, the 
+    emission will look like a FAN beam?  
+    
+    ??? For the cylidrical surface source, MCNP gives an error
+    "dir specified but vec absent"
+    vec is supposed to be the normal to the surface, but does not work for
+    cylindrical, as it does for sphere. The manual hints at this.
+  
+    See Example 9 from MCNP manual 6.1  
+    """
+  
+    top = """\
+c ----- Source: 
+#SDEF PAR=p SUR={surNum:d} DIR=d{dirDistNum:d} ccc=3 EFF=0.001 ERG=d{ergDistNum:d}
+"""
+  #SDEF PAR=p SUR={surNum:d} DIR=d{dirDistNum:d} NRM=1 ccc=3 ERG=d{ergDistNum:d}
+    dirDistNum = 1 # angular biasing distribution of particle initial direction
+    ergDistNum = 2
+    
+    dirDistribString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=0.01)
+    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq)
+    
+    sdefString = top.format(surNum=surNum, dirDistNum=dirDistNum, ergDistNum=ergDistNum)
+  
+    sdefString = sdefString + ergDistribString + dirDistribString
+    sdefString = toMCNP80String(sdefString)
+  
+    self.collectedSrcStrings = sdefString
+    return sdefString
+  
   def insertSource_CylinderMonoDirMonoEnergy(self,
                           pos=[0,0,0], radius=.05, 
                           axs=[0,1,0], thickness=.1, 
@@ -1330,237 +1564,9 @@ SP{extDistNum:d}    0    1         $ Source Probability uniform distribution bet
   
     self.collectedSrcStrings = sdefString
     return sdefString
-
-  def insertSource_CylinderWithAngularBiasingAndEnergyDistrib(self,
-                          pos=[0,0,0], radius=.05, 
-                          axs=[0,1,0], thickness=.1, 
-                          vec=[0,1,0], coneHalfAngleDeg=1, 
-                          MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
-                          rejCell=None, eff=0.01, trNum=None):
-    """
-    Can be used to create a disk source, pencil source with very small coneHalfAngle
-    This is a volume source. The emission cone is along the cylinder axis.
-    
-    Thickness goes to EXT: it is the height of the cylinder or thickness of disk
-    conHalfAngle goes to DIR: 
-      
-    Actually EXT and RAD would only create a surface source at that distance
-    unless a distribution with 0 as the lower range is used.
-    Get the user to provide a second radius and extent value?
-    
-    The distribution numbers are hard coded, for eg energy is dist 2.
-    
-    To make this a Bremstrahlung spectrum, change the en/fq lists.
-    The vertical entry format starting indicated by # is used for ease of 
-    entry/debug.
-    
-    The source variables VEC,DIR,SUR,NORM are used to determine the initial 
-    direction of source-particle flight.
-    
-    The source variables SUR, POS, RAD, EXT, AXS, X, Y, Z, and CCC are used in 
-    various combinations to determine (x,y,z) of the starting positions of the 
-    source particles.
   
-    Page 3-121
-    XXX, YYY, ZZZ (the position of the particle).
-    UUU, VVV, WWW (the direction of the flight of the particle).
-    
-    POS - Reference point for position sampling in vector notation.
-    RAD - radial distance of the position from POS or AXS.
-    AXS - reference vector for EXT and RAD in vector notation.
-    EXT - for a volume source is the distance from POS along AXS.
-        - for a surface source is the cosine of angle from AXS
-  
-    VEC - Reference vector for DIR in vector notation.
-    DIR - the cosine of the angle between VEC and UUU, VVV, WWW
-  
-    If DIR is set to a constant like 1 for monodirectional, be careful with 
-    point detectors. They don't work with constant DIR.
-    DIR provides control over polar angle. The azimuthal angle is always 0-360.
-    This means that cone beam is easy, fan beam is not.
-    """
-    assert(len(MeVList) == len(relFq))
-      
-  #  enStr = '  '.join(['{:.2f}'.format(x) for x in MeVList])
-  #  fqStr = '  '.join(['{:.2f}'.format(x) for x in relFq])
-    
-    radDistNum = 1
-    extDistNum = 2
-    dirDistNum = 3 # angular biasing distribution of particle initial direction
-    ergDistNum = 4
-    if rejCell == None:
-      rejCellString = ''
-    else:
-      rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
-  
-    #dirDistribString = getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    dirDistribString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, MeVList=MeVList, relFq=relFq)
-  
-    trNumString = '' if trNum==None else 'TR=%d'%(trNum)
-  
-  #  top = """\
-  #c ----- Source: Disk, tabulated photon energy distribution, disk source
-  #SDEF POS=%.2f %.2f %.2f AXS=%.2f %.2f %.2f RAD=d%d VEC=%d %d %d EXT=d%d  DIR=d%d ERG=d%d PAR=2                   
-  #si1    0   %.4f       $ Source information RAD source radius wrt AXS (.05 is 1 mm dia spot)
-  #sp1   -21  1          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)                                                
-  #si3    0.0  %.4f      $ Source Information EXT source thickness from POS along AXS                                            
-  #sp3    0    1         $ Source Probability uniform distribution between 0 and 1                          
-  #"""
-  #  sdefString = top%(*pos, *axs, radDistNum, *vec, extDistNum, dirDistNum, ergDistNum, radius, thickness) + dirDistribString + ergDistribString
-  #                                          distrib='Discrete', vertString=True)
-  
-    top = """\
-c ----- Source: Disk, 
-SDEF PAR=p POS={posX:.2f} {posY:.2f} {posZ:.2f} RAD=d{radDistNum:d} \
-AXS={axsX:.2f} {axsY:.2f} {axsZ:.2f} EXT=d{extDistNum:d} \
-VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} DIR=d{dirDistNum:d} ERG=d{ergDistNum:d} {rejCellString} {trNumString}
-SI{radDistNum:d}    0   {radius:.4f}       $ Source information d1 RAD source radius wrt AXS (.05 is 1 mm dia spot)
-SP{radDistNum:d}   -21  1          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)
-SI{extDistNum:d}    0.0  {ext:.4f}      $ Source Information d3 EXT source thickness from POS along AXS
-SP{extDistNum:d}    0    1         $ Source Probability uniform distribution between 0 and 1
-"""
-  #  top = """ """
-    sdefString = top.format(posX=pos[0], posY=pos[1], posZ=pos[2],
-                      axsX=axs[0], axsY=axs[1], axsZ=axs[2],
-                      vecX=vec[0], vecY=vec[1], vecZ=vec[2],
-                      radius=radius, ext=thickness,
-                      radDistNum=radDistNum,
-                      extDistNum=extDistNum,
-                      dirDistNum=dirDistNum,
-                      ergDistNum=ergDistNum, rejCellString=rejCellString, 
-                      trNumString=trNumString)
-  
-    sdefString = sdefString + dirDistribString + ergDistribString  
-    sdefString = toMCNP80String(sdefString)
-  
-    self.collectedSrcStrings = sdefString
-    return sdefString
-
-  def insertSource_BoxWithAngularAndEnergyDistrib(self,
-                          xRange=[0,1], yRange=[0,1], zRange=[0,1],
-                          vec=[0,1,0], coneHalfAngleDeg=1, 
-                          MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
-                          rejCell=None, eff=0.01, trNum=None):
-    """
-    Page 12 of MCNP primer.
-    Volumetric box source is created using X/Y/Z keywords with each having.
-    a distribution that specifies the xrange/yrange/zrange.
-    """
-    assert(len(MeVList) == len(relFq))
-      
-  #  enStr = '  '.join(['{:.2f}'.format(x) for x in MeVList])
-  #  fqStr = '  '.join(['{:.2f}'.format(x) for x in relFq])
-    
-    xDistNum = 1
-    yDistNum = 2
-    zDistNum = 3
-    dirDistNum = 4 # angular biasing distribution of particle initial direction
-    ergDistNum = 5
-    if rejCell == None:
-      rejCellString = ''
-    else:
-      rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
-  
-    #dirDistribString = getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    dirDistribString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, MeVList=MeVList, relFq=relFq)
-  
-    trNumString = '' if trNum==None else 'TR=%d'%(trNum)
-  
-  #  top = """\
-  #c ----- Source: Disk, tabulated photon energy distribution, disk source
-  #SDEF POS=%.2f %.2f %.2f AXS=%.2f %.2f %.2f RAD=d%d VEC=%d %d %d EXT=d%d  DIR=d%d ERG=d%d PAR=2                   
-  #si1    0   %.4f       $ Source information RAD source radius wrt AXS (.05 is 1 mm dia spot)
-  #sp1   -21  1          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)                                                
-  #si3    0.0  %.4f      $ Source Information EXT source thickness from POS along AXS                                            
-  #sp3    0    1         $ Source Probability uniform distribution between 0 and 1                          
-  #"""
-  #  sdefString = top%(*pos, *axs, radDistNum, *vec, extDistNum, dirDistNum, ergDistNum, radius, thickness) + dirDistribString + ergDistribString
-  #                                          distrib='Discrete', vertString=True)
-  
-    top = """\
-c ----- Source: Box, 
-SDEF PAR=p X=d{xDistNum:d} Y=d{yDistNum:d} Z=d{zDistNum:d} \
-VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} DIR=d{dirDistNum:d} ERG=d{ergDistNum:d} {rejCellString} {trNumString}
-SI{xDistNum:d} {xLo:.4f} {xHi:.4f}       $ Source information d1 x
-SP{xDistNum:d}    0  1          $ Source Prob: constant 1
-SI{yDistNum:d} {yLo:.4f} {yHi:.4f}       $ Source information d1 y
-SP{yDistNum:d}    0  1          $ Source Prob: constant 1
-SI{zDistNum:d} {zLo:.4f} {zHi:.4f}       $ Source information d1 z
-SP{zDistNum:d}    0  1          $ Source Prob: constant 1
-"""
-  #  top = """ """
-    sdefString = top.format(xDistNum=xDistNum, yDistNum=yDistNum, zDistNum=zDistNum,
-                      xLo = xRange[0], xHi = xRange[1],
-                      yLo = yRange[0], yHi = yRange[1],
-                      zLo = zRange[0], zHi = zRange[1],
-                      vecX=vec[0], vecY=vec[1], vecZ=vec[2],
-                      dirDistNum=dirDistNum,
-                      ergDistNum=ergDistNum, rejCellString=rejCellString, 
-                      trNumString=trNumString)
-  
-    sdefString = sdefString + dirDistribString + ergDistribString  
-    sdefString = toMCNP80String(sdefString)
-  
-    self.collectedSrcStrings = sdefString
-    return sdefString
-
-  def insertSource_SphSurfaceWithCCC(self, surNum=0,
-                          MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
-                          trNum=None):
-    """
-    To use this source, first define an emitting surface and optionally a cookie
-    cutting cell for rejection.
-
-    Don't use for imaging?
-    Simplest solution for fan beam is to use the cone beam and use only the middle
-    of the detector?
-    
-    For a surface source, spherical surface is easier to understand, cylindrical is not.
-    The norm of the surface decides the VEC, but the spread around the VEC, ie DIR 
-    is not mono directional by default. So a DIR distribution is needed.
-    Can't do a constant DIR=1 because point detectors don't like that.
-      
-    EFF is needed in case ccc rejection is too high
-    With all of this, it works as a fan source, but still the convergence seems very
-    slow, as if no variance reduction techniques that MCNP is known for were used. 
-    The picture builds from individual dots. Not a good source for imaging?
-  
-    ------------------
-    Intent was to create a fan source from a cylindrical surface emitting normally. 
-    That would mean all the particles will seem to come from the axis of the cylinder.
-    For a cylinder with very small height and part of the curved surface used, the 
-    emission will look like a FAN beam?  
-    
-    ??? For the cylidrical surface source, MCNP gives an error
-    "dir specified but vec absent"
-    vec is supposed to be the normal to the surface, but does not work for
-    cylindrical, as it does for sphere. The manual hints at this.
-  
-    See Example 9 from MCNP manual 6.1  
-    """
-  
-    top = """\
-c ----- Source: 
-#SDEF PAR=p SUR={surNum:d} DIR=d{dirDistNum:d} ccc=3 EFF=0.001 ERG=d{ergDistNum:d}
-"""
-  #SDEF PAR=p SUR={surNum:d} DIR=d{dirDistNum:d} NRM=1 ccc=3 ERG=d{ergDistNum:d}
-    dirDistNum = 1 # angular biasing distribution of particle initial direction
-    ergDistNum = 2
-    
-    dirDistribString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=0.01)
-    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, MeVList=MeVList, relFq=relFq)
-    
-    sdefString = top.format(surNum=surNum, dirDistNum=dirDistNum, ergDistNum=ergDistNum)
-  
-    sdefString = sdefString + ergDistribString + dirDistribString
-    sdefString = toMCNP80String(sdefString)
-  
-    self.collectedSrcStrings = sdefString
-    return sdefString
-
-  def getEnergyDistributionString(self, distNum, MeVList, relFq, distrib='Discrete', vertString=True):
+  ### !!!---
+  def getEnergyDistributionString(self, distNum, eList, relFq, distrib='Discrete', vertString=True):
     """
     From MCNP primer by Shultis, Faw.
     Point Isotropic Source with Discrete Energy Photons.
@@ -1595,7 +1601,7 @@ c ----- Source:
 SI%d %s %s $ L for discrete or A for continuous, followed by the n energies (MeV)
 SP%d    %s $ relative frequency of each energy
 """
-    enStr = '  '.join(['{:.4E}'.format(x) for x in MeVList])
+    enStr = '  '.join(['{:.4E}'.format(x) for x in eList])
     fqStr = '  '.join(['{:.4E}'.format(x) for x in relFq])
   
     horizString = horizTemplate%(distNum, dStr, enStr, distNum, fqStr)
@@ -1606,14 +1612,14 @@ SP%d    %s $ relative frequency of each energy
   #     SI%d   SP%d
          %s    D 
   """
-    listOfTuples = list(zip(MeVList, relFq))
+    listOfTuples = list(zip(eList, relFq))
     vertString = vertTemplate%(distNum, distNum, dStr)
     for t in listOfTuples:
       vertString+='   %.4E  %.4E\n'%(t[0], t[1])
     ergString = vertString
     
     #--------------------------------------------------------------------------
-    if len(MeVList) < 6:
+    if len(eList) < 6:
       ergString = horizString
     else:
       ergString = vertString
@@ -1870,7 +1876,7 @@ FT{tallyNumWType} {treatmentKeyword} {argsStr}
     fXTallyString = f"""\
 c -- F{tallyType} Tally --
 F{t}:{par}         $ pulse height tally
-     {cellString}  $ cellString
+     {cellString}  $ cell/surface String
 """
     # Tally done, add energy and multiplier cards if needed
     if eList is not None:
@@ -1890,21 +1896,22 @@ F{t}:{par}         $ pulse height tally
 #    of the items within the parentheses."
 #    Depending on the tally used, it could be surfaces.
 
-  def insertF1Tally(self, tallyNum, cellListList, eList=None, mList=None, par='p'):
+  ### !!!---Tallies
+  def insertF1Tally(self, tallyNum, surfListList, eList=None, mList=None, par='p'):
     """
     Current integrated over a surface. Units: particles.
     """
-    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=1, cellListList=cellListList, eList=eList, mList=mList, par=par)
+    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=1, cellListList=surfListList, eList=eList, mList=mList, par=par)
   
     self.collectedTallyStrings += s
     return tallyNumWType
   
-  def insertF2Tally(self, tallyNum, cellListList, eList=None, mList=None, par='p'):
+  def insertF2Tally(self, tallyNum, surfListList, eList=None, mList=None, par='p'):
     """
     Flux averaged over a surface. Units: particles/cm2.
     Depends on material behind the surface!!! Why?
     """
-    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=2, cellListList=cellListList, eList=eList, mList=mList, par=par)
+    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=2, cellListList=surfListList, eList=eList, mList=mList, par=par)
   
     self.collectedTallyStrings += s
     return tallyNumWType
@@ -1922,20 +1929,20 @@ F{t}:{par}         $ pulse height tally
   def insertF6Tally(self, tallyNum, cellListList, eList=None, mList=None, par='p'):
     """
     Energy deposition averaged over a CELL. Units: particles/cm2.
-    Depends on material in the cell.
+    Cell material must not be void.
     """
     tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=6, cellListList=cellListList, eList=eList, mList=mList, par=par)
   
     self.collectedTallyStrings += s
     return tallyNumWType
   
-  def insertF7Tally(self, tallyNum, cellListList, eList=None, mList=None, par='n'):
+  def insertF7Tally(self, tallyNum, cellListList, eList=None, mList=None):
     """
     Fission energy deposition averaged over a CELL. Units: particles/cm2.
     Only for neutrons.
     ??? Need to create a test case.
     """
-    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=7, cellListList=cellListList, eList=eList, mList=mList, par=par)
+    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=7, cellListList=cellListList, eList=eList, mList=mList, par='n')
   
     self.collectedTallyStrings += s
     return tallyNumWType
@@ -1946,8 +1953,7 @@ F{t}:{par}         $ pulse height tally
     For pulse-height tallies photons/electrons are a special case: F8:P,E is the same 
     as F8:P and F8:E. Also, F8 tallies may have particle combinations such as F8:N,H.  
   
-    Pulse height tally in a cell. Energy deposited.
-    ??? If this is pulse height, what does F5 do? Basically incident energy without any DRF?
+    Pulse height tally in a cell. Energy deposited. Will depend upon material in cell.
   
     The pulse height tally is a radical departure from other MCNP tallies.
     For the pulse-height tally, microscopic events must be modeled much more realistically.
@@ -2255,6 +2261,7 @@ PHYS:e 100 {ides} 0 0 0 1 1 1 1 0
     return outputControlString  
 
 #############################################################################
+  ### !!!---Manual card insertion
   def insertIntoCellSection(self, s):
     """
     Use this function to insert manually generated/unsupported cards into the 

@@ -34,8 +34,8 @@ def runMcnpModel(folder, filename, mcnpCodePath="C:/MY_MCNP/MCNP_CODE/bin/",
   
   Return '' or error string.
   """
-  fileList = [folder+filename+'o', folder+filename+'r', folder+filename+'m',
-              folder+filename+'msht']
+  fileList = [folder+filename+'o', folder+filename+'r', folder+filename+'m']
+              #,folder+filename+'msht']
   for f in fileList:
     try:
       print('Deleting: ', f)
