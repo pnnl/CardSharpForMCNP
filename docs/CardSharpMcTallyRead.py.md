@@ -20,6 +20,10 @@ A tally in MCNP can have 9 possible dimensions.
 - time t The time bins established by use of a T tally input.
 - perturbation pert The perturbation number established by use of PERT inputs.
 
+  ??? Does not seem to work if the tally was created with a list of cells or
+  ??? a list of list of cells. Which is allowed by MCNP and works.
+  ??? Except that the tally reader does not support it.
+
 -----------------
 -----------------
 ## Function: getTallyFromMctal
@@ -27,7 +31,6 @@ A tally in MCNP can have 9 possible dimensions.
 
 tallyNumWtype - tally number with type. For tally numbers 15, 25, the tally type is 5.
 objectNum corresponds to a facet. (cell, surface, point ???).
-
 A given tally can have multiple tally objects in it, say corresponding to different points. These are t.object_bins.
 For each object, there are two possible tallies. t_or_d.
 For each of t or d, there is 'data' or 'err'.

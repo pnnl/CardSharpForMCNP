@@ -281,12 +281,12 @@ angleDeg is in degrees.
 These go in the data card section.
 
 ### Method: CardDeck::insertSource_PointIsotropicWithEnergyDistrib
-(self, pos=[0,0,0], MeVList=[0, .3, .5, 1.0, 2.5], relFq=[0, .2, .1, .3, .4], distrib='Discrete', par='P', trNum=None):
+(self, pos=[0,0,0], eList=[0, .3, .5, 1.0, 2.5], relFq=[0, .2, .1, .3, .4], distrib='Discrete', par='P', trNum=None):
 
 First entry on SP card has to be zero for Continuous only ???
 
 ### Method: CardDeck::insertSource_PointMonoDirWithEnergyDistrib
-(self, pos=[0,0,0], vec=[0,1,0], MeVList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], distrib='Histogram', par='P', trNum=None):
+(self, pos=[0,0,0], vec=[0,1,0], eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], distrib='Histogram', par='P', trNum=None):
 
 Does not work???
 Point source which is also monodirectional... has problems? Mainly with F5  kind of tallies???
@@ -295,26 +295,21 @@ Page 3-52: Area of surface (required only for direct contributions to point  det
 Since this is a point source, I am setting ARA to zero ???
 
 ### Method: CardDeck::insertSource_PointWithAngularBiasingAndEnergyDistrib
-(self, pos=[0,0,0], vec=[0,1,0], coneHalfAngleDeg=25.8, MeVList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], distrib='Histogram',par='P'):
+(self, pos=[0,0,0], vec=[0,1,0], coneHalfAngleDeg=25.8, eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], distrib='Histogram',par='P'):
 
 Source is still isotropic but with Angular biasing???
 So the values will be the same as with isotropic?
 coneHalfAngleDeg - Between 0 and 180 deg.
 
 ### Method: CardDeck::insertSource_SphereWithAngularBiasingAndEnergyDistrib
-(self, pos=[0,0,0], radius=.05, vec=[0,1,0], coneHalfAngleDeg=1, MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None):
+(self, pos=[0,0,0], radius=.05, vec=[0,1,0], coneHalfAngleDeg=1, eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None):
 
 This uses the POS, RAD for particle origin while the cylinder also uses the AXS and EXT.
 
 Both use VEC and DIR for emission direction.
 
-### Method: CardDeck::insertSource_CylinderMonoDirMonoEnergy
-(self, pos=[0,0,0], radius=.05, axs=[0,1,0], thickness=.1, vec=[0,1,0], MeV=1, trNum=None):
-
-Pencil beam, mono energetic.
-
 ### Method: CardDeck::insertSource_CylinderWithAngularBiasingAndEnergyDistrib
-(self, pos=[0,0,0], radius=.05, axs=[0,1,0], thickness=.1, vec=[0,1,0], coneHalfAngleDeg=1, MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None):
+(self, pos=[0,0,0], radius=.05, axs=[0,1,0], thickness=.1, vec=[0,1,0], coneHalfAngleDeg=1, eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None):
 
 Can be used to create a disk source, pencil source with very small coneHalfAngle This is a volume source. The emission cone is along the cylinder axis.
 
@@ -345,14 +340,14 @@ DIR provides control over polar angle. The azimuthal angle is always 0-360.
 This means that cone beam is easy, fan beam is not.
 
 ### Method: CardDeck::insertSource_BoxWithAngularAndEnergyDistrib
-(self, xRange=[0,1], yRange=[0,1], zRange=[0,1], vec=[0,1,0], coneHalfAngleDeg=1, MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None):
+(self, xRange=[0,1], yRange=[0,1], zRange=[0,1], vec=[0,1,0], coneHalfAngleDeg=1, eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=None, eff=0.01, trNum=None):
 
 Page 12 of MCNP primer.
 Volumetric box source is created using X/Y/Z keywords with each having.
 a distribution that specifies the xrange/yrange/zrange.
 
 ### Method: CardDeck::insertSource_SphSurfaceWithCCC
-(self, surNum=0, MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], trNum=None):
+(self, surNum=0, eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], trNum=None):
 
 To use this source, first define an emitting surface and optionally a cookie cutting cell for rejection.
 
@@ -371,8 +366,13 @@ vec is supposed to be the normal to the surface, but does not work for cylindric
 
 See Example 9 from MCNP manual 6.1  
 
+### Method: CardDeck::insertSource_CylinderMonoDirMonoEnergy
+(self, pos=[0,0,0], radius=.05, axs=[0,1,0], thickness=.1, vec=[0,1,0], MeV=1, trNum=None):
+
+Pencil beam, mono energetic.
+
 ### Method: CardDeck::getEnergyDistributionString
-(self, distNum, MeVList, relFq, distrib='Discrete', vertString=True):
+(self, distNum, eList, relFq, distrib='Discrete', vertString=True):
 
 From MCNP primer by Shultis, Faw.
 Point Isotropic Source with Discrete Energy Photons.
@@ -471,12 +471,12 @@ Can this function do F1/2/4/6/7 and maybe 8?
 ??? Clean for all possible cases of the cell type.
 
 ### Method: CardDeck::insertF1Tally
-(self, tallyNum, cellListList, eList=None, mList=None, par='p'):
+(self, tallyNum, surfListList, eList=None, mList=None, par='p'):
 
 Current integrated over a surface. Units: particles.
 
 ### Method: CardDeck::insertF2Tally
-(self, tallyNum, cellListList, eList=None, mList=None, par='p'):
+(self, tallyNum, surfListList, eList=None, mList=None, par='p'):
 
 Flux averaged over a surface. Units: particles/cm2.
 Depends on material behind the surface!!! Why?
@@ -490,10 +490,10 @@ Flux averaged over a CELL. Units: particles/cm2 Depends on material in the cell.
 (self, tallyNum, cellListList, eList=None, mList=None, par='p'):
 
 Energy deposition averaged over a CELL. Units: particles/cm2.
-Depends on material in the cell.
+Cell material must not be void.
 
 ### Method: CardDeck::insertF7Tally
-(self, tallyNum, cellListList, eList=None, mList=None, par='n'):
+(self, tallyNum, cellListList, eList=None, mList=None):
 
 Fission energy deposition averaged over a CELL. Units: particles/cm2.
 Only for neutrons.
@@ -503,8 +503,7 @@ Only for neutrons.
 (self, tallyNum, cellListList, eList=None, mList=None, par='p,e'):
 
 For pulse-height tallies photons/electrons are a special case: F8:P,E is the same  as F8:P and F8:E. Also, F8 tallies may have particle combinations such as F8:N,H.   
-Pulse height tally in a cell. Energy deposited.
-??? If this is pulse height, what does F5 do? Basically incident energy without any DRF?
+Pulse height tally in a cell. Energy deposited. Will depend upon material in cell.
 
 The pulse height tally is a radical departure from other MCNP tallies.
 For the pulse-height tally, microscopic events must be modeled much more realistically.
