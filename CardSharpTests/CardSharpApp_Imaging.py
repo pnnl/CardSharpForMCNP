@@ -113,16 +113,16 @@ def imagingApp(modelFolder, modelFilename):
   srcToOrigin = 10; detToOrigin = 10
   detWidth = 5; detNumPixels = 100 
   # source debug cell-----------------------------------------------------------
-  sn, sphereCn = cd.insertMacroAndCellSphere(name='source', pos=(-srcToOrigin,0,0), radius=.4,
+  sphereSn, sphereCn = cd.insertMacroAndCellSphere(name='source', pos=(-srcToOrigin,0,0), radius=.4,
                matName='Void', density=0, shift=(0,0,0)) # Density 0 means use the default density for this material
 
   # tally debug cell-----------------------------------------------------------
-  sn, tallyCn = cd.insertMacroAndCellRpp(name='detector', yMinMax=(-detWidth/2-1, detWidth/2+1), 
+  tallySn, tallyCn = cd.insertMacroAndCellRpp(name='detector', yMinMax=(-detWidth/2-1, detWidth/2+1), 
     xMinMax=(-.2, .2), zMinMax=(-detWidth/2-1, detWidth/2+1), 
     matName='Void', density=0, shift=(detToOrigin,0,0) )
 
   # object being imaged
-  sn, coneCn = cd.insertMacroAndCellCone(name='cone',
+  coneSn, coneCn = cd.insertMacroAndCellCone(name='cone',
                 base=(0,0,0), height=(0,0,.8), radius1=.6, radius2=.1,
                 matName='Aluminum', density=0,
                 shift=(0,0,0))
@@ -131,22 +131,22 @@ def imagingApp(modelFolder, modelFilename):
   #uniMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, uniMat='Void')
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, worldMat='Void')
   
-#  srcString = cd.insertSource_PointIsotropicWithEnergyDistrib(pos=[-srcToOrigin,0,0], MeVList=[0, .2, .21], relFq=[0, .5, .5], distrib='Discrete')
+#  srcString = cd.insertSource_PointIsotropicWithEnergyDistrib(pos=[-srcToOrigin,0,0], eList=[0, .2, .21], relFq=[0, .5, .5], distrib='Discrete')
 #  trNum = cd.insertTRString(shift=(0,0,0), rotMatrix=None)
   srcString = cd.insertSource_SphereWithAngularBiasingAndEnergyDistrib(pos=[-srcToOrigin,0,0],
                 radius=.2, vec=[1,0,0], coneHalfAngleDeg=5,
-                MeVList=[.1, .2, .3], relFq=[.3, .4, .3], rejCell=sphereCn) #, trNum=trNum)
+                eList=[.1, .2, .3], relFq=[.3, .4, .3], rejCell=sphereCn) #, trNum=trNum)
 
 #  srcString = cd.insertSource_CylinderWithAngularAndEnergyDistrib(pos=[-srcToOrigin,0,-1.5],
 #                radius=.4, axs=[0,0,1], thickness=3, vec=[1,0,0], coneHalfAngleDeg=.1,
-#                MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=cn1) #, trNum=trNum)
+#                eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], rejCell=cn1) #, trNum=trNum)
   
   # s axis is Y, t axis is z
-  cd.insertFIR5Tally(pos=(detToOrigin,0,0), normVec=(1,0,0), 
+  cd.insertFIR5Tally(tallyNum=0, pos=(detToOrigin,0,0), normVec=(1,0,0), 
                 sMin=-detWidth/2, sMax=detWidth/2, sbins=detNumPixels, 
                 tMin=-detWidth/2, tMax=detWidth/2, tbins=detNumPixels)
   cd.insertF5Tally(tallyNum=1, pos=(-srcToOrigin,0,0), r=1, eList=np.linspace(.01, 2.5, 3))
-  cd.insertF1Tally(tallyNum=1, cellListList=[sphereCn, (sphereCn, sphereCn)], eList=[0,1,2])
+  cd.insertF1Tally(tallyNum=1, surfListList=[sphereSn, (sphereSn, sphereSn)], eList=[0,1,2])
   cd.insertDebugTallyString(worldMacroNum=worldMacroNum)
   
   physicsString = cd.insertPhysicsCard(nocoh=0, ides=0, nodop=0)

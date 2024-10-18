@@ -126,7 +126,7 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   # Point source with angular biasing
   cd.insertSource_PointWithAngularBiasingAndEnergyDistrib(pos=[0,-srcToOrigin,0], vec=[0,1,0], 
         coneHalfAngleDeg=.01,
-        MeVList=[gunVolt_kVp/1000], relFq=[1], distrib='Discrete', par='e')  
+        eList=[gunVolt_kVp/1000], relFq=[1], distrib='Discrete', par='e')  
   #===========SOURCE END==============================
 
   #===========DETECTOR START==============================
@@ -150,10 +150,10 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   # In any case, the F5 tally does much better, and with fewer histories
 
   surfNumTxDet = snA + .2
-  cd.insertF1Tally(tallyNum=3, cellListList=[surfNumTxDet], eList=eList, mList=None, par='p') # Flat surface
+  cd.insertF1Tally(tallyNum=3, surfListList=[surfNumTxDet], eList=eList, mList=None, par='p') # Flat surface
 
   surfNumRxDet = snB + .2
-  cd.insertF1Tally(tallyNum=4, cellListList=[surfNumRxDet], eList=eList, mList=None, par='p')
+  cd.insertF1Tally(tallyNum=4, surfListList=[surfNumRxDet], eList=eList, mList=None, par='p')
   #---------------
   cd.insertDebugTallyString(worldMacroNum=worldMacroNum)
   #===========DETECTOR END==============================

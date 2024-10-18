@@ -321,7 +321,7 @@ def testGeom4():
 #  # source debug cell-----------------------------------------------------------
 #  srcString = cd.insertSource_SphereWithAngularBiasingAndEnergyDistrib(pos=[-srcToOrigin,0,0],
 #                radius=.2, vec=[1,0,0], coneHalfAngleDeg=5,
-#                MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4]) #, trNum=trNum)
+#                eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4]) #, trNum=trNum)
 #
 #  cd.insertF5Tally(tallyNum=1, xPos=-srcToOrigin,yPos=0,zPos=0, r=1, eList=np.linspace(.01, .35, 5))
 #
@@ -408,7 +408,7 @@ def testGeom5():
   # source debug cell-----------------------------------------------------------
 #  srcString = cd.insertSource_SphereWithAngularBiasingAndEnergyDistrib(pos=[-srcToOrigin,0,0],
 #                radius=.2, vec=[1,0,0], coneHalfAngleDeg=5,
-#                MeVList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4]) #, trNum=trNum)
+#                eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4]) #, trNum=trNum)
 #
 #  cd.insertF5Tally(tallyNum=1, xPos=-srcToOrigin,yPos=0,zPos=0, r=1, eList=np.linspace(.01, .35, 5))
 #
