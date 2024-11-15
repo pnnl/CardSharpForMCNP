@@ -123,17 +123,17 @@ def imagingApp(modelFolder, modelFilename):
 
   # object being imaged
   coneSn, coneCn = cd.insertMacroAndCellCone(name='cone',
-                base=(0,0,0), height=(0,0,.8), radius1=.6, radius2=.1,
+                base=(0,0,0), height=(0,0,.8), radiusBase=.6, radiusTop=.1,
                 matName='Aluminum', density=0,
                 shift=(0,0,0))
   
   # universe-----------------------------------------------------------
   #uniMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, uniMat='Void')
-  worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, worldMat='Void')
+  worldSurfaceNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, worldMat='Void')
   
 #  srcString = cd.insertSource_PointIsotropicWithEnergyDistrib(pos=[-srcToOrigin,0,0], eList=[0, .2, .21], relFq=[0, .5, .5], distrib='Discrete')
 #  trNum = cd.insertTRString(shift=(0,0,0), rotMatrix=None)
-  srcString = cd.insertSource_SphereWithAngularBiasingAndEnergyDistrib(pos=[-srcToOrigin,0,0],
+  srcString = cd.insertSource_SphereWithAngularAndEnergyDistrib(pos=[-srcToOrigin,0,0],
                 radius=.2, vec=[1,0,0], coneHalfAngleDeg=5,
                 eList=[.1, .2, .3], relFq=[.3, .4, .3], rejCell=sphereCn) #, trNum=trNum)
 
@@ -146,11 +146,11 @@ def imagingApp(modelFolder, modelFilename):
                 sMin=-detWidth/2, sMax=detWidth/2, sbins=detNumPixels, 
                 tMin=-detWidth/2, tMax=detWidth/2, tbins=detNumPixels)
   cd.insertF5Tally(tallyNum=1, pos=(-srcToOrigin,0,0), r=1, eList=np.linspace(.01, 2.5, 3))
-  cd.insertF1Tally(tallyNum=1, surfListList=[sphereSn, (sphereSn, sphereSn)], eList=[0,1,2])
-  cd.insertDebugTallyString(worldMacroNum=worldMacroNum)
+  cd.insertF1Tally(tallyNum=1, surfInfo=[sphereSn, (sphereSn, sphereSn)], eList=[0,1,2])
+  cd.insertDebugTallyString(worldSurfaceNum=worldSurfaceNum)
   
   physicsString = cd.insertPhysicsCard(nocoh=0, ides=0, nodop=0)
-  outputControlString = cd.insertOutputControlCards(nps=1E3)
+  outputControlString = cd.insertOutputControlCards(nps=1E4)
 
   #---------------------------
   deckStr = cd.assembleDeck(titleCard='Imaging App')

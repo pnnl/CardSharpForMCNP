@@ -29,8 +29,8 @@ cutp = 0.001 # default 1 keV, 2keV for Tx, 12 keV for reflection removes low ene
 cute = 0.001 # default 1 keV
 notrn = False # Does not work for source particle e ???
 
-numParticles = int(1E3 * 1e1) # 1E8 for Tx target, 1E7 for Reflection target
-worldMacroNum = 100
+numParticles = int(1E3 * 1E2) # 1E8 for Tx target, 1E7 for Reflection target
+worldSurfaceNum = 100
 txTarget = True
 gunVolt_kVp = 80 # kVp, converted to MVp later
 binSize = 0.001/2 # in MeV (0.5 keV)
@@ -73,6 +73,9 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   #===========MATERIALS START==============================
   csmat.matAddAlias('Tungsten', 'W')
   cd.insertMaterialStrings(['W'])
+  #csmat.matSearch('lanthanum'); return # search for material by partial name
+#  csmat.nextMatNum = 10 # if first few matNums need to be reserved
+#  csmat.reloadMatsDict()  
   #===========MATERIALS END==============================
  
   universeRadius = 70
@@ -82,7 +85,7 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   # instantiate source debug cell, tally debug cell, target, optional filter
   # and the electron source
   # source debug cell-----------------------------------------------------------
-  sn, cn = cd.insertMacroAndCellSphere(name='source', macrobodyNum=0, cellNum=0, radius=0.5,
+  sn, cn = cd.insertMacroAndCellSphere(name='source', surfaceNum=None, cellNum=None, radius=0.5,
               pos=(0,-srcToOrigin,0), matName='Void', density=0)
   #cellString += cs; macroString += ms; cellList.append(cn)
 
@@ -118,15 +121,15 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
     
   # universe-----------------------------------------------------------
   sn, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=universeRadius,
-              worldMat='Void', worldDensity=0, worldMacroNum=worldMacroNum)
+              worldMat='Void', worldDensity=0, worldSurfaceNum=worldSurfaceNum)
 
   #===========GEOMETRY END==============================
   
   #===========SOURCE START==============================
   # Point source with angular biasing
-  cd.insertSource_PointWithAngularBiasingAndEnergyDistrib(pos=[0,-srcToOrigin,0], vec=[0,1,0], 
-        coneHalfAngleDeg=.01,
-        eList=[gunVolt_kVp/1000], relFq=[1], distrib='Discrete', par='e')  
+  cd.insertSource_PointWithAngularAndEnergyDistrib(pos=[0,-srcToOrigin,0], 
+        dirDistrib='Restrict', vec=[0,1,0], coneHalfAngleDeg=.01,
+        ergDistrib='Discrete', eList=[gunVolt_kVp/1000], relFq=[1], par='e')  
   #===========SOURCE END==============================
 
   #===========DETECTOR START==============================
@@ -150,12 +153,12 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   # In any case, the F5 tally does much better, and with fewer histories
 
   surfNumTxDet = snA + .2
-  cd.insertF1Tally(tallyNum=3, surfListList=[surfNumTxDet], eList=eList, mList=None, par='p') # Flat surface
+  cd.insertF1Tally(tallyNum=3, surfInfo=surfNumTxDet, eList=eList, mList=None, par='p') # Flat surface
 
   surfNumRxDet = snB + .2
-  cd.insertF1Tally(tallyNum=4, surfListList=[surfNumRxDet], eList=eList, mList=None, par='p')
+  cd.insertF1Tally(tallyNum=4, surfInfo=surfNumRxDet, eList=eList, mList=None, par='p')
   #---------------
-  cd.insertDebugTallyString(worldMacroNum=worldMacroNum)
+  cd.insertDebugTallyString(worldSurfaceNum=worldSurfaceNum)
   #===========DETECTOR END==============================
   
   cd.insertPhysicsCard(nocoh=nocoh, ides=ides, nodop=nodop, cutp=cutp, cutn=cutn, cute=cute)
