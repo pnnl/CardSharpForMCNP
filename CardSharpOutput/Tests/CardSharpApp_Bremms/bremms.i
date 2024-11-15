@@ -3,28 +3,28 @@ c ====================Cells======================
 c (cell #, material #, density, macrobody, importance)                      
 c density: negative is g/cc, positive is atoms/barn-cm                        
 c -----------------------------------------------------------------
-c source, macrobody:1, xPos:0.00, yPos:-5.00, zPos:0.00, radius:0.50, matNum:Void, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c source, macrobody:1, xPos:0.00, yPos:-5.00, zPos:0.00, radius:0.50, matNum:Void, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---source----
 1 0        -1    IMP:p,e=1
-c Tx detector, macrobody:2, cellNum:0, baseX:0.00, baseY:40.00, baseZ:0.00, axisX:0.00, axisY:0.50, axisZ:0.00, radius:1.00, matName:Void, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c Tx detector, macrobody:2, baseX:0.00, baseY:40.00, baseZ:0.00, axisX:0.00, axisY:0.50, axisZ:0.00, radius:1.00, matName:Void, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Tx detector----
 2 0        -2    IMP:p,e=1
-c Tx detector, macrobody:3, cellNum:0, baseX:0.00, baseY:40.00, baseZ:5.00, axisX:0.00, axisY:0.50, axisZ:0.00, radius:1.00, matName:Void, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c Tx detector, macrobody:3, baseX:0.00, baseY:40.00, baseZ:5.00, axisX:0.00, axisY:0.50, axisZ:0.00, radius:1.00, matName:Void, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Tx detector----
 3 0        -3    IMP:p,e=1
-c Tx detector, macrobody:4, cellNum:0, baseX:0.00, baseY:40.00, baseZ:10.00, axisX:0.00, axisY:0.50, axisZ:0.00, radius:1.00, matName:Void, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c Tx detector, macrobody:4, baseX:0.00, baseY:40.00, baseZ:10.00, axisX:0.00, axisY:0.50, axisZ:0.00, radius:1.00, matName:Void, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Tx detector----
 4 0        -4    IMP:p,e=1
-c Ref detector, macrobody:5, cellNum:0, baseX:40.00, baseY:0.00, baseZ:0.00, axisX:0.50, axisY:0.00, axisZ:0.00, radius:1.00, matName:Void, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c Ref detector, macrobody:5, baseX:40.00, baseY:0.00, baseZ:0.00, axisX:0.50, axisY:0.00, axisZ:0.00, radius:1.00, matName:Void, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Ref detector----
 5 0        -5    IMP:p,e=1
-c Ref detector, macrobody:6, cellNum:0, baseX:40.00, baseY:0.00, baseZ:5.00, axisX:0.50, axisY:0.00, axisZ:0.00, radius:1.00, matName:Void, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c Ref detector, macrobody:6, baseX:40.00, baseY:0.00, baseZ:5.00, axisX:0.50, axisY:0.00, axisZ:0.00, radius:1.00, matName:Void, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Ref detector----
 6 0        -6    IMP:p,e=1
-c Ref detector, macrobody:7, cellNum:0, baseX:40.00, baseY:0.00, baseZ:10.00, axisX:0.50, axisY:0.00, axisZ:0.00, radius:1.00, matName:Void, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c Ref detector, macrobody:7, baseX:40.00, baseY:0.00, baseZ:10.00, axisX:0.50, axisY:0.00, axisZ:0.00, radius:1.00, matName:Void, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Ref detector----
 7 0        -7    IMP:p,e=1
-c Tungsten, Rect PPiped macrobody:8, cellNum:0, xMin:-0.01, xMax:0.01, yMin:-0.00, yMax:0.00, zMin:-0.01, zMax:0.01, matName:W, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c Tungsten, Rect PPiped macrobody:8, xMin:-0.01, xMax:0.01, yMin:-0.00, yMax:0.00, zMin:-0.01, zMax:0.01, matName:W, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Tungsten----
 8 369 -19.3000  -8    IMP:p,e=1
 c World cells---Void inside------------------
@@ -71,11 +71,9 @@ m369       74180  -0.001175 $ W180
        74186  -0.287570 $ W186
 c -----------------Source---------------------
 c ----- Source: point source with biasing tabulated photon energy distribution
-c -----Bias angle: 0.01
-SDEF POS=0.00 -5.00 0.00 VEC=0.00 1.00 0.00 DIR=d4 ERG=d1 PAR=e $ energy distribution
-SI4   -1.00   0.999999984769129102   1.0     $ for DIR, histogram of cosine bin, two bins, coneHalfAngleDeg=0.01
-SP4    0.     0.999999992384564607   0.000000007615435449   $ fraction solid angle for each bin
-SB4    0.     0.     1.0      $ Source bias for each bin
+SDEF POS=0.00 -5.00 0.00 VEC=0.00 1.00 0.00 ERG=d1 DIR=d2 PAR=e  $ energy distribution
+SI2   -1.00   0.999999984769129102   1.0     $ for DIR, histogram of cosine bin, two bins, coneHalfAngleDeg=0.01
+SP2    0.     0.     1.0      $ Source *probability* for each bin, integrated
 SI1 L 8.0000E-02 $ L for discrete or A for continuous, followed by the n energies (MeV)
 SP1    1.0000E+00 $ relative frequency of each energy
 c -----------------Tally----------------------
@@ -267,7 +265,7 @@ E235  0.0000E+00 5.0000E-04 1.0000E-03 1.5000E-03 2.0000E-03 2.5000E-03 &
          7.8000E-02 7.8500E-02 7.9000E-02 7.9500E-02 8.0000E-02
 c -- F1 Tally --
 F31:p         $ pulse height tally
-     2.2   $ cellString
+     2.2   $ cell/surface String
 c Energy bins
 E31  0.0000E+00 5.0000E-04 1.0000E-03 1.5000E-03 2.0000E-03 2.5000E-03 &
          3.0000E-03 3.5000E-03 4.0000E-03 4.5000E-03 5.0000E-03 5.5000E-03 &
@@ -298,7 +296,7 @@ E31  0.0000E+00 5.0000E-04 1.0000E-03 1.5000E-03 2.0000E-03 2.5000E-03 &
          7.8000E-02 7.8500E-02 7.9000E-02 7.9500E-02 8.0000E-02
 c -- F1 Tally --
 F41:p         $ pulse height tally
-     5.2   $ cellString
+     5.2   $ cell/surface String
 c Energy bins
 E41  0.0000E+00 5.0000E-04 1.0000E-03 1.5000E-03 2.0000E-03 2.5000E-03 &
          3.0000E-03 3.5000E-03 4.0000E-03 4.5000E-03 5.0000E-03 5.5000E-03 &
@@ -342,13 +340,13 @@ c -----------------Output Control-------------
 c --MCTAL nps --
   c NOTRN                $ uncomment then you get ray tracing only, not scatter
   c PRDMP NDP NDM MCT NDMP DMMP
-  PRDMP   j   1000    1    1    j  $ write MCTAL file                                 
+  PRDMP   j   10000    1    1    j  $ write MCTAL file                                 
   PRINT
   c PRINT 40 $ For material normalization check, see .io file
   c RAND  gen=2 seed=19539353113317 stride=751313 $ Bad ... and this was recommended!!!
   c RAND  gen=1 seed=19073486328125 $ These are defaults, must end in Odd.
-  c DBCN j 1000 $ nj is jump over n options, debug print and multitasking are incompatible
-  NPS 10000     $ stop after number of source particles have been run                 
+  c DBCN j 10000 $ nj is jump over n options, debug print and multitasking are incompatible
+  NPS 100000     $ stop after number of source particles have been run                 
   c CTME 2.0 $ stop run after number of minutes
   c VOID     $ make all materials void (VisEd particle tracking) (still need xsdir)
 
