@@ -3,7 +3,7 @@ c ====================Cells======================
 c (cell #, material #, density, macrobody, importance)                      
 c density: negative is g/cc, positive is atoms/barn-cm                        
 c -----------------------------------------------------------------
-c Cyl, macrobody:1, cellNum:0, baseX:0.00, baseY:0.00, baseZ:-3.00, axisX:0.00, axisY:0.00, axisZ:6.00, radius:0.50, matName:Lead, density:0.00, xShift:0.00, yShift:0.00, zShift:0.00
+c Cyl, macrobody:1, baseX:0.00, baseY:0.00, baseZ:-3.00, axisX:0.00, axisY:0.00, axisZ:6.00, radius:0.50, matName:Lead, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Cyl----
 1 189 -11.3500  -1    IMP:p,e=1 U=1
 c ---hex_cell----
