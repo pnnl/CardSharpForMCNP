@@ -55,3 +55,20 @@ c ZrO2, rho = 5.68 g/cc ... More isotopes of Zr should be used
 m{}   40000   0.333338   $ Zr 1/3
        8000   0.666662   $ O  2/3 """
 matNum = matInsert('ZrO2', zirconiumDioxideString, -5.68)
+
+# The CZT defintion in the material compendium is not correct
+# and will be fixed in the next version
+# It assumes that the atom ratio is really 1:1:1 CZT
+CZT_fixedString = """\
+c  CD_0.9 Zn_0.1 Te_1 
+m{}    48000  0.9
+       30000  0.1
+       52120  0.0009
+       52122  0.0255
+       52123  0.0089
+       52124  0.0474
+       52125  0.0707
+       52126  0.1884
+       52128  0.3174
+       52130  0.3408  """
+matNum = matInsert('CZT_fixed', CZT_fixedString, -5.78)

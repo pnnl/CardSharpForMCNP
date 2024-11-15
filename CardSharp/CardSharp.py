@@ -33,18 +33,18 @@ def main():
   cd = CardDeck()
   cd.setParticlesList(['p', 'e'])  
   sn, cn = cd.insertMacroAndCellRpp(name='testRPP', xMinMax=(-1,1), yMinMax=(-20,20), 
-                  zMinMax=(-20,20), shift=(10,0,0), matName='Air', density=0.001, macrobodyNum=0, cellNum=0)
+                  zMinMax=(-20,20), shift=(10,0,0), matName='Air', density=0.001, surfaceNum=None, cellNum=None)
 
   sn, cn = cd.insertMacroAndCellRcc(name='testRCC', base=(0,0,0), axis=(0,0,1), radius=1, 
-                  shift=(0,0,3), matName='Aluminum', density=-.5, macrobodyNum=0, cellNum=0)  
+                  shift=(0,0,3), matName='Aluminum', density=-.5, surfaceNum=None, cellNum=None)  
   
   snList, cn = cd.insertMacroAndCellRppShell(name='testRppShell', innerXWidth=2,outerXWidth=4, 
                            innerYWidth=8,outerYWidth=10, innerZWidth=6,outerZWidth=8,
                            shift=(0,0,0), matName='Aluminum', density=-.5, 
-                           macrobodyNum1=1, macrobodyNum2=2, cellNum=101) 
+                           surfaceNum1=1, surfaceNum2=2, cellNum=101) 
 
   sn, cn = cd.insertMacroAndCellSphere(name='testSphere', pos=(1,2,3), radius=10,
-              matName='Aluminum', density=-.5, macrobodyNum=0, cellNum=0)
+              matName='Aluminum', density=-.5, surfaceNum=None, cellNum=None)
 #############################################################################
 class CardDeck:
   """
@@ -61,7 +61,7 @@ class CardDeck:
     self.nextTrNum = 0
     self.cellNumNameList = []
 
-    self.collectedMacroStrings = ''
+    self.collectedSurfaceStrings = ''
     self.collectedCellStrings = ''
     self.collectedTrStrings = ''
     self.collectedMatStrings = ''
@@ -73,7 +73,7 @@ class CardDeck:
 
     csmat.matClearAllAliases()
 #############################################################################
-  # Auto assign universe numbers, although currently only gratings need it?
+  # Tally numbers and universe numbers are not auto assigned, yet.
   def _getNextSN(self):
     self.nextSurfaceNum += 1
     return self.nextSurfaceNum
@@ -99,9 +99,8 @@ class CardDeck:
 #  Granted, the sphere has no orientation, but the RPP does?
 
   ### !!!-----SURFACES/CELL----------
-
   def insertSurface_CylinderAligned(self, name, axis='X', offset=(0,0,0), radius=1.0, 
-                                    surfaceNum=0, trNum=None):
+                                    surfaceNum=None, trNum=None):
     """
     Define a cylinder parallel to one of the three axes.
     If parallel to X axes, the YZ offsets are used.
@@ -116,7 +115,7 @@ class CardDeck:
 
     Returns assigned surface number.
     """
-    if surfaceNum == 0: surfaceNum = self._getNextSN()
+    if surfaceNum == None: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     surfaceString = ''
@@ -140,37 +139,48 @@ class CardDeck:
     elif axis=='Z':
       surfaceString += toMCNP80String('%d %s C/%s %.4f %.4f %.4f'%(surfaceNum, trNumString, axis, offset[0], offset[1], radius))
   
-    self.collectedMacroStrings += surfaceString
+    self.collectedSurfaceStrings += surfaceString
     
     printIfShow(surfaceString)
     return surfaceNum
   
-  def insertSurface_Plane(self, name, A=1.0, B=1.0, C=1.0, D=1.0, surfaceNum=0, trNum=None):
+  def insertSurface_ConeAligned(self, name, axis='X', xyz=(0,0,0), tSqr=0.25, sheet=0, 
+                                    surfaceNum=None, trNum=None):
     """
-    Define a plane surface aligned with equation: Ax + By + Cz -D = 0.
-    Can also add a transform.
+    Define a cone parallel to one of the three axes.
+    tsqr is the sqr of tan of cone angle. sheet is...
+    
+    The trNum can be obtained by first calling insertTRString.
+    The same trNum can be used for multiple objects.
+    
+    In general, instantiate surfaces/cells at the origin and then apply
+    TR/TRCL to rotate/translate.
+    In all the geometry functions name is used only for the descriptive comment.
 
-    Returns assigned surface number.    
+    Returns assigned surface number.
     """
-    if surfaceNum == 0: surfaceNum = self._getNextSN()
+    if surfaceNum == None: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
     
+    if sheet == 0:
+      sheetSel = ''
+    else:
+      sheetSel = '%d'%(sheet)
     surfaceString = ''
-    descrStr = '%s, surface:%d, trNum:%s, plane A:%.2f B:%.2f C:%.2f D:%.2f'\
-                     %(name, surfaceNum, trNumString, A, B, C, D)
-    # ----surface--------
-    surfaceString += toMCNP80String('c ---%s'%(descrStr))  
-    #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
-    #801 1 rcc 0  0  0  1  1  1  5
-    surfaceString += toMCNP80String('%d %s P %.4f %.4f %.4f %.4f' %(surfaceNum, trNumString, A, B, C, D))
+    descrStr = '%s, surface:%d, trNum:%s, cone_%s x:%.2f y:%.2f z:%.2f tSqr:%.2f sheetSel:%s'\
+                     %(name, surfaceNum, trNumString, axis, xyz[0], xyz[1], xyz[2], tSqr, sheetSel)
+      # ----macro--------
+    surfaceString += toMCNP80String('c ---%s'%(descrStr))
+    #c surface/macrobody number, transformation number optional, C/X, yPos,zPos, radius'
+    #801 1 C/X 1 1 5
+    surfaceString += toMCNP80String('%d %s K/%s %.4f %.4f %.4f %.4f %s'%(surfaceNum, trNumString, axis, xyz[0], xyz[1], xyz[2], tSqr, sheetSel))
   
-    global collectedMacroStrings
-    collectedMacroStrings += surfaceString
+    self.collectedSurfaceStrings += surfaceString
     
     printIfShow(surfaceString)
     return surfaceNum
 
-  def insertSurface_PlaneAligned(self, name, axis='X', D=1.0, surfaceNum=0, trNum=None):
+  def insertSurface_PlaneAligned(self, name, axis='X', D=1.0, surfaceNum=None, trNum=None):
     """
     Define a plane surface aligned with X or Y or Z axis.
     D refers to: PX, PY, PZ. 
@@ -178,7 +188,7 @@ class CardDeck:
 
     Returns assigned surface number.    
     """
-    if surfaceNum == 0: surfaceNum = self._getNextSN()
+    if surfaceNum == None: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     surfaceString = ''
@@ -190,16 +200,160 @@ class CardDeck:
     #801 1 rcc 0  0  0  1  1  1  5
     surfaceString += toMCNP80String('%d %s P%s %.4f' %(surfaceNum, trNumString, axis, D))
   
-    self.collectedMacroStrings += surfaceString
+    self.collectedSurfaceStrings += surfaceString
     
     printIfShow(surfaceString)
     return surfaceNum
 
+  def insertSurface_Plane(self, name, A=1.0, B=1.0, C=1.0, D=1.0, surfaceNum=None, trNum=None):
+    """
+    Define a plane surface aligned with equation: Ax + By + Cz -D = 0.
+    Can also add a transform.
+
+    Returns assigned surface number.    
+    """
+    if surfaceNum == None: surfaceNum = self._getNextSN()
+    trNumString = '' if trNum==None else '%d'%(trNum)
+    
+    surfaceString = ''
+    descrStr = '%s, surface:%d, trNum:%s, plane A:%.2f B:%.2f C:%.2f D:%.2f'\
+                     %(name, surfaceNum, trNumString, A, B, C, D)
+    # ----surface--------
+    surfaceString += toMCNP80String('c ---%s'%(descrStr))  
+    #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
+    #801 1 rcc 0  0  0  1  1  1  5
+    surfaceString += toMCNP80String('%d %s P %.4f %.4f %.4f %.4f' %(surfaceNum, trNumString, A, B, C, D))
+  
+    self.collectedSurfaceStrings += surfaceString
+    
+    printIfShow(surfaceString)
+    return surfaceNum
+
+  def insertSurface_Torus(self, name, axis='X', xyz=(0,1,1), ABC=(5,3,2), 
+                                    surfaceNum=None, trNum=None):
+    """
+    Axis specifies the axis of rotation of the torus, TX,TY,TZ
+    xyz is the center of the torus.
+    The input parameters a b c specify the ellipse.
+    a is the torus radius? b/c are the ellipse radii.
+    if |a|< c, then the hole disappears.
+    If b==c, then the torus cross section is a circle, instead of an ellipse.
+    
+    Returns assigned surface number.
+    """
+    if surfaceNum == None: surfaceNum = self._getNextSN()
+    trNumString = '' if trNum==None else '%d'%(trNum)
+    
+    surfaceString = ''
+    descrStr = '%s, surface:%d, trNum:%s, torus_%s x:%.2f y:%.2f z:%.2f  A:%.2f B:%.2f C:%.2f'\
+                     %(name, surfaceNum, trNumString, axis, *xyz, *ABC)
+      # ----macro--------
+    surfaceString += toMCNP80String('c ---%s'%(descrStr))
+
+    #c surface/macrobody number, transformation number optional, C/X, yPos,zPos, radius'
+    surfaceString += toMCNP80String('%d %s T%s %.4f %.4f %.4f  %.4f %.4f %.4f'%(surfaceNum, trNumString, axis,  *xyz, *ABC))
+  
+    self.collectedSurfaceStrings += surfaceString
+    
+    printIfShow(surfaceString)
+    return surfaceNum
+
+  def insertSurface_SQ(self, name, A=-0.0833, B=1, C=1, D=0, E=0,
+                                   F=0, G=68.5, xyz=(-26.5,0,0),
+                                   surfaceNum=None, trNum=None):
+    """
+    Special quadratic surface.
+    A(x - x)**2 + B(y – y)**2 + C(z – z)**2 + 2D(x – x) + 2E(y – y) + 2F(z – z) + G = 0
+    
+    Returns assigned surface number.
+    """
+    if surfaceNum == None: surfaceNum = self._getNextSN()
+    trNumString = '' if trNum==None else '%d'%(trNum)
+    
+    surfaceString = ''
+    descrStr = '%s, surface:%d, trNum:%s, SQ A:%.2f B:%.2f C:%.2f  D:%.2f E:%.2f F:%.2f G:%.2f  x:%.2f y:%.2f z:%.2f'\
+                     %(name, surfaceNum, trNumString, A,B,C,D,E,F,G,*xyz)
+      # ----macro--------
+    surfaceString += toMCNP80String('c ---%s'%(descrStr))
+
+    #c surface/macrobody number, transformation number optional, C/X, yPos,zPos, radius'
+    surfaceString += toMCNP80String('%d %s SQ %.4f %.4f %.4f  %.4f %.4f %.4f %.4f  %.4f %.4f %.4f'%(surfaceNum, trNumString, A,B,C,D,E,F,G,*xyz))
+  
+    self.collectedSurfaceStrings += surfaceString
+    
+    printIfShow(surfaceString)
+    return surfaceNum
+
+  def insertSurface_GQ(self, name, A=1, B=0.25, C=0.75, D=0, E=-0.866,
+                                   F=0, G=-12, H=-2, I=3.464, J=39,
+                                   surfaceNum=None, trNum=None):
+    """
+    General quadratic surface.
+    Ax2 + By2 + Cz2 + Dxy + Eyz + Fzx + Gx + Hy + Jz + K = 0
+    
+    Returns assigned surface number.
+    """
+    if surfaceNum == None: surfaceNum = self._getNextSN()
+    trNumString = '' if trNum==None else '%d'%(trNum)
+    
+    surfaceString = ''
+    descrStr = '%s, surface:%d, trNum:%s, GQ A:%.2f B:%.2f C:%.2f  D:%.2f E:%.2f F:%.2f G:%.2f H:%.2f'\
+                     %(name, surfaceNum, trNumString, A,B,C,D,E,F,G,H)
+      # ----macro--------
+    surfaceString += toMCNP80String('c ---%s'%(descrStr))
+
+    #c surface/macrobody number, transformation number optional, C/X, yPos,zPos, radius'
+    surfaceString += toMCNP80String('%d %s GQ %.4f %.4f %.4f  %.4f %.4f %.4f %.4f  %.4f %.4f %.4f'%(surfaceNum, trNumString, A,B,C,D,E,F,G,H,I,J))
+  
+    self.collectedSurfaceStrings += surfaceString
+    
+    printIfShow(surfaceString)
+    return surfaceNum
+
+  def insertSurface_AxisSymmetricByPoints(self, name, axis='X', pointList=[], surfaceNum=None, trNum=None):
+    """
+    The surfaces described by these cards must be symmetric about the x-, y-, 
+    or z-axis, respectively, and, if the surface consists of more than one
+    sheet, the specified coordinate points must all be on the same sheet.
+    
+    Each of the coordinate pairs defines a geometrical point on the surface. 
+    On the Y card, for example, the entries may be j Y y1 r1 y2 r2
+    where ri = sqrt(xi**2 + yi**2)and yi is the coordinate of point i.
+    If one coordinate pair is used, a plane (PX, PY, or PZ) is defined.
+    If two coordinate pairs are used, a linear surface (PX, PY, PZ, CX, CY, CZ, 
+    KX, KY, or KZ) is defined.
+    If three coordinate pairs are used, a quadratic surface (PX, PY, PZ, 
+    SO, SX, SY, SZ, CX, CY, CZ, KX, KY, KZ, or SQ) is defined.
+
+    Returns assigned surface number.    
+    """
+    assert(len(pointList) in [2,4,6])
+    assert(axis.lower() in ['x', 'y', 'z'])
+    
+    if surfaceNum == None: surfaceNum = self._getNextSN()
+    trNumString = '' if trNum==None else '%d'%(trNum)
+    
+    pointString = ' '.join(map(str, pointList))
+
+    surfaceString = ''
+    descrStr = '%s, surface:%d, trNum:%s, AxisSymByPoints %s %s'\
+                     %(name, surfaceNum, trNumString, axis, pointString)
+    # ----surface--------
+    surfaceString += toMCNP80String('c ---%s'%(descrStr))  
+    #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
+    #801 1 rcc 0  0  0  1  1  1  5
+    surfaceString += toMCNP80String('%d %s %s %s' %(surfaceNum, trNumString, axis, pointString))
+  
+    self.collectedSurfaceStrings += surfaceString
+    
+    printIfShow(surfaceString)
+    return surfaceNum
+      
   def insertCellString(self, name, surfaceList=None, cellComplementList=None,
                      manualSurfacesString=None,
                      matName='Void', density=0,
                      shift=(0,0,0), rotMatrix=None, 
-                     impString='', cellNum=0, uni=0, fill=0, 
+                     impString='', cellNum=None, uni=0, fill=0, 
                      latticeType=None, latticeIndices=None):
     """
     This function is used to insert a cell using surfaces (and cells) that have
@@ -207,11 +361,13 @@ class CardDeck:
   
     The terms surface number/macro number/macro surface number are used interchangeably.
     
-    surfaceList simply supports positive/negative surfaces. The complement list 
-    is a list of cells which get subtracted.
-  
-    The possible combinations with unions, intersections, complement,
-    complement of unions and so on are too many.  If the user wants to do that, 
+    surfaceList does intersection of positive/negative surfaces to define a volume. 
+    The complement list is a list of other cells whose volume gets subtracted 
+    from this one. This is sufficient for most geometries.
+    
+    For certain geometries, combinations of unions, intersections, complement,
+    complement of unions etc might be needed and those can entered using the
+    manualSurfacesList. and so on are too many.  If the user wants to do that, 
     they can enter the string manually.
 
     Either use surfaceList and cellComplementList, or use the manualSurfacesList.
@@ -226,14 +382,14 @@ class CardDeck:
     the particles list set before the call to the cell function.
     If a cell needs a different importance string from the default, use this
     option:
-    impString: It should look like this: 'imp:p,e=1'  .
+    impString: It should look like this: 'imp:p,e=1' or 'imp:p=1 imp:e=0' .
 
     latType - 1 (RPP).
     latType - 2 (Hexagonal prism).
     latIndices - Range specifying Imin/Imax, Jmin/Jmax, Kmin/Kmax of the lattice range.
     fill can be a single universe number or a list of universes in case of a lattice.
     """
-    if cellNum == 0: cellNum = self._getNextCN()
+    if cellNum == None: cellNum = self._getNextCN()
     
     #cellString = ''
     matNum, defaultDensity = csmat.matLookup(matName)
@@ -253,15 +409,15 @@ class CardDeck:
       surfacesString = " %s "%(manualSurfacesString) # add spaces around just in case
     else:
       if surfaceList is not None: # inside of negative surfaces, outside of positive surfaces
-        for mb in surfaceList:
-          surfacesString += " %d "%(mb)
+        for sn in surfaceList:
+          surfacesString += " %d "%(sn)
       if cellComplementList is not None:
         for c in cellComplementList:
           surfacesString += " #%d "%(c)
     #---------
     uniString = ''; fillString = ''; latString = ''
   
-    if uni != 0: uniString = 'U=%d'%(uni) 
+    if uni != 0: uniString = 'U=%d'%(uni)
     if fill != 0:
       if latticeType is None:
         fillString = 'FILL=%d'%(fill)
@@ -284,41 +440,73 @@ class CardDeck:
   
     self.collectedCellStrings += cellString
     
-    #if uni==0:
-    self.cellNumNameList.append((cellNum, name, uni)) # ??? Append uni #
+    self.cellNumNameList.append((cellNum, name, uni))
   
     printIfShow(cellString)
     return cellNum
+
+  def insertCellLike(self, name, oldCellNum, newCellNum=None, shift=None, 
+                     rotMatrix=None, impString='', uni=0):
+    """
+    newCellNum will be auto assigned if left as None.
+    impString: It should look like this: 'imp:p,e=1' or 'imp:p=1 IMP:e=0'.
+    Any importances that are not specified are inherited from the old cell.
+    
+    What about matName, density? Should that be supported on this card?
+    What about uni? The cell being cloned has to be in uni=0. Otherwise MCNP
+    can't find it.
+
+    Looks like the newCell can be in any universe, but defaults to 0 as expected.    
+    """
+    if newCellNum == None: newCellNum = self._getNextCN()
+
+    trclString = self.getTrclStringDeg(shift=shift, rotMatrix=rotMatrix)
+    if impString == '': impString = self.getImpString()
+    uniString = ''
+    if uni != 0: uniString = 'U=%d'%(uni)
+    
+    cellString = '%d LIKE %d BUT %s %s %s'%(newCellNum, oldCellNum, trclString, \
+                                         impString, uniString)
+    #---------
+    cellString = toMCNP80String(cellString)
+  
+    self.collectedCellStrings += cellString
+    
+    self.cellNumNameList.append((newCellNum, name, uni))
+  
+    printIfShow(cellString)
+    return newCellNum
+
 #############################################################################
   ### !!!-----MACRO SURFACES AND CELLS------
   def insertMacroSphere(self, name, pos=(0,0,0), radius=1, 
-                        macrobodyNum=0, trNum=None):
+                        surfaceNum=None, trNum=None):
     """
     Insert a sphere macro at the given position and radius.
     Returns assigned macro surface number.
     """
-    if macrobodyNum == 0: macrobodyNum = self._getNextSN()
+    if surfaceNum == None: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
     descrStr = '%s, sphere macrobody:%d, trNum:%s, xPos:%.2f, yPos:%.2f, zPos:%.2f, radius:%.2f'\
-                      %(name, macrobodyNum, trNumString, *pos, radius)
+                      %(name, surfaceNum, trNumString, *pos, radius)
   
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, rpp, x/y/z radius
     #801 1 sph 0 0 0  10 
     macroString += toMCNP80String('%d %s SPH %.4f %.4f %.4f  %.4f'
-                                  %(macrobodyNum, trNumString, *pos, radius))
+                                  %(surfaceNum, trNumString, *pos, radius))
   
-    self.collectedMacroStrings += macroString
+    self.collectedSurfaceStrings += macroString
   
     printIfShow(macroString)
-    return macrobodyNum
+    return surfaceNum
 
   def insertMacroAndCellSphere(self, name, pos=(0,0,0), radius=1, 
                        matName='Void', density=0,
                        shift=(0,0,0),
-                       macrobodyNum=0, cellNum=0, uni=0):
+                       surfaceNum=None, cellNum=None, uni=0):
     """
     Insert a sphere macro and a cell based on that macro.
     Sphere is different from other macrobodies in not ever needing an orientation
@@ -327,61 +515,60 @@ class CardDeck:
     Returns assigned macro surface number and cell number.
     """
     # ----macro--------
-    macrobodyNum = self.insertMacroSphere(name=name, pos=pos,
+    surfaceNum = self.insertMacroSphere(name=name, pos=pos,
                                      radius=radius,
-                                     macrobodyNum=macrobodyNum)
+                                     surfaceNum=surfaceNum)
     # ----cellNum is not defined at this point
-    descrStr = '%s, macrobody:%d, xPos:%.2f, yPos:%.2f, zPos:%.2f, radius:%.2f, matNum:%s, density:%.2f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
-                  %(name, macrobodyNum, *pos, radius, matName, density, *shift) 
+    descrStr = '%s, macrobody:%d, xPos:%.2f, yPos:%.2f, zPos:%.2f, radius:%.2f, matNum:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
+                  %(name, surfaceNum, *pos, radius, matName, density, *shift) 
   
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum], cellComplementList=None,
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], cellComplementList=None,
                                matName=matName, density=density,
                                shift=shift, rotMatrix=None,
                                impString=impString, cellNum=cellNum, uni=uni)
   
-    return macrobodyNum, cellNum
+    return surfaceNum, cellNum
 
   def insertMacroAndCellSphereShell(self, name,
-                  pos=(0,0,0), radius1=2, radius2=1,
+                  pos=(0,0,0), radiusOuter=2, radiusInner=1,
                   matName='Void', density=0, 
                   shift=(0,0,0), rotMatrix=None,
-                  macrobodyNum1=0, macrobodyNum2=0, cellNum=0,uni=0):
+                  surfaceNum1=0, surfaceNum2=0, cellNum=None,uni=0):
     """
     Uses two sphere macros to generate a shell.
-    
     Returns a list of the two assigned macro surface numbers and the assigned cell number.
     """
     # ----macro--------    
-    macrobodyNum1 = self.insertMacroSphere(name=name, pos=pos,
-                                  radius=radius1, macrobodyNum=macrobodyNum1)  
+    surfaceNum1 = self.insertMacroSphere(name=name, pos=pos,
+                                  radius=radiusOuter, surfaceNum=surfaceNum1)  
   
-    macrobodyNum2 = self.insertMacroSphere(name=name, pos=pos,
-                                  radius=radius2, macrobodyNum=macrobodyNum2)  
+    surfaceNum2 = self.insertMacroSphere(name=name, pos=pos,
+                                  radius=radiusInner, surfaceNum=surfaceNum2)  
     # ----cell--------
-    descrStr = '%s, macrobody:%d, macrobody:%d, cellNum:%d,\
-    posX:%.2f, posY:%.2f, posZ:%.2f, radius1:%.2f, radius2:%.2f,\
-    matName:%s, density:%.2f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
-                  %(name, macrobodyNum1, macrobodyNum2, cellNum, 
-                    *pos, radius1, radius2, 
+    descrStr = '%s, macrobody:%d, macrobody:%d,\
+    posX:%.2f, posY:%.2f, posZ:%.2f, radiusOuter:%.2f, radiusInner:%.2f,\
+    matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
+                  %(name, surfaceNum1, surfaceNum2,
+                    *pos, radiusOuter, radiusInner, 
                     matName, density, *shift)
     
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum1, macrobodyNum2], # cellComplementList=None, 
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
                                matName=matName, density=density, 
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
     
-    return (macrobodyNum1, macrobodyNum2), cellNum
+    return (surfaceNum1, surfaceNum2), cellNum
   
 #############################################################################
   ### !!!-----
   def insertMacroRcc(self, name, base=(0,0,0), axis=(0,0,1), radius=1, 
-                     macrobodyNum=0, trNum=None):
+                     surfaceNum=None, trNum=None):
     """
     From MCNP manual: RCC vx vy vz hx hy hz r.
     vx/vy/vz - coordinates of center of base.
@@ -390,29 +577,29 @@ class CardDeck:
     
     Returns assigned surface number.    
     """
-    if macrobodyNum == 0: macrobodyNum = self._getNextSN()
+    if surfaceNum == None: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
     descrStr = '%s, cylinder macrobody:%d, trNum:%s, baseX:%.2f, baseY:%.2f, baseZ:%.2f, axisX:%.2f, axisY:%.2f, axisZ:%.2f, radius:%.2f'\
-                  %(name, macrobodyNum, trNumString, *base, *axis,radius)
+                  %(name, surfaceNum, trNumString, *base, *axis,radius)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
     macroString += toMCNP80String('%d %s RCC %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f'\
-                             %(macrobodyNum, trNumString, *base, *axis, radius))
+                             %(surfaceNum, trNumString, *base, *axis, radius))
   
-    self.collectedMacroStrings += macroString
+    self.collectedSurfaceStrings += macroString
   
     printIfShow(macroString)
-    return macrobodyNum
+    return surfaceNum
   
   def insertMacroAndCellRcc(self, name, base=(0,0,0), 
                  axis=(0,0,1), radius=1, 
                  matName='Void', density=0, 
                  shift=(0,0,0), rotMatrix=None,
-                 macrobodyNum=0, cellNum=0, uni=0):
+                 surfaceNum=None, cellNum=None, uni=0):
     """
     Generates a RCC Right Circular Cylinder macro and a cell based on that macro.
     axisX/axisY/axisZ together given orientation and height of cyl.
@@ -423,30 +610,30 @@ class CardDeck:
     Returns assigned surface number and cell number.
     """
     # ----macro--------
-    macrobodyNum = self.insertMacroRcc(name=name, base=base, axis=axis, 
-                                  radius=radius, macrobodyNum=macrobodyNum)  
+    surfaceNum = self.insertMacroRcc(name=name, base=base, axis=axis, 
+                                  radius=radius, surfaceNum=surfaceNum)  
   
     # ----cell--------
-    descrStr = '%s, macrobody:%d, cellNum:%d, baseX:%.2f, baseY:%.2f, baseZ:%.2f, axisX:%.2f, axisY:%.2f, axisZ:%.2f, radius:%.2f, matName:%s, density:%.2f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
-                  %(name, macrobodyNum, cellNum, *base, *axis,
+    descrStr = '%s, macrobody:%d, baseX:%.2f, baseY:%.2f, baseZ:%.2f, axisX:%.2f, axisY:%.2f, axisZ:%.2f, radius:%.2f, matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
+                  %(name, surfaceNum, *base, *axis,
                     radius, matName, density, *shift)
   
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum], #cellComplementList=None, 
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], #cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix, 
                                impString=impString, cellNum=cellNum, uni=uni)
    
-    return macrobodyNum, cellNum
+    return surfaceNum, cellNum
 
   def insertMacroAndCellRccShell(self, name,
-                  base1=(0,0,0), axis1=(0,0,1), radius1=2,
-                  base2=(0,0,0), axis2=(0,0,1), radius2=1,
+                  base1=(0,0,0), axis1=(0,0,1), radiusOuter=2,
+                  base2=(0,0,0), axis2=(0,0,1), radiusInner=1,
                   matName='Void', density=0, 
                   shift=(0,0,0), rotMatrix=None,
-                  macrobodyNum1=0, macrobodyNum2=0, cellNum=0,uni=0):
+                  surfaceNum1=None, surfaceNum2=None, cellNum=None,uni=0):
     """
     Uses two RCC macros to generate an annulus. FIRST one is the OUTER one.
     As it is currently, the center of the axis won't be at the origin unless
@@ -461,30 +648,30 @@ class CardDeck:
     Returns a list of the assigned macro numbers and the assigned cell number.
     """
     # ----macro--------    
-    macrobodyNum1 = self.insertMacroRcc(name=name, base=base1, axis=axis1,
-                                  radius=radius1, macrobodyNum=macrobodyNum1)  
+    surfaceNum1 = self.insertMacroRcc(name=name, base=base1, axis=axis1,
+                                  radius=radiusOuter, surfaceNum=surfaceNum1)  
   
-    macrobodyNum2 = self.insertMacroRcc(name=name, base=base2, axis=axis2,
-                                  radius=radius2, macrobodyNum=macrobodyNum2)  
+    surfaceNum2 = self.insertMacroRcc(name=name, base=base2, axis=axis2,
+                                  radius=radiusInner, surfaceNum=surfaceNum2)  
     # ----cell--------
-    descrStr = '%s, macrobody1:%d, macrobody2:%d, cellNum:%d,\
-    baseX1:%.2f, baseY1:%.2f, baseZ1:%.2f, axisX1:%.2f, axisY1:%.2f, axisZ1:%.2f, radius1:%.2f,\
-    baseX2:%.2f, baseY2:%.2f, baseZ2:%.2f, axisX2:%.2f, axisY2:%.2f, axisZ2:%.2f, radius2:%.2f,\
-    matName:%s, density:%.2f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
-                  %(name, macrobodyNum1, macrobodyNum2, cellNum, 
-                    *base1, *axis1, radius1, 
-                    *base2, *axis2, radius2, 
+    descrStr = '%s, macrobody1:%d, macrobody2:%d,\
+    baseX1:%.2f, baseY1:%.2f, baseZ1:%.2f, axisX1:%.2f, axisY1:%.2f, axisZ1:%.2f, radiusOuter:%.2f,\
+    baseX2:%.2f, baseY2:%.2f, baseZ2:%.2f, axisX2:%.2f, axisY2:%.2f, axisZ2:%.2f, radiusInner:%.2f,\
+    matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
+                  %(name, surfaceNum1, surfaceNum2,
+                    *base1, *axis1, radiusOuter, 
+                    *base2, *axis2, radiusInner, 
                     matName, density, *shift)
     
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum1, macrobodyNum2], # cellComplementList=None, 
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
                                matName=matName, density=density, 
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
     
-    return (macrobodyNum1, macrobodyNum2), cellNum
+    return (surfaceNum1, surfaceNum2), cellNum
 #############################################################################
   ### !!!-----
   # RPP macro and RPP cell parameters allow direct positioning
@@ -492,65 +679,66 @@ class CardDeck:
   # This is a choice I made for ease of use of RPP shell
   # RCC shell on the other hand has positioning and orienting in the base params
   # That's just my choice
-  def insertMacroRpp(self, name, xMinMax, yMinMax, zMinMax, macrobodyNum=0, trNum=None):
+  def insertMacroRpp(self, name, xMinMax, yMinMax, zMinMax, surfaceNum=None, trNum=None):
     """
     xMinMax, yMinMax, zMinMax are tuples giving the upper/lower bounds of the RPP.
 
     Returns assigned surface number.    
     """
-    if macrobodyNum == 0: macrobodyNum = self._getNextSN()
+    if surfaceNum == None: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
     descrStr = '%s, macrobody:%d, trNum:%s, xMin:%.2f, xMax:%.2f, yMin:%.2f, yMax:%.2f, zMin:%.2f, zMax:%.2f'\
-                  %(name, macrobodyNum, trNumString, *xMinMax, *yMinMax, *zMinMax)
+                  %(name, surfaceNum, trNumString, *xMinMax, *yMinMax, *zMinMax)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, rpp, xmin/xmax,    ymin/ymax, zmin/zmax'
     #801 1 rpp -0.0728   0.0728    -0.32      0.32     -3 3 
     macroString += toMCNP80String('%d %s RPP %.6f %.6f   %.6f %.6f    %.6f %.6f'\
-                             %(macrobodyNum, trNumString, *xMinMax, *yMinMax, *zMinMax))
+                             %(surfaceNum, trNumString, *xMinMax, *yMinMax, *zMinMax))
   
-    self.collectedMacroStrings += macroString
+    self.collectedSurfaceStrings += macroString
   
     printIfShow(macroString)
-    return macrobodyNum
+    return surfaceNum
 
   def insertMacroAndCellRpp(self, name, xMinMax, yMinMax, zMinMax,
                 matName='Void', density=0, 
                 shift=(0,0,0), rotMatrix=None, 
-                macrobodyNum=0, cellNum=0, uni=0):
+                surfaceNum=None, cellNum=None, uni=0):
     """
     Generates a RPP Rect Parallelopipded macro and a cell based on that macro.
 
     Returns assigned surface number and cell number.    
     """
     # ----macro--------
-    macrobodyNum = self.insertMacroRpp(name=name, xMinMax=xMinMax, yMinMax=yMinMax, 
-                                  zMinMax=zMinMax, macrobodyNum=macrobodyNum)
+    surfaceNum = self.insertMacroRpp(name=name, xMinMax=xMinMax, yMinMax=yMinMax, 
+                                  zMinMax=zMinMax, surfaceNum=surfaceNum)
     # ----cell--------
-    descrStr = '%s, Rect PPiped macrobody:%d, cellNum:%d, xMin:%.2f, xMax:%.2f, yMin:%.2f, yMax:%.2f, zMin:%.2f, zMax:%.2f, matName:%s, density:%.2f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
-                  %(name, macrobodyNum, cellNum, *xMinMax, *yMinMax, *zMinMax, matName, density, *shift)
+    descrStr = '%s, Rect PPiped macrobody:%d, xMin:%.2f, xMax:%.2f, yMin:%.2f, yMax:%.2f, zMin:%.2f, zMax:%.2f, matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
+                  %(name, surfaceNum, *xMinMax, *yMinMax, *zMinMax, matName, density, *shift)
     
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum], #cellComplementList=None,
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], #cellComplementList=None,
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
   
-    return macrobodyNum, cellNum
+    return surfaceNum, cellNum
 
-  def insertMacroAndCellRppShell(self, name, innerXWidth,outerXWidth, 
-                               innerYWidth,outerYWidth, 
-                               innerZWidth,outerZWidth,
-                               matName, density=0,
-                               shift=(0,0,0), rotMatrix=None, 
-                               macrobodyNum1=0, macrobodyNum2=0, cellNum=0, uni=0):
+  def insertMacroAndCellRppShell(self, name,
+                                 innerXWidth,outerXWidth, 
+                                 innerYWidth,outerYWidth, 
+                                 innerZWidth,outerZWidth,
+                                 matName, density=0,
+                                 shift=(0,0,0), rotMatrix=None, 
+                                 surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
     """
     Inserts two RPP macros to generate shell.
-
+    Both macros are symmetrically placed around the origin before being shifted/rotated together.
     Returns a list of the assigned macro numbers and the assigned cell number.
     """
     # ----macro--------  
@@ -559,34 +747,73 @@ class CardDeck:
     xMin = -outerXWidth/2; xMax = -xMin
     yMin = -outerYWidth/2; yMax = -yMin
     zMin = -outerZWidth/2; zMax = -zMin
-    macrobodyNum1 = self.insertMacroRpp(name=name, xMinMax=(xMin, xMax), 
+    surfaceNum1 = self.insertMacroRpp(name=name, xMinMax=(xMin, xMax), 
                                   yMinMax=(yMin, yMax), zMinMax=(zMin, zMax),
-                                  macrobodyNum=macrobodyNum1)
+                                  surfaceNum=surfaceNum1)
   
     xMin = -innerXWidth/2; xMax = -xMin
     yMin = -innerYWidth/2; yMax = -yMin
     zMin = -innerZWidth/2; zMax = -zMin
-    macrobodyNum2 = self.insertMacroRpp(name=name, xMinMax=(xMin, xMax), 
+    surfaceNum2 = self.insertMacroRpp(name=name, xMinMax=(xMin, xMax), 
                                   yMinMax=(yMin, yMax), zMinMax=(zMin, zMax),
-                                  macrobodyNum=macrobodyNum2)
+                                  surfaceNum=surfaceNum2)
   
     # ----cell--------
-    descrStr = '%s, macrobody1:%d, macrobody2:%d, cellNum:%d, innerXWidth:%.2f, outerXWidth:%.2f, innerYWidth:%.2f, outerYWidth:%.2f, innerZWidth:%.2f, outerZWidth:%.2f, xShift:%.2f, yShift:%.2f, zShift:%.2f, matName:%s, density:%.2f'\
-                  %(name, macrobodyNum1, macrobodyNum2, cellNum, innerXWidth,outerXWidth, innerYWidth,outerYWidth, innerZWidth,outerZWidth, *shift, matName, density)
+    descrStr = '%s, macrobody1:%d, macrobody2:%d, outerXWidth:%.3f, innerXWidth:%.3f, outerYWidth:%.3f, innerYWidth:%.3f, outerZWidth:%.3f, innerZWidth:%.3f, xShift:%.2f, yShift:%.2f, zShift:%.2f, matName:%s, density:%.4f'\
+                  %(name, surfaceNum1, surfaceNum2, outerXWidth,innerXWidth, outerYWidth,innerYWidth, outerZWidth,innerZWidth, *shift, matName, density)
             
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum1, macrobodyNum2], #cellComplementList=None, 
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], #cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix, 
                                impString=impString, cellNum=cellNum, uni=uni)
   
-    return (macrobodyNum1, macrobodyNum2), cellNum
+    return (surfaceNum1, surfaceNum2), cellNum
+
+  def insertMacroAndCellRppShell2(self, name,
+                                 xMinMaxOut, yMinMaxOut, zMinMaxOut,
+                                 xMinMaxIn, yMinMaxIn, zMinMaxIn,
+                                 matName, density=0,
+                                 shift=(0,0,0), rotMatrix=None, 
+                                 surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
+    """
+    Inserts two RPP macros to generate shell.
+    This version allows you to place the two surfaces at arbitrary locations, whereas
+    the other verison placed both surfaces symmetrically about the origin in all
+    three directions.
+    Returns a list of the assigned macro numbers and the assigned cell number.
+    """
+    # ----macro--------  
+    #c surface/macrobody number, transformation number optional, rpp, xmin/xmax,    ymin/ymax, zmin/zmax'
+    #801 1 rpp -0.0728   0.0728    -0.32      0.32     -3 3 
+    surfaceNum1 = self.insertMacroRpp(name=name, xMinMax=xMinMaxOut, 
+                                  yMinMax=yMinMaxOut, zMinMax=zMinMaxOut,
+                                  surfaceNum=surfaceNum1)
+  
+    surfaceNum2 = self.insertMacroRpp(name=name, xMinMax=xMinMaxIn,
+                                  yMinMax=yMinMaxIn, zMinMax=zMinMaxIn,
+                                  surfaceNum=surfaceNum2)
+  
+    # ----cell--------
+    descrStr = '%s, macrobody1:%d, macrobody2:%d, xMinOut:%.3f, xMaxOut:%.3f, yMinOut:%.3f, yMaxOut:%.3f, zMinOut:%.3f, zMaxOut:%.3f, xMinIn:%.3f, xMaxIn:%.3f, yMinIn:%.3f, yMaxIn:%.3f, zMinIn:%.3f, zMaxIn:%.3f,  xShift:%.2f, yShift:%.2f, zShift:%.2f, matName:%s, density:%.4f'\
+                  %(name, surfaceNum1, surfaceNum2, *xMinMaxOut, *yMinMaxOut, *zMinMaxOut, *xMinMaxIn, *yMinMaxIn, *zMinMaxIn, *shift, matName, density)
+            
+    impString = self.getImpString() #'imp:p=1'
+  
+    self.insertIntoCellSection('c '+descrStr)
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], #cellComplementList=None, 
+                               matName=matName, density=density,
+                               shift=shift, rotMatrix=rotMatrix, 
+                               impString=impString, cellNum=cellNum, uni=uni)
+  
+    return (surfaceNum1, surfaceNum2), cellNum
+  
 #############################################################################
   ### !!!-----
   def insertMacroRhpHex(self, name, base=(0,0,0), axis=(0,0,1), r=(0,1,0),
-                     macrobodyNum=0, trNum=None):
+                     surfaceNum=None, trNum=None):
     """
     From MCNP manual: RHP v1 v2 v3   h1 h2 h3  r1 r2 r3  s1 s2 s3  t1 t2 t3.
     RHP/HEX's side surface should be orthogonal to top/bottom.
@@ -596,75 +823,75 @@ class CardDeck:
 
     Returns assigned surface number.
     """
-    if macrobodyNum == 0: macrobodyNum = self._getNextSN()
+    if surfaceNum == None: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
     descrStr = '%s, Rhp/Hex macrobody:%d, trNum:%s, base:%.2f,%.2f,%.2f, axis:%.2f,:%.2f,%.2f, radius:%.2f,%.2f,%.2f'\
-                  %(name, macrobodyNum, trNumString, *base, *axis, *r)
+                  %(name, surfaceNum, trNumString, *base, *axis, *r)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
     macroString += toMCNP80String('%d %s RHP %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f %.4f %.4f'\
-                             %(macrobodyNum, trNumString, *base, *axis, *r))
+                             %(surfaceNum, trNumString, *base, *axis, *r))
   
-    self.collectedMacroStrings += macroString
+    self.collectedSurfaceStrings += macroString
   
     printIfShow(macroString)
-    return macrobodyNum
+    return surfaceNum
 
   def insertMacroAndCellRhpHex(self, name, base=(0,0,0), 
                  axis=(0,0,1), r=(0,1,0), 
                  matName='Void', density=0, 
                  shift=(0,0,0), rotMatrix=None,
-                 macrobodyNum=0, cellNum=0, uni=0):
+                 surfaceNum=None, cellNum=None, uni=0):
     """
     Generates a RHP macro and a cell based on that macro.
     Returns assigned surface number and cell number.    
     """
     # ----macro--------
-    macrobodyNum = self.insertMacroRhpHex(name=name, base=base, axis=axis, 
-                                  r=r, macrobodyNum=macrobodyNum)  
+    surfaceNum = self.insertMacroRhpHex(name=name, base=base, axis=axis, 
+                                  r=r, surfaceNum=surfaceNum)  
     # ----cell--------
-    descrStr = '%s, macrobody:%d, cellNum:%d, base:%.2f,%.2f,%.2f, axis:%.2f,%.2f,%.2f, radius:%.2f,%.2f,%.2f, matName:%s, density:%.2f, shift:%.2f,%.2f,%.2f'\
-                  %(name, macrobodyNum, cellNum, *base, *axis,
+    descrStr = '%s, macrobody:%d, base:%.2f,%.2f,%.2f, axis:%.2f,%.2f,%.2f, radius:%.2f,%.2f,%.2f, matName:%s, density:%.4f, shift:%.2f,%.2f,%.2f'\
+                  %(name, surfaceNum, *base, *axis,
                     *r, matName, density, *shift)
   
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum], #cellComplementList=None, 
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], #cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix, 
                                impString=impString, cellNum=cellNum, uni=uni)
    
-    return macrobodyNum, cellNum
+    return surfaceNum, cellNum
   
   def insertMacroAndCellRhpHexShell(self, name, 
                  base1=(0,0,0), axis1=(0,0,1), r1=(0,1,0), 
                  base2=(0,0,0), axis2=(0,0,1), r2=(0,1,0), 
                  matName='Void', density=0, 
                  shift=(0,0,0), rotMatrix=None,
-                 macrobodyNum1=0, macrobodyNum2=0, cellNum=0, uni=0):
+                 surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
     """
     Uses two RHP macros to generate a shell.
 
     Returns a list of the assigned macro numbers and the assigned cell number.
     """
     # ----macro--------
-    macrobodyNum1 = self.insertMacroRhpHex(name=name,
+    surfaceNum1 = self.insertMacroRhpHex(name=name,
                                            base=base1, axis=axis1, r=r1, 
-                                           macrobodyNum=macrobodyNum1)
-    macrobodyNum2 = self.insertMacroRhpHex(name=name, 
+                                           surfaceNum=surfaceNum1)
+    surfaceNum2 = self.insertMacroRhpHex(name=name, 
                                            base=base2, axis=axis2, r=r2,
-                                           macrobodyNum=macrobodyNum2)
+                                           surfaceNum=surfaceNum2)
     # ----cell--------
-    descrStr = '%s, macrobody1:%d, macrobody2:%d, cellNum:%d,\
+    descrStr = '%s, macrobody1:%d, macrobody2:%d,\
     base1:%.2f,%.2f,%.2f, axis1:%.2f,%.2f,%.2f, r1:%.2f,%.2f,%.2f,\
     base2:%.2f,%.2f,%.2f, axis2:%.2f,%.2f,%.2f, r2:%.2f,%.2f,%.2f,\
-    matName:%s, density:%.2f, shift:%.2f,%.2f,%.2f'\
-                  %(name, macrobodyNum1, macrobodyNum2, cellNum, 
+    matName:%s, density:%.4f, shift:%.2f,%.2f,%.2f'\
+                  %(name, surfaceNum1, surfaceNum2,
                     *base1, *axis1, *r1, 
                     *base2, *axis2, *r2, 
                     matName, density, *shift)
@@ -672,17 +899,85 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum1, macrobodyNum2], # cellComplementList=None, 
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
                                matName=matName, density=density, 
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
     
-    return (macrobodyNum1, macrobodyNum2), cellNum
+    return (surfaceNum1, surfaceNum2), cellNum
+#############################################################################
+  ### !!!-----
+  def insertMacroCone(self, name, base=(0,0,0), height=(0,0,1), radiusBase=2, radiusTop=1,
+                    surfaceNum=None, trNum=None):
+    """
+    Cone has a base pos, height vector, base radius and top radius.
+    radiusBase must be larger than radiusTop
+    
+    From MCNP manual: TRC vx vy vz    hx hy hz   r1 r2.
+    vertexX, vertexY, vertexZ - are the coordinates of the base.
+    hx/hy/hz - provide orientation and height of top corner.
+               If the base is at 0,0,0 the hx/hy/hz would be the coordinates of top corner.
+    r1 > r2 (base radius and top radius).
+
+    Returns assigned surface number.    
+    """
+    if surfaceNum == None: surfaceNum = self._getNextSN()
+    trNumString = '' if trNum==None else '%d'%(trNum)
+    
+    macroString = ''
+    descrStr = '%s, cone macrobody:%d, trNum:%s, baseX:%.4f, baseY:%.4f, baseZ:%.4f, heightX:%.4f, heightY:%.4f, heightZ:%.4f, radiusTop:%.4f, radiusBase:%.4f'\
+                  %(name, surfaceNum, trNumString, *base, *height, radiusBase, radiusTop)
+    # ----macro--------
+    macroString += toMCNP80String('c ---%s'%(descrStr))  
+    #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
+    #801 1 rcc 0  0  0  1  1  1  5
+    macroString += toMCNP80String('%d %s TRC %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f'\
+                             %(surfaceNum, trNumString, *base, *height, radiusBase, radiusTop))
+  
+    self.collectedSurfaceStrings += macroString
+  
+    printIfShow(macroString)
+    return surfaceNum
+
+  def insertMacroAndCellCone(self, name, base=(0,0,0), height=(0,0,1),
+                    radiusBase=2, radiusTop=1,
+                    matName='Void', density=0, 
+                    shift=(0,0,0), rotMatrix=None, 
+                    surfaceNum=None, cellNum=None, uni=0):
+    """
+    Generates a TRC truncated right angle cone macro and a cell based on that macro.
+  
+    The cone is first instantiated at 0/0/0, then optionally rotated by rotMatrix and
+    then moved by shift.
+
+    Returns assigned surface number and cell number.    
+    """
+    # ----macro--------
+    surfaceNum = self.insertMacroCone(name=name, 
+                                    base=base, height=height, 
+                                    radiusBase=radiusBase, radiusTop=radiusTop,
+                                    surfaceNum=surfaceNum)  
+    # ----cell--------
+    impString = self.getImpString() #'imp:p=1'
+  
+    descrStr = '%s, macrobody:%d, baseX:%.2f, baseY:%.2f, baseZ:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, radiusBase:%.2f, radiusTop:%.2f, matName:%s, density:%.4f'\
+                  %(name, surfaceNum, *base, *height,
+                    radiusBase, radiusTop, matName, density)
+  
+    self.insertIntoCellSection('c '+descrStr)
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], # cellComplementList=None, 
+                               matName=matName, density=density,
+                               shift=shift, rotMatrix=rotMatrix,
+                               impString=impString, cellNum=cellNum, uni=uni)
+  
+    return surfaceNum, cellNum
+
+    # Add convenience function cone shell when needed.
 #############################################################################
   ### !!!-----
   def insertMacroWedge(self, name, vertex=(0,0,0), base1=(1,0,0),
                     base2=(0,1,0), height=(0,0,1), 
-                    macrobodyNum=0, trNum=None):
+                    surfaceNum=None, trNum=None):
     """
     Wedge has a right angled triangle as base and a right angled prism above it.
       
@@ -697,30 +992,30 @@ class CardDeck:
 
     Returns assigned surface number.
     """
-    if macrobodyNum == 0: macrobodyNum = self._getNextSN()
+    if surfaceNum == None: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
     descrStr = '%s, wedge macrobody:%d, trNum:%s, vertexX:%.2f, vertexY:%.2f, vertexZ:%.2f, base1X:%.2f, base1Y:%.2f, base1Z:%.2f, base2X:%.2f, base2Y:%.2f, base2Z:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f,'\
-                  %(name, macrobodyNum, trNumString, *vertex, *base1,
+                  %(name, surfaceNum, trNumString, *vertex, *base1,
                     *base2, *height)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
     macroString += toMCNP80String('%d %s WED %.4f %.4f %.4f   %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f'\
-                             %(macrobodyNum, trNumString, *vertex, *base1, *base2, *height))
+                             %(surfaceNum, trNumString, *vertex, *base1, *base2, *height))
   
-    self.collectedMacroStrings += macroString
+    self.collectedSurfaceStrings += macroString
   
     printIfShow(macroString)
-    return macrobodyNum
+    return surfaceNum
 
   def insertMacroAndCellWedge(self, name, vertex=(0,0,0), base1=(1,0,0),
                     base2=(0,1,0), height=(0,0,1), 
                     matName='Void', density=0, 
                     shift=(0,0,0), rotMatrix=None, 
-                    macrobodyNum=0, cellNum=0, uni=0):
+                    surfaceNum=None, cellNum=None, uni=0):
     """
     Generates a WED wedge macro and a cell based on that macro.
   
@@ -729,107 +1024,195 @@ class CardDeck:
     Returns assigned surface number and cell number.    
     """
     # ----macro--------
-    macrobodyNum = self.insertMacroWedge(name=name, 
+    surfaceNum = self.insertMacroWedge(name=name, 
                                     vertex=vertex, base1=base1, 
                                     base2=base2, height=height,
-                                    macrobodyNum=macrobodyNum)  
+                                    surfaceNum=surfaceNum)  
     # ----cell--------
     impString = self.getImpString() #'imp:p=1'
   
-    descrStr = '%s, macrobody:%d, cellNum:%d, vertexX:%.2f, vertexY:%.2f, vertexZ:%.2f, base1X:%.2f, base1Y:%.2f, base1Z:%.2f, base2X:%.2f, base2Y:%.2f, base2Z:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, matName:%s, density:%.2f'\
-                  %(name, macrobodyNum, cellNum, *vertex, *base1,
+    descrStr = '%s, macrobody:%d, vertexX:%.2f, vertexY:%.2f, vertexZ:%.2f, base1X:%.2f, base1Y:%.2f, base1Z:%.2f, base2X:%.2f, base2Y:%.2f, base2Z:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, matName:%s, density:%.4f'\
+                  %(name, surfaceNum, *vertex, *base1,
                     *base2, *height, matName, density)
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum], # cellComplementList=None, 
+    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], # cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
   
-    return macrobodyNum, cellNum
+    return surfaceNum, cellNum
   
     # Add wedge shell when needed.
 #############################################################################
   ### !!!-----
-  def insertMacroCone(self, name, base=(0,0,0), height=(0,0,1), radius1=2, radius2=1,
-                    macrobodyNum=0, trNum=None):
+  def insertMacroBox(self, name, v=(-1,-1,-1), a1=(2,0,0), a2=(0,2,0), a3=(0,0,2), 
+                    surfaceNum=None, trNum=None):
     """
-    Cone has a base pos, height vector, base radius and top radius.
-    radius1 is base radius.
-    
-    From MCNP manual: TRC vx vy vz    hx hy hz   r1 r2.
-    vertexX, vertexY, vertexZ - are the coordinates of the base.
-    hx/hy/hz - provide orientation and height of top corner.
-               If the base is at 0,0,0 the hx/hy/hz would be the coordinates of top corner.
-    r1 > r2 (base radius and top radius).
+    BOX Vx Vy Vz A1x A1y A1z A2x A2y A2z A3x A3y A3z
+      where Vx Vy Vz = x,y,z coordinates of corner
+    A1x A1y A1z = vector of first side
+    A2x A2y A2z = vector of second side
+    A2x A3y A3z = vector of third side
 
-    Returns assigned surface number.    
+    Returns assigned surface number.
     """
-    if macrobodyNum == 0: macrobodyNum = self._getNextSN()
+    if surfaceNum == None: surfaceNum = self._getNextSN()
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, cone macrobody:%d, trNum:%s, baseX:%.2f, bseY:%.2f, baseZ:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, radius1:%.2f, radius2:%.2f'\
-                  %(name, macrobodyNum, trNumString, *base, *height, radius1, radius1)
+    descrStr = '%s, wedge macrobody:%d, trNum:%s, vX:%.2f, vY:%.2f, vZ:%.2f, a1X:%.2f, a1Y:%.2f, a1Z:%.2f, a2X:%.2f, a2Y:%.2f, a2Z:%.2f, a3X:%.2f, a3Y:%.2f, a3Z:%.2f,'\
+                  %(name, surfaceNum, trNumString, *v, *a1, *a2, *a3)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    macroString += toMCNP80String('%d %s TRC %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f'\
-                             %(macrobodyNum, trNumString, *base, *height, radius1, radius2))
+    macroString += toMCNP80String('%d %s BOX %.4f %.4f %.4f   %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f'\
+                             %(surfaceNum, trNumString, *v, *a1, *a2, *a3))
   
-    self.collectedMacroStrings += macroString
+    self.collectedSurfaceStrings += macroString
   
     printIfShow(macroString)
-    return macrobodyNum
-
-  def insertMacroAndCellCone(self, name, base=(0,0,0), height=(0,0,1),
-                    radius1=2, radius2=1,
-                    matName='Void', density=0, 
-                    shift=(0,0,0), rotMatrix=None, 
-                    macrobodyNum=0, cellNum=0, uni=0):
+    return surfaceNum
+    
+#############################################################################
+  ### !!!-----
+  def insertMacroREC(self, name, v=(0,-5,0), h=(0,10,0), v1=(4,0,0), Rm=2,
+                                        surfaceNum=None, trNum=None):
     """
-    Generates a TRC truncated right angle cone macro and a cell based on that macro.
-  
-    The cone is first instantiated at 0/0/0, then optionally rotated by rotMatrix and
-    then moved by shift.
+    ??? only 10 entry version is supported
+    
+    Right Elliptical Cylinder
+    REC Vx Vy Vz Hx Hy Hz V1z V1y V1z V2x V2y V2z
+        where Vx Vy Vz = x,y,z coordinates of bottom cylinder
+    Hx Hy Hz = cylinder axis height vector
+    V1x V1y V1z = 2 ellipse major axis vector (normal to Hx Hy Hz)
+    V2x V2y V2z = ellipse minor axis vector (orthogonal to H and V1)
 
-    Returns assigned surface number and cell number.    
+    If there are ten entries instead of twelve, the tenth entry is the minor 
+    axis radius, where the direction is determined from the cross product of 
+    H and V1.
+
+    Returns assigned surface number.    
     """
+    if surfaceNum == None: surfaceNum = self._getNextSN()
+    trNumString = '' if trNum==None else '%d'%(trNum)
+    
+    macroString = ''
+    descrStr = '%s, Right ellip cyl macrobody:%d, trNum:%s, vX:%.4f, vY:%.4f, vZ:%.4f, hX:%.4f, hY:%.4f, hZ:%.4f, v1X:%.4f, v1Y:%.4f, v1Z:%.4f, Rm:%.4f'\
+                  %(name, surfaceNum, trNumString, *v, *h, *v1, Rm)
     # ----macro--------
-    macrobodyNum = self.insertMacroCone(name=name, 
-                                    base=base, height=height, 
-                                    radius1=radius1, radius2=radius2,
-                                    macrobodyNum=macrobodyNum)  
-    # ----cell--------
-    impString = self.getImpString() #'imp:p=1'
+    macroString += toMCNP80String('c ---%s'%(descrStr))  
+    #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
+    #801 1 rcc 0  0  0  1  1  1  5
+    macroString += toMCNP80String('%d %s REC %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f'\
+                             %(surfaceNum, trNumString, *v, *h, *v1, Rm))
   
-    descrStr = '%s, macrobody:%d, cellNum:%d, baseX:%.2f, baseY:%.2f, baseZ:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, radius1:%.2f, radius2:%.2f, matName:%s, density:%.2f'\
-                  %(name, macrobodyNum, cellNum, *base, *height,
-                    radius1, radius2, matName, density)
+    self.collectedSurfaceStrings += macroString
   
-    self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-macrobodyNum], # cellComplementList=None, 
-                               matName=matName, density=density,
-                               shift=shift, rotMatrix=rotMatrix,
-                               impString=impString, cellNum=cellNum, uni=uni)
-  
-    return macrobodyNum, cellNum
+    printIfShow(macroString)
+    return surfaceNum
+#############################################################################
+  ### !!!-----
+  # Follownig macros don't have convenience functions yet
+  # Will be added as needed
+  def insertMacroEllipsoid(self, name, v1=(0,0,-2), v2=(0,0,2), Rm=6,
+                                        surfaceNum=None, trNum=None):
+    """
+    ELL V1x V1y V1z V2x V2y V2z Rm
+    If Rm > 0:
+      V1x Vly V1z = first focus coordinate
+      V2x V2y V2z = second focus coordinate
+      Rm = length of major axis
+    If Rm < 0:
+      V1x Vly V1z = center of ellipsoid
+      V2x V2y V2z = major axis vector (length = major radius)
+      Rm = minor radius length
 
-    # Add cone shell when needed.
+    Returns assigned surface number.    
+    """
+    if surfaceNum == None: surfaceNum = self._getNextSN()
+    trNumString = '' if trNum==None else '%d'%(trNum)
+    
+    macroString = ''
+    descrStr = '%s, ellipsoid macrobody:%d, trNum:%s, v1X:%.4f, v1Y:%.4f, v1Z:%.4f, v2X:%.4f, v2Y:%.4f, v2Z:%.4f, Rm:%.4f'\
+                  %(name, surfaceNum, trNumString, *v1, *v2, Rm)
+    # ----macro--------
+    macroString += toMCNP80String('c ---%s'%(descrStr))  
+    #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
+    #801 1 rcc 0  0  0  1  1  1  5
+    macroString += toMCNP80String('%d %s ELL %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f'\
+                             %(surfaceNum, trNumString, *v1, *v2, Rm))
+  
+    self.collectedSurfaceStrings += macroString
+  
+    printIfShow(macroString)
+    return surfaceNum
+#############################################################################
+  ### !!!-----
+  def insertMacroARB(self, name, a=(-5,-10,-5), b=(-5,-10,5), c=(5,-10,-5), d=(5,-10,5),
+                     e=(0,12,0), f=(0,0,0), g=(0,0,0), h=(0,0,0),
+                     N1=1234, N2=1250, N3=1350, N4=2450, N5=3450, N6=0,
+                    surfaceNum=None, trNum=None):
+    """
+    ARB ax ay az bx by bz cx cy cz ... hx by hz N1 N2 N3 N4 N5 N6
+    
+    There must be eight triplets of entries input for the ARB to describe the 
+    (x,y,z) of the corners, although some may not be used (just use zero triplets 
+    of entries). These are followed by six more entries, N, which follow the 
+    prescription: each entry is a four-digit integer that defines a side of the 
+    ARB in terms of the corners for the side.
+
+    ARB -5 -10 -5   -5 -10 5   5 -10 -5   5 -10 5   0 12 0   0 0 0
+    0 0 0  0 0 0  1234 1250 1350 2450 3450 0
+
+    A five-sided polyhedron with corners at x,y,z = (-5,-10,-5), (-5,-10,6),
+    (5,-10,-5), (5,-10,5), (0,12,0), and planar facets are constructed from
+    corners 1234, etc
+    
+    Returns assigned surface number.
+    """
+    if surfaceNum == None: surfaceNum = self._getNextSN()
+    trNumString = '' if trNum==None else '%d'%(trNum)
+    
+    macroString = ''
+    descrStr = '%s, ARB macrobody:%d, trNum:%s, \
+                     aX:%.2f,aY:%.2f,aZ:%.2f, bX:%.2f,bY:%.2f,bZ:%.2f, \
+                     cX:%.2f,cY:%.2f,cZ:%.2f, dX:%.2f,dY:%.2f,dZ:%.2f, \
+                     eX:%.2f,eY:%.2f,eZ:%.2f, fX:%.2f,fY:%.2f,fZ:%.2f, \
+                     gX:%.2f,gY:%.2f,gZ:%.2f, hX:%.2f,hY:%.2f,hZ:%.2f, \
+                       N1:%d, N2:%d, N3:%d, N4:%d, N5:%d, N6:%d'\
+                  %(name, surfaceNum, trNumString, *a, *b, *c, *d, *e, *f, *g, *h,
+                            N1, N2, N3, N4, N5, N6)
+    # ----macro--------
+    macroString += toMCNP80String('c ---%s'%(descrStr))  
+    #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
+    #801 1 rcc 0  0  0  1  1  1  5
+    macroString += toMCNP80String('%d %s ARB %.4f %.4f %.4f   %.4f %.4f %.4f \
+                                  %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f %.4f %.4f \
+                                  %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f  \
+                                  %d  %d  %d  %d  %d  %d'\
+                             %(surfaceNum, trNumString, *a, *b, *c, *d, *e, *f, *g, *h,
+                            N1, N2, N3, N4, N5, N6))
+  
+    self.collectedSurfaceStrings += macroString
+  
+    printIfShow(macroString)
+    return surfaceNum
+
 #############################################################################
   ### !!!-----
   # ??? another function or parameter option to describe the world without
   # ??? using complements? Using only surfaces???
   def insertWorldMacroAndCell(self, pos=(0,0,0), radius=50, surfaceList=None,
                                  worldMat='Void',  worldDensity=0, 
-                                 worldMacroNum=0, worldCellNum=0, graveyardCellNum=0):
+                                 worldSurfaceNum=None, worldCellNum=None, graveyardCellNum=None):
     """
-    This function inserts a macro to define the world/graveyard.
+    This function inserts a sphere macro to define the world/graveyard.
     This can be done using using automatic cell complement. 
     If you would like to define the world without using complements, just provide
     a surfaceList which contains all the surfaces whose outside defines the world.
-    The worldMacroNum will the surface whose inside will define the world.
+    The worldSurfaceNum will the surface whose inside will define the world.
     
     Only the radius needs to be specified.
     Define the world cell using a sphere macro.
@@ -840,15 +1223,15 @@ class CardDeck:
     but If the # is omitted, the cell number will be treated as a macro/surface
     number leading to unexpected results if such a macro/surface exists!!!
     """
-    if worldMacroNum == 0: worldMacroNum = self._getNextSN()
-    if worldCellNum == 0: worldCellNum = self._getNextCN()
-    if graveyardCellNum == 0: graveyardCellNum = self._getNextCN()
+    if worldSurfaceNum == None: worldSurfaceNum = self._getNextSN()
+    if worldCellNum == None: worldCellNum = self._getNextCN()
+    if graveyardCellNum == None: graveyardCellNum = self._getNextCN()
     
     # ----macro--------
     # c -------World sphere macrobody-------------------------------------
     # 900   so 120  $ sphere at origin
-    worldMacroNum = self.insertMacroSphere(name='Universe', pos=pos, radius=radius, 
-                                          macrobodyNum=worldMacroNum)
+    worldSurfaceNum = self.insertMacroSphere(name='Universe', pos=pos, radius=radius, 
+                                          surfaceNum=worldSurfaceNum)
     
     # ----cell--------    
     descrStr = 'World cells---%s inside------------------'%(worldMat)
@@ -859,17 +1242,17 @@ class CardDeck:
     if surfaceList is not None:
       # we are using the surfaceList to define the world
       cellsToComplement = None 
-      surfaceList.append(-worldMacroNum)
+      surfaceList.append(-worldSurfaceNum)
     else:
-      # we are using cell complement list (along with worldMacroNum)
+      # we are using automatic cell complement list (along with worldSurfaceNum)
       cellsToComplement = None 
-      surfaceList = [-worldMacroNum]
+      surfaceList = [-worldSurfaceNum]
       uniZeroCellList = []
       for c in self.cellNumNameList:
         if c[2] == 0:
           uniZeroCellList.append(c[0])
       if len(uniZeroCellList) > 0: # incase there are no cells other than the universe
-        cellsToComplement = uniZeroCellList # ??? only uni=0
+        cellsToComplement = uniZeroCellList
   
   # 900 124 -0.0012 -900 %s imp:p=1 $ Air inside
   # 999   0          900    imp:p=0 $ Void cell outside
@@ -884,8 +1267,8 @@ class CardDeck:
   #  else:
   #    cellListString = ''
   #    
-  #  worldCell = worldCell%(worldCellNum, matNum, uniDensityString, worldMacroNum, cellListString, imp1String,
-  #                               graveyardCellNum, worldMacroNum, imp0String)
+  #  worldCell = worldCell%(worldCellNum, matNum, uniDensityString, worldSurfaceNum, cellListString, imp1String,
+  #                               graveyardCellNum, worldSurfaceNum, imp0String)
   #  cellString += toMCNP80String(universeCell)
   
     self.insertIntoCellSection('c '+descrStr)
@@ -893,13 +1276,13 @@ class CardDeck:
                    matName=worldMat, density=worldDensity, 
                    impString=imp1String, cellNum=worldCellNum)
   
-    cn2 = self.insertCellString(name='Graveyard', surfaceList=[worldMacroNum], 
+    cn2 = self.insertCellString(name='Graveyard', surfaceList=[worldSurfaceNum], 
                            matName='Void', density=worldDensity, 
                            impString=imp0String, cellNum=graveyardCellNum)
     
     self.printCellNumNameList()
     
-    return worldMacroNum, (cn1, cn2)
+    return worldSurfaceNum, (cn1, cn2)
 
   def printCellNumNameList(self):
     """
@@ -908,17 +1291,18 @@ class CardDeck:
     usually the last one to be instantiated.
     """
     print('---------Cell List------------')
+    print('CellNum, name, UniNum')
     numName = sorted(self.cellNumNameList, key=lambda tup: tup[0])
     for n in numName:
       print(n)
     print('------------------------------')
   ### !!!----------TRANSLATE ROTATE FUNCTIONS----------
-  def insertTRString(self, name, shift=(0,0,0), rotMatrix=None, trNum=0):
+  def insertTRString(self, name, shift=(0,0,0), rotMatrix=None, trNum=None):
     """
     Used by insertMacro functions to insert a TRanslate/Rotate string.
     The rotation happens before the translate.
     """  
-    if trNum == 0: trNum = self._getNextTRN()
+    if trNum is None: trNum = self._getNextTRN()
     
     descrStr = '%s, shift: %.2f %.2f %.2f'%(name, *shift)
     trString = toMCNP80String('c ---%s'%(descrStr))  
@@ -952,15 +1336,15 @@ class CardDeck:
     """
     The provided rotMatrix should be in degrees.
     """
-    trclTemplate = '*TR%d  %.3f %.3f %.3f  %.3f %.3f %.3f   %.3f %.3f %.3f   %.3f %.3f %.3f' # * for degree
+    trTemplate = '*TR%d  %.3f %.3f %.3f  %.3f %.3f %.3f   %.3f %.3f %.3f   %.3f %.3f %.3f' # * for degree
     if shift[0]==0 and shift[1]==0 and shift[2]==0 and rotMatrix is None:
-      trclString = ''
+      trString = ''
     elif rotMatrix is None:
-      trclString = '*TR%d  %.6f %.6f %.6f'%(*shift,)
+      trString = '*TR%d  %.6f %.6f %.6f'%(*shift,)
     else:
-      trclString = trclTemplate%(trNum, *shift, *rotMatrix)
-  
-    return trclString
+      trString = trTemplate%(trNum, *shift, *rotMatrix)
+
+    return trString
 
   def getTrclStringDeg(self, shift=(0,0,0), rotMatrix=None):
     """ 
@@ -1157,8 +1541,9 @@ class CardDeck:
   """
   ### !!!----Point sources
   def insertSource_PointIsotropicWithEnergyDistrib(self, pos=[0,0,0], 
-            eList=[0, .3, .5, 1.0, 2.5], relFq=[0, .2, .1, .3, .4], 
-            distrib='Discrete', par='P', trNum=None):
+                           ergDistrib='Discrete', # 'Histogram', 'Continuous'
+                           eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], 
+                           par='P', trNum=None):
     """
     First entry on SP card has to be zero for Continuous only ???
     """
@@ -1171,7 +1556,7 @@ SDEF POS=%.2f %.2f %.2f ERG=d1 PAR=%s %s $ energy distribution
 """
     #----------------------------------------------------------
     ergString = self.getEnergyDistributionString(distNum=1, eList=eList, relFq=relFq, 
-                                            distrib=distrib, vertString=True)
+                                            distrib=ergDistrib, vertString=True)
   
     sdefString = top%(*pos, par, trNumString) + ergString
   
@@ -1179,8 +1564,9 @@ SDEF POS=%.2f %.2f %.2f ERG=d1 PAR=%s %s $ energy distribution
     return sdefString
 
   def insertSource_PointMonoDirWithEnergyDistrib(self, pos=[0,0,0], vec=[0,1,0], 
-            eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], distrib='Histogram', 
-            par='P',  trNum=None):
+                           ergDistrib='Discrete', # 'Histogram', 'Continuous'
+                           eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], 
+                           par='P',  trNum=None):
     """
     Does not work???
     Point source which is also monodirectional... has problems? Mainly with F5 
@@ -1201,96 +1587,144 @@ SDEF POS=%.2f %.2f %.2f  VEC=%.2f %.2f %.2f DIR=1 ARA=0 ERG=d1 PAR=%s %s $ energ
     # ??? Change to using .format
     #----------------------------------------------------------
     ergString = self.getEnergyDistributionString(distNum=1, eList=eList, relFq=relFq, 
-                                            distrib=distrib, vertString=True)
+                                            distrib=ergDistrib, vertString=True)
   
     sdefString = top%(*pos, *vec, par, trNumString) + ergString
   
-    global collectedSrcStrings
-    collectedSrcStrings = sdefString  
+    self.collectedSrcStrings = sdefString
     return sdefString
 
-  def insertSource_PointWithAngularBiasingAndEnergyDistrib(self, pos=[0,0,0], vec=[0,1,0], 
-          coneHalfAngleDeg=25.8, eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], 
-          distrib='Histogram',par='P'):
+  def insertSource_PointWithAngularAndEnergyDistrib(self, pos=[0,0,0], 
+                           dirDistrib=None, # None, Bias, Restrict
+                           vec=[0,1,0], coneHalfAngleDeg=25.8,
+                           ergDistrib='Discrete', # 'Histogram', 'Continuous'
+                           eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], 
+                           par='P', trNum=None):
     """
-    Source is still isotropic but with Angular biasing???
-    So the values will be the same as with isotropic?
+    ergDistrib - 'Discrete', 'Histogram', 'Continuous'    
+    dirDistrib - None, 'Bias', 'Restrict'
+    coneHalfAngleDeg - Ignored if dirDistrib is None
+    
+    Source is still isotropic but with Angular biasing.
+    So the values will be the same as with isotropic, but convergence should be faster.
     coneHalfAngleDeg - Between 0 and 180 deg.
     """
     assert(len(eList) == len(relFq))
+
+    assert(len(eList) == len(relFq))
+
+    ergDistNum = 1
+    dirDistNum = 2 # angular biasing distribution of particle initial direction
+
+    if dirDistrib is None:
+      dirString = ''
+      dirDistNumString = ''
+
+    elif dirDistrib == 'Bias':
+      dirString = self.getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+      dirDistNumString = "DIR=d%d"%(dirDistNum)
+    elif dirDistrib == 'Restrict':
+      dirString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+      dirDistNumString = "DIR=d%d"%(dirDistNum)
+
+    ergString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq, 
+                                            distrib=ergDistrib, vertString=True)
+
+    trNumString = '' if trNum==None else 'TR=%d'%(trNum)    
+  
     top = """\
 c ----- Source: point source with biasing tabulated photon energy distribution
-c -----Bias angle: %.2f
-SDEF POS=%.2f %.2f %.2f VEC=%.2f %.2f %.2f DIR=d4 ERG=d1 PAR=%s $ energy distribution
+SDEF POS={posX:.2f} {posY:.2f} {posZ:.2f} VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} \
+ERG=d{ergDistNum:d} {dirDistNumString} PAR={par} {trNumString} $ energy distribution
 """
-    angularBiasingString = self.getAngularBiasingString(4, coneHalfAngleDeg)
-    
-    ergString = self.getEnergyDistributionString(distNum=1, eList=eList, relFq=relFq, 
-                                            distrib=distrib, vertString=True)
-  
-    sdefString = top%(coneHalfAngleDeg, *pos,*vec,par) + angularBiasingString + ergString
+    sdefString = top.format(posX=pos[0], posY=pos[1], posZ=pos[2],
+                            vecX=vec[0], vecY=vec[1], vecZ=vec[2],
+                            ergDistNum=ergDistNum,
+                            dirDistNumString=dirDistNumString,
+                            par=par, trNumString=trNumString)
+    sdefString = sdefString + dirString + ergString
   
     self.collectedSrcStrings = sdefString
     return sdefString
+  
   ### !!!---Volumetric sources
-  def insertSource_SphereWithAngularBiasingAndEnergyDistrib(self, 
-                          pos=[0,0,0], radius=.05, 
-                          vec=[0,1,0], coneHalfAngleDeg=1, 
-                          eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
-                          rejCell=None, eff=0.01, trNum=None):
+  def insertSource_SphereWithAngularAndEnergyDistrib(self, 
+                           pos=[0,0,0], radius=.05,
+                           dirDistrib=None, # None, Bias, Restrict
+                           vec=[0,1,0], coneHalfAngleDeg=1, 
+                           eList=[.3, .5, 1.0, 2.5], # bin edges (first edge is 0)
+                           relFq=[0, .1, .3, .4], # values for bins, will be normalized
+                           ergDistrib='Discrete', # 'Histogram', 'Continuous'
+                           rejCell=None, eff=0.01, 
+                           par='P', trNum=None):
     """
     This uses the POS, RAD for particle origin while the cylinder also uses
-    the AXS and EXT.
-    
+    the AXS and EXT.    
     Both use VEC and DIR for emission direction.
+
+    ergDistrib - 'Discrete', 'Histogram', 'Continuous'
+    dirDistrib - None, 'Bias', 'Restrict'
+    coneHalfAngleDeg - Ignored if dirDistrib is None
     """
     assert(len(eList) == len(relFq))
-      
-  #  enStr = '  '.join(['{:.2f}'.format(x) for x in eList])
-  #  fqStr = '  '.join(['{:.2f}'.format(x) for x in relFq])
-    
+          
     radDistNum = 1
     #extDistNum = 2
-    dirDistNum = 3 # angular biasing distribution of particle initial direction
-    ergDistNum = 4
+    ergDistNum = 3
+    dirDistNum = 4 # angular biasing distribution of particle initial direction
+    
     if rejCell == None:
       rejCellString = ''
     else:
       rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
-    dirDistribString = self.getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq)
+
+    if dirDistrib is None:
+      dirString = ''
+      dirDistNumString = ''
+    elif dirDistrib == 'Bias':
+      dirString = self.getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+      dirDistNumString = "DIR=d%d"%(dirDistNum)
+    elif dirDistrib == 'Restrict':
+      dirString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+      dirDistNumString = "DIR=d%d"%(dirDistNum)
+      
+    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq,
+                                                        distrib=ergDistrib)
   
     trNumString = '' if trNum==None else 'TR=%d'%(trNum)
   
     top = """\
-c ----- Source: Disk, tabulated photon energy distribution, disk source
-SDEF PAR=p POS={posX:.2f} {posY:.2f} {posZ:.2f} RAD=d{radDistNum:d} \
-VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} DIR=d{dirDistNum:d} \
-ERG=d{ergDistNum:d} {rejCellString} {trNumString}
+c ----- Volume Source: Sphere
+SDEF POS={posX:.2f} {posY:.2f} {posZ:.2f} RAD=d{radDistNum:d} \
+VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} ERG=d{ergDistNum:d} \
+{dirDistNumString} PAR={par} {rejCellString} {trNumString}
 si{radDistNum:d}    0   {radius:.4f}       $ Source information d1 RAD source radius wrt AXS (.05 is 1 mm dia spot)
-sp{radDistNum:d}   -21  1          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)
+sp{radDistNum:d}   -21  2          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)
 """
   #  top = """ """
     sdefString = top.format(posX=pos[0], posY=pos[1], posZ=pos[2], radius=radius,
-                      vecX=vec[0], vecY=vec[1], vecZ=vec[2],                     
+                      vecX=vec[0], vecY=vec[1], vecZ=vec[2],                   
                       radDistNum=radDistNum,
-                      dirDistNum=dirDistNum,
-                      ergDistNum=ergDistNum, rejCellString=rejCellString, 
-                      trNumString=trNumString)
+                      ergDistNum=ergDistNum,
+                      dirDistNumString=dirDistNumString,
+                      rejCellString=rejCellString,
+                      par=par, trNumString=trNumString)
   
-    sdefString = sdefString + dirDistribString + ergDistribString  
+    sdefString = sdefString + ergDistribString + dirString 
     sdefString = toMCNP80String(sdefString)
   
     self.collectedSrcStrings = sdefString
     return sdefString
 
-
-  def insertSource_CylinderWithAngularBiasingAndEnergyDistrib(self,
-                          pos=[0,0,0], radius=.05, 
-                          axs=[0,1,0], thickness=.1, 
-                          vec=[0,1,0], coneHalfAngleDeg=1, 
-                          eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
-                          rejCell=None, eff=0.01, trNum=None):
+  def insertSource_CylinderWithAngularAndEnergyDistrib(self,
+                           pos=[0,0,0], radius=.05, 
+                           axs=[0,1,0], thickness=.1, 
+                           dirDistrib=None, # None, Bias, Restrict
+                           vec=[0,1,0], coneHalfAngleDeg=1, 
+                           ergDistrib='Discrete', # 'Histogram', 'Continuous'
+                           eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4],
+                           rejCell=None, eff=0.01, 
+                           par='P', trNum=None):
     """
     Can be used to create a disk source, pencil source with very small coneHalfAngle
     This is a volume source. The emission cone is along the cylinder axis.
@@ -1303,8 +1737,11 @@ sp{radDistNum:d}   -21  1          $ Source Prob: sampling 0 is constant for lin
     Get the user to provide a second radius and extent value?
     
     The distribution numbers are hard coded, for eg energy is dist 2.
+    ergDistrib - 'Discrete', 'Histogram', 'Continuous'
+
+    dirDistrib - None, 'Bias', 'Restrict'
+    coneHalfAngleDeg - Ignored if dirDistrib is None
     
-    To make this a Bremstrahlung spectrum, change the en/fq lists.
     The vertical entry format starting indicated by # is used for ease of 
     entry/debug.
     
@@ -1340,16 +1777,26 @@ sp{radDistNum:d}   -21  1          $ Source Prob: sampling 0 is constant for lin
     
     radDistNum = 1
     extDistNum = 2
-    dirDistNum = 3 # angular biasing distribution of particle initial direction
-    ergDistNum = 4
+    ergDistNum = 3
+    dirDistNum = 4 # angular biasing distribution of particle initial direction (DIR)
+
     if rejCell == None:
       rejCellString = ''
     else:
       rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
   
-    #dirDistribString = getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    dirDistribString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq)
+    if dirDistrib is None:
+      dirString = ''
+      dirDistNumString = ''
+    elif dirDistrib == 'Bias':
+      dirString = self.getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+      dirDistNumString = "DIR=d%d"%(dirDistNum)
+    elif dirDistrib == 'Restrict':      
+      dirString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+      dirDistNumString = "DIR=d%d"%(dirDistNum)
+    
+    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq,
+                                                        distrib=ergDistrib)
   
     trNumString = '' if trNum==None else 'TR=%d'%(trNum)
   
@@ -1365,10 +1812,11 @@ sp{radDistNum:d}   -21  1          $ Source Prob: sampling 0 is constant for lin
   #                                          distrib='Discrete', vertString=True)
   
     top = """\
-c ----- Source: Disk, 
+c ----- Volume Source: Cylinder
 SDEF PAR=p POS={posX:.2f} {posY:.2f} {posZ:.2f} RAD=d{radDistNum:d} \
 AXS={axsX:.2f} {axsY:.2f} {axsZ:.2f} EXT=d{extDistNum:d} \
-VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} DIR=d{dirDistNum:d} ERG=d{ergDistNum:d} {rejCellString} {trNumString}
+VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} ERG=d{ergDistNum:d} \
+{dirDistNumString} PAR={par} {rejCellString} {trNumString}
 SI{radDistNum:d}    0   {radius:.4f}       $ Source information d1 RAD source radius wrt AXS (.05 is 1 mm dia spot)
 SP{radDistNum:d}   -21  1          $ Source Prob: sampling 0 is constant for line source, area: 1, volume: 2 (-21 is power law, r, r^2)
 SI{extDistNum:d}    0.0  {ext:.4f}      $ Source Information d3 EXT source thickness from POS along AXS
@@ -1381,44 +1829,60 @@ SP{extDistNum:d}    0    1         $ Source Probability uniform distribution bet
                       radius=radius, ext=thickness,
                       radDistNum=radDistNum,
                       extDistNum=extDistNum,
-                      dirDistNum=dirDistNum,
-                      ergDistNum=ergDistNum, rejCellString=rejCellString, 
-                      trNumString=trNumString)
+                      ergDistNum=ergDistNum, 
+                      dirDistNumString=dirDistNumString,
+                      rejCellString=rejCellString,
+                      par=par, trNumString=trNumString)
   
-    sdefString = sdefString + dirDistribString + ergDistribString  
+    sdefString = sdefString + ergDistribString + dirString
     sdefString = toMCNP80String(sdefString)
   
     self.collectedSrcStrings = sdefString
     return sdefString
 
   def insertSource_BoxWithAngularAndEnergyDistrib(self,
-                          xRange=[0,1], yRange=[0,1], zRange=[0,1],
-                          vec=[0,1,0], coneHalfAngleDeg=1, 
-                          eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
-                          rejCell=None, eff=0.01, trNum=None):
+                           xRange=[0,1], yRange=[0,1], zRange=[0,1],
+                           dirDistrib=None, # None, Bias, Restrict
+                           vec=[0,1,0], coneHalfAngleDeg=1, 
+                           ergDistrib='Discrete', # 'Histogram', 'Continuous'
+                           eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4],
+                           rejCell=None, eff=0.01, 
+                           par='P', trNum=None):
     """
+    ergDistrib - 'Discrete', 'Histogram', 'Continuous'
+
+    dirDistrib - None, 'Bias', 'Restrict'
+    coneHalfAngleDeg - Ignored if dirDistrib is None
+
     Page 12 of MCNP primer.
     Volumetric box source is created using X/Y/Z keywords with each having.
     a distribution that specifies the xrange/yrange/zrange.
     """
     assert(len(eList) == len(relFq))
-      
-  #  enStr = '  '.join(['{:.2f}'.format(x) for x in eList])
-  #  fqStr = '  '.join(['{:.2f}'.format(x) for x in relFq])
-    
+          
     xDistNum = 1
     yDistNum = 2
     zDistNum = 3
-    dirDistNum = 4 # angular biasing distribution of particle initial direction
-    ergDistNum = 5
+    ergDistNum = 4
+    dirDistNum = 5 # angular biasing distribution of particle initial direction
+    
     if rejCell == None:
       rejCellString = ''
     else:
       rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
   
-    #dirDistribString = getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    dirDistribString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
-    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq)
+    if dirDistrib is None:
+      dirString = ''
+      dirDistNumString = ''      
+    elif dirDistrib == 'Bias':
+      dirString = self.getAngularBiasingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+      dirDistNumString = "DIR=d%d"%(dirDistNum)
+    elif dirDistrib == 'Restrict':      
+      dirString = self.getAngularRestrictingString(distNum=dirDistNum, coneHalfAngleDeg=coneHalfAngleDeg)
+      dirDistNumString = "DIR=d%d"%(dirDistNum)
+
+    ergDistribString = self.getEnergyDistributionString(distNum=ergDistNum, eList=eList, relFq=relFq,
+                                                        distrib=ergDistrib)
   
     trNumString = '' if trNum==None else 'TR=%d'%(trNum)
   
@@ -1434,9 +1898,10 @@ SP{extDistNum:d}    0    1         $ Source Probability uniform distribution bet
   #                                          distrib='Discrete', vertString=True)
   
     top = """\
-c ----- Source: Box, 
+c ----- Volume Source: Box
 SDEF PAR=p X=d{xDistNum:d} Y=d{yDistNum:d} Z=d{zDistNum:d} \
-VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} DIR=d{dirDistNum:d} ERG=d{ergDistNum:d} {rejCellString} {trNumString}
+VEC={vecX:.2f} {vecY:.2f} {vecZ:.2f} ERG=d{ergDistNum:d} \
+{dirDistNumString} PAR={par} {rejCellString} {trNumString}
 SI{xDistNum:d} {xLo:.4f} {xHi:.4f}       $ Source information d1 x
 SP{xDistNum:d}    0  1          $ Source Prob: constant 1
 SI{yDistNum:d} {yLo:.4f} {yHi:.4f}       $ Source information d1 y
@@ -1449,12 +1914,14 @@ SP{zDistNum:d}    0  1          $ Source Prob: constant 1
                       xLo = xRange[0], xHi = xRange[1],
                       yLo = yRange[0], yHi = yRange[1],
                       zLo = zRange[0], zHi = zRange[1],
-                      vecX=vec[0], vecY=vec[1], vecZ=vec[2],
+                      vecX=vec[0], vecY=vec[1], vecZ=vec[2],            
                       dirDistNum=dirDistNum,
-                      ergDistNum=ergDistNum, rejCellString=rejCellString, 
-                      trNumString=trNumString)
+                      ergDistNum=ergDistNum, 
+                      dirDistNumString=dirDistNumString,
+                      rejCellString=rejCellString, 
+                      par=par, trNumString=trNumString)
   
-    sdefString = sdefString + dirDistribString + ergDistribString  
+    sdefString = sdefString + ergDistribString + dirString
     sdefString = toMCNP80String(sdefString)
   
     self.collectedSrcStrings = sdefString
@@ -1462,9 +1929,11 @@ SP{zDistNum:d}    0  1          $ Source Prob: constant 1
 
   ### !!!---Special case
   def insertSource_SphSurfaceWithCCC(self, surNum=0,
-                          eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
-                          trNum=None):
+                           ergDistrib='Discrete', # 'Histogram', 'Continuous'                                     
+                           eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], 
+                           trNum=None):
     """
+    Experimental: Surface source
     To use this source, first define an emitting surface and optionally a cookie
     cutting cell for rejection.
 
@@ -1839,34 +2308,40 @@ FT{tallyNumWType} {treatmentKeyword} {argsStr}
     
     return
 
-  def getFXTallySTring(self, tallyNum, tallyType, cellListList, eList=None, mList=None, par='p'):
+  def getFXTallySTring(self, tallyNum, tallyType, cellSurfInfo, eList=None, mList=None, par='p'):
     """
-    Can this function do F1/2/4/6/7 and maybe 8?
-    ??? Clean for all possible cases of the cell type.
+    Used for F1/2/4/6/7/8.
+    The cellDescriptor has too many options according to the MCNP manual.
+    The string is the most generic way to handle anything that MCNP supports.
+    An int or float can also be passed in.
+    If a list/tuple is passed, each element in it is converted to a string and
+    wrapped with parentheses.
+    
+    See Chapter 4, page 4–48, for a CAUTION when tallying a union of overlapping 
+    regions. For unnormalized tallies (type 1, 8), the union is a sum. For 
+    normalized tallies (type 2, 4, 6, 7), the union is an average.
+
+    When cell is given from another universe, (1<4), it is a string
+    The string case can actually take care of the int/float also
+    Page 3-19, MCNP 6.1: "Parentheses indicate that the tally is for the union 
+    of the items within the parentheses.
+    Nested lists can get complicated so it is best to just use the string.
     """
     tallyNumWType = t = tallyNum*10 + tallyType #'%d5'%(tallyNum)
   
     cellString = ''
-    for c in cellListList:
+    if type(cellSurfInfo) is str: 
+      cellString += '%s '%(cellSurfInfo)
       # single cell or surface 
-      if type(c) is int:
-        cellString += '%d '%(c)
+    elif type(cellSurfInfo) is int:
+        cellString += '%d '%(cellSurfInfo)
       # Surface numbers can be given as 5.1
-      if type(c) is float: 
-        cellString += '%.1f '%(c)
-      # When cell is given from another universe, (1<4), it is a string
-      # The string case can take care of the int/float also?
-      if type(c) is str: 
-        cellString += '%s '%(c)
-      # Page 3-19, MCNP 6.1: "Parentheses indicate that the tally is for the union 
-      # of the items within the parentheses."
-      # ??? One level of nesting?
-      # Will work for int/str/nested int/str, but not float which requires a.b with one decimal
-      # ??? recursive?
-      elif type(c) in (list, tuple):
+    elif type(cellSurfInfo) is float: 
+        cellString += '%.1f '%(cellSurfInfo)
+    elif type(cellSurfInfo) in (list, tuple):
         s = '('
-        for cc in c:
-          s+=' %s'%(str(cc))
+        for c in cellSurfInfo:
+          s+=' %s'%(str(c))
         s+=')'  
         cellString += '%s '%(s)
         
@@ -1897,58 +2372,58 @@ F{t}:{par}         $ pulse height tally
 #    Depending on the tally used, it could be surfaces.
 
   ### !!!---Tallies
-  def insertF1Tally(self, tallyNum, surfListList, eList=None, mList=None, par='p'):
+  def insertF1Tally(self, tallyNum, surfInfo, eList=None, mList=None, par='p'):
     """
     Current integrated over a surface. Units: particles.
     """
-    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=1, cellListList=surfListList, eList=eList, mList=mList, par=par)
+    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=1, cellSurfInfo=surfInfo, eList=eList, mList=mList, par=par)
   
     self.collectedTallyStrings += s
     return tallyNumWType
   
-  def insertF2Tally(self, tallyNum, surfListList, eList=None, mList=None, par='p'):
+  def insertF2Tally(self, tallyNum, surfInfo, eList=None, mList=None, par='p'):
     """
     Flux averaged over a surface. Units: particles/cm2.
-    Depends on material behind the surface!!! Why?
+    Depends on material behind the surface? Why?
     """
-    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=2, cellListList=surfListList, eList=eList, mList=mList, par=par)
+    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=2, cellSurfInfo=surfInfo, eList=eList, mList=mList, par=par)
   
     self.collectedTallyStrings += s
     return tallyNumWType
   
-  def insertF4Tally(self, tallyNum, cellListList, eList=None, mList=None, par='p'):
+  def insertF4Tally(self, tallyNum, cellInfo, eList=None, mList=None, par='p'):
     """
     Flux averaged over a CELL. Units: particles/cm2
     Depends on material in the cell.
     """
-    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=4, cellListList=cellListList, eList=eList, mList=mList, par=par)
+    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=4, cellSurfInfo=cellInfo, eList=eList, mList=mList, par=par)
   
     self.collectedTallyStrings += s
     return tallyNumWType
   
-  def insertF6Tally(self, tallyNum, cellListList, eList=None, mList=None, par='p'):
+  def insertF6Tally(self, tallyNum, cellInfo, eList=None, mList=None, par='p'):
     """
     Energy deposition averaged over a CELL. Units: particles/cm2.
     Cell material must not be void.
     """
-    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=6, cellListList=cellListList, eList=eList, mList=mList, par=par)
+    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=6, cellSurfInfo=cellInfo, eList=eList, mList=mList, par=par)
   
     self.collectedTallyStrings += s
     return tallyNumWType
   
-  def insertF7Tally(self, tallyNum, cellListList, eList=None, mList=None):
+  def insertF7Tally(self, tallyNum, cellInfo, eList=None, mList=None):
     """
     Fission energy deposition averaged over a CELL. Units: particles/cm2.
     Only for neutrons.
     ??? Need to create a test case.
     """
-    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=7, cellListList=cellListList, eList=eList, mList=mList, par='n')
+    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=7, cellSurfInfo=cellInfo, eList=eList, mList=mList, par='n')
   
     self.collectedTallyStrings += s
     return tallyNumWType
   
   
-  def insertF8Tally(self, tallyNum, cellListList, eList=None, mList=None, par='p,e'):
+  def insertF8Tally(self, tallyNum, cellInfo, eList=None, mList=None, par='p,e'):
     """
     For pulse-height tallies photons/electrons are a special case: F8:P,E is the same 
     as F8:P and F8:E. Also, F8 tallies may have particle combinations such as F8:N,H.  
@@ -1991,7 +2466,7 @@ F{t}:{par}         $ pulse height tally
   
     F8 tallies always tally both p and e.
     """
-    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=8, cellListList=cellListList, eList=eList, mList=mList, par=par)
+    tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=8, cellSurfInfo=cellInfo, eList=eList, mList=mList, par=par)
   
     self.collectedTallyStrings += s
     return tallyNumWType
@@ -2097,15 +2572,15 @@ C{t}   {tMin:.3f} {tbins-1}i {tMax:.3f}  $ T axis, tmin, bins-1, tmax numCols
   #  """ """
   #  pass # To be implemented
 
-  def insertDebugTallyString(self, worldMacroNum):
+  def insertDebugTallyString(self, worldSurfaceNum):
     """
-    Debug tally needs the worldMacroNum. (Works off surface, not cell).
+    Debug tally needs the worldSurfaceNum. (Works off surface, not cell).
     This is a specific use of the F1 tally?
     """
     debugTallyString = \
 """c -- Debug tally --
 F1011:p %d              $ debug tally with universe surface to see if all particles come out
-"""%(worldMacroNum)
+"""%(worldSurfaceNum)
   
     self.collectedTallyStrings += debugTallyString
   
@@ -2269,19 +2744,31 @@ PHYS:e 100 {ides} 0 0 0 1 1 1 1 0
     """
     self.collectedCellStrings += toMCNP80String(s)
     
-  def insertIntoMacroSection(self, s):
+  def insertIntoSurfaceSection(self, s):
     """
     Use this function to insert manually generated/unsupported cards into the
     macros/surfaces section.
     """
-    self.collectedMacroStrings += toMCNP80String(s)
+    self.collectedSurfaceStrings += toMCNP80String(s)
 
-  def insertIntoMaterialSection(self, s):
+  def insertIntoSrcSection(self, s):
     """
     Use this function to insert manually generated/unsupported cards into the
-    data section.
+    data section. Could have gone into any of: collectedMatStrings, collectedTrStrings,
+    collectedSrcStrings, collectedTallyStrings, collectedPhysicsStrings, 
+    collectedOutputControlStrings which together comprise the data section.
+    But Mat has its own method. TR section is too simple to need one.
     """
-    self.collectedMatStrings += toMCNP80String(s)
+    self.collectedSrcStrings += toMCNP80String(s)
+  def insertIntoTallySection(self, s):
+    """  """
+    self.collectedTallyStrings += toMCNP80String(s)
+  def insertIntoPhysicsSection(self, s):
+    """  """
+    self.collectedPhysicsStrings += toMCNP80String(s)
+  def insertIntoOutputSection(self, s):
+    """  """
+    self.collectedPhysicsStrings += toMCNP80String(s)
 #############################################################################
   def assembleDeck(self, titleCard, macroString='Auto', cellString='Auto', trString='Auto', matString='Auto',  
                    srcString='Auto', tallyString='Auto', physicsString='Auto', outputControlString='Auto'):
@@ -2306,7 +2793,7 @@ PHYS:e 100 {ides} 0 0 0 1 1 1 1 0
     go into data section.
     """
     if cellString == 'Auto': cellString = self.collectedCellStrings
-    if macroString == 'Auto': macroString = self.collectedMacroStrings
+    if macroString == 'Auto': macroString = self.collectedSurfaceStrings
     if matString == 'Auto': matString = self.collectedMatStrings
     if trString == 'Auto': trString = self.collectedTrStrings
   
@@ -2478,27 +2965,6 @@ def toMCNP80String(multilineString):
   findLongestLineLen(outputStr)
 
   return outputStr
-#def reset():
-#  """ """
-#  global nextSurfaceNum, nextCellNum, nextTrNum
-#  global cellNumNameList
-#  global collectedMacroStrings, collectedCellStrings, collectedTrStrings, collectedMatStrings
-#  global collectedSrcStrings, collectedTallyStrings, collectedPhysicsStrings, collectedOutputControlStrings
-#  
-#  nextSurfaceNum = 0; # Will start from 1
-#  nextCellNum = 0 
-#  nextTrNum = 0  
-#  cellNumNameList = []
-#
-#  collectedMacroStrings = ''
-#  collectedCellStrings = ''
-#  collectedTrStrings = ''
-#  collectedMatStrings = ''
-#
-#  collectedSrcStrings = ''
-#  collectedTallyStrings = ''
-#  collectedPhysicsStrings = ''
-#  collectedOutputControlStrings = ''
 #############################################################################
 def testToMCNP80String():
   """ """

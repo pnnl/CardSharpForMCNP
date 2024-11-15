@@ -37,7 +37,7 @@ show = False
 #############################################################################
 def main():
   """  """
-  pass
+  print('Nothing here')
 #############################################################################
 def getTallyFromMctal(filepath, tallyNumWtype, objectNum, t_or_d):
   """
