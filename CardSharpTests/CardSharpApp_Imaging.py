@@ -113,7 +113,7 @@ def imagingApp(modelFolder, modelFilename):
   srcToOrigin = 10; detToOrigin = 10
   detWidth = 5; detNumPixels = 100 
   # source debug cell-----------------------------------------------------------
-  sphereSn, sphereCn = cd.insertMacroAndCellSphere(name='source', pos=(-srcToOrigin,0,0), radius=.4,
+  sphereSn, sphereCn = cd.insertMacroAndCellSphere(name='source', pos=(-srcToOrigin,0,0), radius=.1,
                matName='Void', density=0, shift=(0,0,0)) # Density 0 means use the default density for this material
 
   # tally debug cell-----------------------------------------------------------
@@ -122,10 +122,21 @@ def imagingApp(modelFolder, modelFilename):
     matName='Void', density=0, shift=(detToOrigin,0,0) )
 
   # object being imaged
-  coneSn, coneCn = cd.insertMacroAndCellCone(name='cone',
-                base=(0,0,0), height=(0,0,.8), radiusBase=.6, radiusTop=.1,
-                matName='Aluminum', density=0,
-                shift=(0,0,0))
+  coneSn = cd.insertMacroCone(name='cone', base=(0,0,.2), height=(0,0,0.8), radiusBase=0.6, radiusTop=0.1)
+  bodySn = cd.insertMacroSphere(name='body', pos=(0,0,-0.6), radius=0.6)
+  trNum = cd.insertTRString('eye1 shift', shift=(0,-.2,-0.4))
+  eyeSn1 = cd.insertMacroRcc(name='eye1', base=(-1,0,0), axis=(2,0,0), radius=0.12, trNum=trNum)
+
+  eyeSn2, eyeCn2 = cd.insertMacroAndCellRcc(name='eye1', base=(-1,0,0), axis=(2,0,0), radius=0.1,
+                                    matName='Air', shift=(0,.2,-0.4))
+
+  manualSurfacesString='(%s:%s) %s #%s'%(-coneSn, -bodySn, eyeSn1, eyeCn2) # union, parentheses optional
+  objCn = cd.insertCellString(name='object', manualSurfacesString=manualSurfacesString,
+                              matName='Aluminum', density=0,)
+#  coneSn, coneCn = cd.insertMacroAndCellCone(name='cone',
+#                base=(0,0,0), height=(0,0,.8), radiusBase=.6, radiusTop=.1,
+#                matName='Aluminum', density=0,
+#                shift=(0,0,0))
   
   # universe-----------------------------------------------------------
   #uniMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, uniMat='Void')
@@ -146,7 +157,7 @@ def imagingApp(modelFolder, modelFilename):
                 sMin=-detWidth/2, sMax=detWidth/2, sbins=detNumPixels, 
                 tMin=-detWidth/2, tMax=detWidth/2, tbins=detNumPixels)
   cd.insertF5Tally(tallyNum=1, pos=(-srcToOrigin,0,0), r=1, eList=np.linspace(.01, 2.5, 3))
-  cd.insertF1Tally(tallyNum=1, surfInfo=[sphereSn, (sphereSn, sphereSn)], eList=[0,1,2])
+  #cd.insertF1Tally(tallyNum=1, surfInfo=[sphereSn, (sphereSn, sphereSn)], eList=[0,1,2])
   cd.insertDebugTallyString(worldSurfaceNum=worldSurfaceNum)
   
   physicsString = cd.insertPhysicsCard(nocoh=0, ides=0, nodop=0)

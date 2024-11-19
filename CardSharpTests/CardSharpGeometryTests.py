@@ -26,71 +26,14 @@ def main():
   If you do, use separate ranges for manual and auto and manage the cellNumList 
   for the final Universe cell generation.
   """
-  testGeomAxisSymmByPoints(); #return
+  testGeomSNCN(); #return
   testGeom0(); #return
   testGeom1(); #return
   testGeom2(); #return
   testGeom3(); #return
-  testGeom4(); #return
+  testGeom4(); return
   testGeom5(); #return
-
-def testGeomAxisSymmByPoints():
-  """
-  Test specifically for AxisSymmetric surfaces defined by points.
-  """
-  # start creating the deck
-  cd = cs.CardDeck()
-
-  #--------------insert surfaces/cells-----------
-#  snGq = cd.insertSurface_ConeAligned(name='K/Y  1', axis='Y', tSqr = 0.09)
-#  snP1 = cd.insertSurface_PlaneAligned(name='P1', axis='Y', D=5)
-#  snP2 = cd.insertSurface_PlaneAligned(name='P2', axis='Y', D=-5)
-#  cn = cd.insertCellString(name='K/Y 1', surfaceList=[-snGq, -snP1, snP2])
-  #--------------insert surfaces/cells-----------
-  snGq = cd.insertSurface_SQ(name='SQ 1')
-  snP1 = cd.insertSurface_PlaneAligned(name='P1', axis='X', D=15)
-  cn = cd.insertCellString(name='SQ 1', surfaceList=[-snGq, -snP1])
-  #--------------insert surfaces/cells-----------
-#  snGq = cd.insertSurface_GQ(name='GQ 1')
-#  snP1 = cd.insertSurface_PlaneAligned(name='P1', axis='Y', D=5)
-#  snP2 = cd.insertSurface_PlaneAligned(name='P2', axis='Y', D=-5)
-#  cn = cd.insertCellString(name='GQ 1', surfaceList=[-snGq, -snP1, snP2])
-  #--------------insert surfaces/cells-----------
-#  snNum = cd.insertMacroARB(name='ARB 1')
-#  cnNum = cd.insertCellString(name='ARB 1', surfaceList=[-snNum])
-  #--------------insert surfaces/cells-----------
-  # sphere
-#  snNum = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm', axis='Y', 
-#                                         pointList=[3,0, 4,1, 5,0])
-#  cnNum = cd.insertCellString(name='AxisSymm sphere', surfaceList=[-snNum])
-  #----------------------------------------------
-  # right sheet of hyperboloid??? what is right? Should be pos or neg?
-  # gxsview shows both???
-#  snNum1 = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm', axis='Z', 
-#                                          pointList=[2, 1, 3, 4, 5, 9.380832])
-#  snNum2 = cd.insertMacroRpp(name='Box', xMinMax=(-5,5), yMinMax=(-6,6), zMinMax=(-7,7))
-#  cnNum = cd.insertCellString(name='AxisSymm hyperboloid', surfaceList=[-snNum1, -snNum2])
-  #----------------------------------------------
-  # donut like cell, symmetric about Y axis
-#  snNum1 = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm Cone', axis='Y', 
-#                                          pointList=[-3, 2, 2, 1]) # cone
-#  snNum2 = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm Hyperbolid', axis='Y', 
-#                                          pointList=[2,3, 3,3, 4,2]) # hyperbolid
-#  snNum3 = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm ellipsoid', axis='Y', 
-#                                          pointList=[2,1, 3,1, 4,2]) # ellipsoid
-#
-#  cn = cd.insertCellString(name='AxisSymm donut like', surfaceList=[snNum1, -snNum2, snNum3])
-  #--------------insert universe-----------
-  # Universe macro number and all cells within are returned
-  worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=50, worldMat='Void')
-
-  cd.insertMaterialStrings(['Aluminum'])
-  deckStr = cd.assembleDeck(titleCard='Title card: Test 0')
-  print(deckStr)
-  # Save file ---------------------------------------------------------
-  modelFolder = '../CardSharpOutput/Tests/CardSharpGeomTestAxisSymmByPoints/'
-  modelFilename = "/test.i"
-  cd.saveDeck(modelFolder, modelFilename, deckStr)
+  testGeomAxisSymmByPoints(); #return
 
 def testGeom0():
   """
@@ -110,6 +53,33 @@ def testGeom0():
   modelFilename = "/test.i"
   cd.saveDeck(modelFolder, modelFilename, deckStr)
 
+def testGeomSNCN():
+  """
+  Manually assigned surfaceNum, cellNum. Accessing facets.
+  """
+  # start creating the deck
+  cd = cs.CardDeck()
+  #--------------insert universe-----------
+  snRpp = cd.insertMacroRpp(name='Rpp', xMinMax=(-5,5), yMinMax=(-6,6), zMinMax=(-7,7),
+                            surfaceNum=1) # int
+  snCyl = cd.insertSurface_CylinderAligned(name='cyl', axis='X', xyz=(0,1,1), radius=1.0,
+                            surfaceNum='2') # str
+
+  #cnTest = cd.insertCellString(name='Test', surfaceList=[-snRpp, -snCyl])
+  #cnTest = cd.insertCellString(name='Test', surfaceList=[-cs.SN('1.1'), -cs.SN('1.2'),-snCyl])
+  cnTest = cd.insertCellString(name='Test', surfaceList=[-snRpp.facets['Xmax'], 
+                                  -snRpp.facets['Xmin'], -snCyl], cellNum='1')
+  # Universe macro number and all cells within are returned
+  worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Void')
+
+  cd.insertMaterialStrings(['Aluminum'])
+  deckStr = cd.assembleDeck(titleCard='Title card: Test 0')
+  print(deckStr)
+  # Save file ---------------------------------------------------------
+  modelFolder = '../CardSharpOutput/Tests/CardSharpGeomTestSNCN/'
+  modelFilename = "/test.i"
+  cd.saveDeck(modelFolder, modelFilename, deckStr)
+
 def testGeom1():
   """
   Short example with surfaces.
@@ -119,7 +89,7 @@ def testGeom1():
 
   # -------------insert surfaces----------------
   # Auto assigned surface number is returned
-  sCyl = cd.insertSurface_CylinderAligned(name='cyl', axis='X', offset=(0,1,1), radius=1.0)
+  sCyl = cd.insertSurface_CylinderAligned(name='cyl', axis='X', xyz=(0,1,1), radius=1.0)
   sPL1 = cd.insertSurface_PlaneAligned(name='plane1', axis='X', D=2.0)
   sPL2 = cd.insertSurface_PlaneAligned(name='plane2', axis='X', D=-2.0)
 
@@ -133,8 +103,7 @@ def testGeom1():
   #worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Air')
 
   # define world using user supplied surface list
-  worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Air',
-                                                       surfaceList = [cn])
+  worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Air')
   # -------------insert materials----------  
   cd.insertMaterialStrings(['Aluminum', 'Air'])
   deckStr = cd.assembleDeck(titleCard='Title card: Test 1')
@@ -149,7 +118,7 @@ def testGeom2():
   Basic geometry test showing all basic shapes with macros, with auto numbering 
   of macro/surface/cell numbers.
   
-  NOTICE: Unlinke MCNP, you can define surfaces/macros/cells in any order that makes
+  NOTICE: Unlike MCNP, you can define surfaces/macros/cells in any order that makes
   sense, grouping relevant entities together etc.
   """
   # insert a material that isn't already in the CardSharp material's library
@@ -504,6 +473,63 @@ def testGeom5():
 
 #  csrun.runMcnpModel(modelFolder, modelFilename, mcnpCodePath="C:/MY_MCNP/MCNP_CODE/bin/", 
 #                 mcnpDataPath="C:/MY_MCNP/MCNP_DATA/", numTasks=1); #return
+def testGeomAxisSymmByPoints():
+  """
+  Test specifically for AxisSymmetric surfaces defined by points.
+  """
+  # start creating the deck
+  cd = cs.CardDeck()
+
+  #--------------insert surfaces/cells-----------
+#  snGq = cd.insertSurface_ConeAligned(name='K/Y  1', axis='Y', tSqr = 0.09)
+#  snP1 = cd.insertSurface_PlaneAligned(name='P1', axis='Y', D=5)
+#  snP2 = cd.insertSurface_PlaneAligned(name='P2', axis='Y', D=-5)
+#  cn = cd.insertCellString(name='K/Y 1', surfaceList=[-snGq, -snP1, snP2])
+  #--------------insert surfaces/cells-----------
+  snGq = cd.insertSurface_SQ(name='SQ 1')
+  snP1 = cd.insertSurface_PlaneAligned(name='P1', axis='X', D=15)
+  cn = cd.insertCellString(name='SQ 1', surfaceList=[-snGq, -snP1])
+  #--------------insert surfaces/cells-----------
+#  snGq = cd.insertSurface_GQ(name='GQ 1')
+#  snP1 = cd.insertSurface_PlaneAligned(name='P1', axis='Y', D=5)
+#  snP2 = cd.insertSurface_PlaneAligned(name='P2', axis='Y', D=-5)
+#  cn = cd.insertCellString(name='GQ 1', surfaceList=[-snGq, -snP1, snP2])
+  #--------------insert surfaces/cells-----------
+#  snNum = cd.insertMacroARB(name='ARB 1')
+#  cnNum = cd.insertCellString(name='ARB 1', surfaceList=[-snNum])
+  #--------------insert surfaces/cells-----------
+  # sphere
+#  snNum = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm', axis='Y', 
+#                                         pointList=[3,0, 4,1, 5,0])
+#  cnNum = cd.insertCellString(name='AxisSymm sphere', surfaceList=[-snNum])
+  #----------------------------------------------
+  # right sheet of hyperboloid??? what is right? Should be pos or neg?
+  # gxsview shows both???
+#  snNum1 = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm', axis='Z', 
+#                                          pointList=[2, 1, 3, 4, 5, 9.380832])
+#  snNum2 = cd.insertMacroRpp(name='Box', xMinMax=(-5,5), yMinMax=(-6,6), zMinMax=(-7,7))
+#  cnNum = cd.insertCellString(name='AxisSymm hyperboloid', surfaceList=[-snNum1, -snNum2])
+  #----------------------------------------------
+  # donut like cell, symmetric about Y axis
+#  snNum1 = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm Cone', axis='Y', 
+#                                          pointList=[-3, 2, 2, 1]) # cone
+#  snNum2 = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm Hyperbolid', axis='Y', 
+#                                          pointList=[2,3, 3,3, 4,2]) # hyperbolid
+#  snNum3 = cd.insertSurface_AxisSymmetricByPoints(name='AxisSymm ellipsoid', axis='Y', 
+#                                          pointList=[2,1, 3,1, 4,2]) # ellipsoid
+#
+#  cn = cd.insertCellString(name='AxisSymm donut like', surfaceList=[snNum1, -snNum2, snNum3])
+  #--------------insert universe-----------
+  # Universe macro number and all cells within are returned
+  worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=50, worldMat='Void')
+
+  cd.insertMaterialStrings(['Aluminum'])
+  deckStr = cd.assembleDeck(titleCard='Title card: Test 0')
+  print(deckStr)
+  # Save file ---------------------------------------------------------
+  modelFolder = '../CardSharpOutput/Tests/CardSharpGeomTestAxisSymmByPoints/'
+  modelFilename = "/test.i"
+  cd.saveDeck(modelFolder, modelFilename, deckStr)
 
 #############################################################################
 if __name__ == '__main__':

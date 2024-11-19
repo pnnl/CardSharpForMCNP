@@ -103,7 +103,7 @@ m{}   60000   -1.0   $ CO"""
   #===========SOURCE END/TALLY START==============================
   # F8 tally enclosing detector, zero/epsilon bins plus user bins
   eList = [0, 1E-5] + list(np.linspace(0.01, 2.0, 1024))
-  cellUnionString = '(%d<(%d %d %d %d))'%(cnCryst, cnDetList[0], cnDetList[1], 
+  cellUnionString = '(%s<(%s %s %s %s))'%(cnCryst, cnDetList[0], cnDetList[1], 
                      cnDetList[2], cnDetList[3]) # '(4<(15 16 17 18))'
   cd.insertF8Tally(tallyNum=1, cellInfo=cellUnionString, eList=eList, par='p')
   #===========TALLY END==============================

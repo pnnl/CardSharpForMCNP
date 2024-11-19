@@ -152,10 +152,10 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   # The dot 2/3 surfaces on cylinder get some signal, they are the flat faces.
   # In any case, the F5 tally does much better, and with fewer histories
 
-  surfNumTxDet = snA + .2
+  surfNumTxDet = str(snA.facets['Top']) # snA + .2
   cd.insertF1Tally(tallyNum=3, surfInfo=surfNumTxDet, eList=eList, mList=None, par='p') # Flat surface
 
-  surfNumRxDet = snB + .2
+  surfNumRxDet = str(snB.facets['Top']) # snB + .2
   cd.insertF1Tally(tallyNum=4, surfInfo=surfNumRxDet, eList=eList, mList=None, par='p')
   #---------------
   cd.insertDebugTallyString(worldSurfaceNum=worldSurfaceNum)
