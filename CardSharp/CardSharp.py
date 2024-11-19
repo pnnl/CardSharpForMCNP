@@ -14,7 +14,7 @@ MOST ARGUMENTS TO THE FUNCTIONS HAVE SENSIBLE DEFAULT VALUES AND CAN BE IGNORED.
 import os
 import numpy as np
 import CardSharpMats as csmat
-
+import sys
 #############################################################################
 show = False # Turn debug print statements on/off
 identityRotMatrix = (0,90,90,   90,0,90,   90,90,0)
@@ -22,11 +22,12 @@ identityRotMatrix = (0,90,90,   90,0,90,   90,90,0)
 def main():
   """
   """
-  global show
+  global show, stopOnError
   show = False
 
   #testToMCNP80String(); return
-  
+  stopOnError = False
+  testSNCN(); return  
   #print(getSource_DiskWithAngularAndEnergyDistrib()); return
   #print(getSource_PointIsotropicWithEnergyDistrib()); return
 
@@ -46,6 +47,178 @@ def main():
   sn, cn = cd.insertMacroAndCellSphere(name='testSphere', pos=(1,2,3), radius=10,
               matName='Aluminum', density=-.5, surfaceNum=None, cellNum=None)
 #############################################################################
+# Define classes for SurfaceNums and CellNums
+# This is not a full OO design with all the details of the cell/surface geoemetry
+# contained in the surface/cell class.
+# This is a simple way to manage surfaceNums and cellNums as strings inside a
+# custom class.
+  
+# The SN (surfaceNum) class supports facets and since surfaces are universe
+# agnostic, there is no multi level complication.
+# Instead of storing facets, one could simpl store the macrobody type.
+# But the user interface seems to work well this way
+  
+# Cells can be nested multi level inside universes. 
+# Will extend when a good use case comes up.
+# The usage will be primarily when defining sources/tallies
+# Also, making this more formal might make it harder to combine external pieces
+# MCNP input decks with those produced by the library.
+stopOnError = True
+class SN():
+  """
+  A class to hold the surface number (and its facets if a macro)
+  But should be as transparent to use as an integer or string.
+  And support unary negative.
+  """
+  def __init__(self, sn, uneg=False):
+    # check that sn is either a positive integer, >0 
+    # or a string with valid characters convertible to integer? (leading negative sign okay)
+    try:
+      if type(sn) is SN:
+        self.sn = sn.sn # ******
+        self.uneg = sn.uneg
+        self.facets = None
+      elif type(sn) is str:
+        # Don't check by casting to float, we don't want 1. (one dot)
+        pcs = sn.split('.')
+        for p in pcs:
+          if len(p)<1 or p.startswith('0'):
+            print('Error a, not a valid surfaceNum:', sn)
+            if stopOnError: sys.exit(0)
+          else:
+            if int(p)<1:
+              print('Error b, not a valid surfaceNum:', sn)
+              if stopOnError: sys.exit(0)
+        else:     
+          self.sn = str(sn) # ******
+          self.uneg = uneg
+          self.facets = None
+      elif type(sn) is int:
+        t = int(sn)
+        if t<1:
+          print('Error, surface num <1:', sn)
+          if stopOnError: sys.exit(0)
+        else:
+          self.sn = str(sn) # ******
+          self.uneg = uneg
+          self.facets = None
+      else:
+        print('sn must be input as int or str:', sn)
+    except ValueError as e:
+      print(e)
+      print('Error c, not a legal surface number:', sn)
+      if stopOnError: sys.exit(0)
+    
+  def __str__(self):
+    if self.uneg:
+      return '-'+self.sn
+    else:
+      return self.sn
+
+  def __repr__(self): # should this also return any facets?
+    if self.uneg:
+      return '-'+self.sn
+    else:
+      return self.sn
+
+  def __neg__(self): # unary negative operators
+    temp = SN(self.sn, uneg=True) # create a new SN object with uneg=True, copy facets and return it
+    temp.facets = self.facets
+    return temp
+
+  def __lt__(self, other): # to allow sorting of surfaces by sn
+        if isinstance(other, SN):
+            return self.sn < other.sn
+        return NotImplemented
+
+class CN():
+  """
+  A class to support cellNumbers.
+  
+  Not yet implemented:
+  Eventually should support, children from multi level nested universes.
+  A simple cellNumber is an integer, say 1.
+  A cellNumber inside a universe is still an integer like object inside another 
+  integer like object: 1<2
+  But with lattices, a cellNumber needs to be treated as a complex object,
+  or possibly a string: 1<3(1,2,3)<4
+  """
+  def __init__(self, cn):
+    try:
+      # cn can be str or int
+      if type(cn) is CN:
+        self.cn = cn.cn  # ******
+        self.children = None
+      elif type(cn) is str:
+        # Don't check for valid float, we don't want 1.
+        pcs = cn.split('<')
+        for p in pcs:
+          if len(p)<1 or p.startswith('0'):
+            print('Error a, not a valid cellNum:', cn)
+            if stopOnError: sys.exit(0)
+          else:
+            if int(p)<1:
+              print('Error b, not a valid surfaceNum:', cn)
+              if stopOnError: sys.exit(0)
+        else:     
+          self.cn = str(cn) # ******
+          self.children = None
+      elif type(cn) is int:
+        t = int(cn)
+        if t<1:
+          print('Error, cell num <1:', cn)
+          if stopOnError: sys.exit(0)
+        else:
+          self.cn = str(cn) # ******
+          self.children = None
+      else:
+        print('cn must be input as int or str:', cn)
+    except ValueError as e:
+      print(e)
+      print('Error c, not a legal cell number:', cn)
+      if stopOnError: sys.exit(0)
+
+  def __str__(self):
+    return self.cn
+
+  def __repr__(self): # should this also return any child cells?
+    return self.cn
+
+  def __lt__(self, other):
+    if isinstance(other, CN):
+        return self.cn < other.cn
+    return NotImplemented
+
+def testSNCN():
+  """
+  """
+  # Errors
+  n = SN(0); print('------------')
+  n = SN(-1); print('------------') 
+  n = SN('01'); print('------------')
+  n = SN('d42'); print('------------') 
+  n = SN('5.'); print('------------')
+  
+  # Errors
+  n = CN(0); print('------------')
+  n = CN(-1); print('------------')
+  n = CN('01'); print('------------')
+  n = CN('d42'); print('------------')
+  n = CN('5.'); print('------------')
+
+  sn1 = SN(42); sn2=SN('43'); sn3=SN('43.1')
+  print("%s %s %s"%(sn1, -sn2, -sn3))
+  
+  # to support sorting of surfaces/cells
+  print(SN(3)<SN(4))
+  print(CN(3)<CN(4))
+
+  # making manual surfaces string  
+  snList = [sn1, sn2]
+  manualSurfacesString = f'({snList[0]}:{-sn2})'
+  print(manualSurfacesString)
+  
+#############################################################################
 class CardDeck:
   """
   Class representing an MCNP input deck/file.
@@ -56,8 +229,8 @@ class CardDeck:
 
     self.particlesList = ['p', 'e'] # used by getModeString, getImpString
 
-    self.nextSurfaceNum = 0 # Will start from 1
-    self.nextCellNum = 0
+    self.nextSurfaceNum = 0 # SN(0) # Will start from 1
+    self.nextCellNum = 0 # CN(0)
     self.nextTrNum = 0
     self.cellNumNameList = []
 
@@ -75,12 +248,12 @@ class CardDeck:
 #############################################################################
   # Tally numbers and universe numbers are not auto assigned, yet.
   def _getNextSN(self):
-    self.nextSurfaceNum += 1
-    return self.nextSurfaceNum
+    self.nextSurfaceNum += 1 # SN(1)
+    return SN(self.nextSurfaceNum)
   
   def _getNextCN(self):
-    self.nextCellNum += 1
-    return self.nextCellNum
+    self.nextCellNum += 1 # CN(1)
+    return CN(self.nextCellNum)
   
   def _getNextTRN(self):
     self.nextTrNum += 1
@@ -99,10 +272,10 @@ class CardDeck:
 #  Granted, the sphere has no orientation, but the RPP does?
 
   ### !!!-----SURFACES/CELL----------
-  def insertSurface_CylinderAligned(self, name, axis='X', offset=(0,0,0), radius=1.0, 
+  def insertSurface_CylinderAligned(self, name, axis='X', xyz=(0,0,0), radius=1.0, 
                                     surfaceNum=None, trNum=None):
     """
-    Define a cylinder parallel to one of the three axes.
+    Define an infinitely long cylindrical surface parallel to one of the three axes.
     If parallel to X axes, the YZ offsets are used.
     If parallel to Y axes, the XZ offsets are used and so on.
 
@@ -115,29 +288,29 @@ class CardDeck:
 
     Returns assigned surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     surfaceString = ''
     if axis=='X':
-      descrStr = '%s, surface:%d, trNum:%s, cylinder_%s Y:%.2f Z:%.2f R:%.2f'\
-                     %(name, surfaceNum, trNumString, axis, offset[1], offset[2], radius)
+      descrStr = '%s, surface:%s, trNum:%s, cylinder_%s Y:%.2f Z:%.2f R:%.2f'\
+                     %(name, surfaceNum, trNumString, axis, xyz[1], xyz[2], radius)
     elif axis=='Y':
-      descrStr = '%s, surface:%d, trNum:%s, cylinder_%s X:%.2f Z:%.2f R:%.2f'\
-                     %(name, surfaceNum, trNumString, axis, offset[0], offset[2], radius)
+      descrStr = '%s, surface:%s, trNum:%s, cylinder_%s X:%.2f Z:%.2f R:%.2f'\
+                     %(name, surfaceNum, trNumString, axis, xyz[0], xyz[2], radius)
     elif axis=='Z':
-      descrStr = '%s, surface:%d, trNum:%s, cylinder_%s X:%.2f Y:%.2f R:%.2f'\
-                     %(name, surfaceNum, trNumString, axis, offset[0], offset[1], radius)
+      descrStr = '%s, surface:%s, trNum:%s, cylinder_%s X:%.2f Y:%.2f R:%.2f'\
+                     %(name, surfaceNum, trNumString, axis, xyz[0], xyz[1], radius)
       # ----macro--------
     surfaceString += toMCNP80String('c ---%s'%(descrStr))
     #c surface/macrobody number, transformation number optional, C/X, yPos,zPos, radius'
     #801 1 C/X 1 1 5
     if axis=='X':
-      surfaceString += toMCNP80String('%d %s C/%s %.4f %.4f %.4f'%(surfaceNum, trNumString, axis, offset[1], offset[2], radius))
+      surfaceString += toMCNP80String('%s %s C/%s %.4f %.4f %.4f'%(surfaceNum, trNumString, axis, xyz[1], xyz[2], radius))
     elif axis=='Y':
-      surfaceString += toMCNP80String('%d %s C/%s %.4f %.4f %.4f'%(surfaceNum, trNumString, axis, offset[0], offset[2], radius))
+      surfaceString += toMCNP80String('%s %s C/%s %.4f %.4f %.4f'%(surfaceNum, trNumString, axis, xyz[0], xyz[2], radius))
     elif axis=='Z':
-      surfaceString += toMCNP80String('%d %s C/%s %.4f %.4f %.4f'%(surfaceNum, trNumString, axis, offset[0], offset[1], radius))
+      surfaceString += toMCNP80String('%s %s C/%s %.4f %.4f %.4f'%(surfaceNum, trNumString, axis, xyz[0], xyz[1], radius))
   
     self.collectedSurfaceStrings += surfaceString
     
@@ -159,7 +332,7 @@ class CardDeck:
 
     Returns assigned surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     if sheet == 0:
@@ -167,13 +340,13 @@ class CardDeck:
     else:
       sheetSel = '%d'%(sheet)
     surfaceString = ''
-    descrStr = '%s, surface:%d, trNum:%s, cone_%s x:%.2f y:%.2f z:%.2f tSqr:%.2f sheetSel:%s'\
+    descrStr = '%s, surface:%s, trNum:%s, cone_%s x:%.2f y:%.2f z:%.2f tSqr:%.2f sheetSel:%s'\
                      %(name, surfaceNum, trNumString, axis, xyz[0], xyz[1], xyz[2], tSqr, sheetSel)
       # ----macro--------
     surfaceString += toMCNP80String('c ---%s'%(descrStr))
     #c surface/macrobody number, transformation number optional, C/X, yPos,zPos, radius'
     #801 1 C/X 1 1 5
-    surfaceString += toMCNP80String('%d %s K/%s %.4f %.4f %.4f %.4f %s'%(surfaceNum, trNumString, axis, xyz[0], xyz[1], xyz[2], tSqr, sheetSel))
+    surfaceString += toMCNP80String('%s %s K/%s %.4f %.4f %.4f %.4f %s'%(surfaceNum, trNumString, axis, xyz[0], xyz[1], xyz[2], tSqr, sheetSel))
   
     self.collectedSurfaceStrings += surfaceString
     
@@ -188,17 +361,17 @@ class CardDeck:
 
     Returns assigned surface number.    
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     surfaceString = ''
-    descrStr = '%s, surface:%d, trNum:%s, plane %s D:%.2f'\
+    descrStr = '%s, surface:%s, trNum:%s, plane %s D:%.2f'\
                      %(name, surfaceNum, trNumString, axis, D)
     # ----surface--------
     surfaceString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    surfaceString += toMCNP80String('%d %s P%s %.4f' %(surfaceNum, trNumString, axis, D))
+    surfaceString += toMCNP80String('%s %s P%s %.4f' %(surfaceNum, trNumString, axis, D))
   
     self.collectedSurfaceStrings += surfaceString
     
@@ -212,17 +385,17 @@ class CardDeck:
 
     Returns assigned surface number.    
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     surfaceString = ''
-    descrStr = '%s, surface:%d, trNum:%s, plane A:%.2f B:%.2f C:%.2f D:%.2f'\
+    descrStr = '%s, surface:%s, trNum:%s, plane A:%.2f B:%.2f C:%.2f D:%.2f'\
                      %(name, surfaceNum, trNumString, A, B, C, D)
     # ----surface--------
     surfaceString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    surfaceString += toMCNP80String('%d %s P %.4f %.4f %.4f %.4f' %(surfaceNum, trNumString, A, B, C, D))
+    surfaceString += toMCNP80String('%s %s P %.4f %.4f %.4f %.4f' %(surfaceNum, trNumString, A, B, C, D))
   
     self.collectedSurfaceStrings += surfaceString
     
@@ -241,17 +414,17 @@ class CardDeck:
     
     Returns assigned surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     surfaceString = ''
-    descrStr = '%s, surface:%d, trNum:%s, torus_%s x:%.2f y:%.2f z:%.2f  A:%.2f B:%.2f C:%.2f'\
+    descrStr = '%s, surface:%s, trNum:%s, torus_%s x:%.2f y:%.2f z:%.2f  A:%.2f B:%.2f C:%.2f'\
                      %(name, surfaceNum, trNumString, axis, *xyz, *ABC)
       # ----macro--------
     surfaceString += toMCNP80String('c ---%s'%(descrStr))
 
     #c surface/macrobody number, transformation number optional, C/X, yPos,zPos, radius'
-    surfaceString += toMCNP80String('%d %s T%s %.4f %.4f %.4f  %.4f %.4f %.4f'%(surfaceNum, trNumString, axis,  *xyz, *ABC))
+    surfaceString += toMCNP80String('%s %s T%s %.4f %.4f %.4f  %.4f %.4f %.4f'%(surfaceNum, trNumString, axis,  *xyz, *ABC))
   
     self.collectedSurfaceStrings += surfaceString
     
@@ -267,17 +440,17 @@ class CardDeck:
     
     Returns assigned surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     surfaceString = ''
-    descrStr = '%s, surface:%d, trNum:%s, SQ A:%.2f B:%.2f C:%.2f  D:%.2f E:%.2f F:%.2f G:%.2f  x:%.2f y:%.2f z:%.2f'\
+    descrStr = '%s, surface:%s, trNum:%s, SQ A:%.2f B:%.2f C:%.2f  D:%.2f E:%.2f F:%.2f G:%.2f  x:%.2f y:%.2f z:%.2f'\
                      %(name, surfaceNum, trNumString, A,B,C,D,E,F,G,*xyz)
       # ----macro--------
     surfaceString += toMCNP80String('c ---%s'%(descrStr))
 
     #c surface/macrobody number, transformation number optional, C/X, yPos,zPos, radius'
-    surfaceString += toMCNP80String('%d %s SQ %.4f %.4f %.4f  %.4f %.4f %.4f %.4f  %.4f %.4f %.4f'%(surfaceNum, trNumString, A,B,C,D,E,F,G,*xyz))
+    surfaceString += toMCNP80String('%s %s SQ %.4f %.4f %.4f  %.4f %.4f %.4f %.4f  %.4f %.4f %.4f'%(surfaceNum, trNumString, A,B,C,D,E,F,G,*xyz))
   
     self.collectedSurfaceStrings += surfaceString
     
@@ -293,17 +466,17 @@ class CardDeck:
     
     Returns assigned surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     surfaceString = ''
-    descrStr = '%s, surface:%d, trNum:%s, GQ A:%.2f B:%.2f C:%.2f  D:%.2f E:%.2f F:%.2f G:%.2f H:%.2f'\
+    descrStr = '%s, surface:%s, trNum:%s, GQ A:%.2f B:%.2f C:%.2f  D:%.2f E:%.2f F:%.2f G:%.2f H:%.2f'\
                      %(name, surfaceNum, trNumString, A,B,C,D,E,F,G,H)
       # ----macro--------
     surfaceString += toMCNP80String('c ---%s'%(descrStr))
 
     #c surface/macrobody number, transformation number optional, C/X, yPos,zPos, radius'
-    surfaceString += toMCNP80String('%d %s GQ %.4f %.4f %.4f  %.4f %.4f %.4f %.4f  %.4f %.4f %.4f'%(surfaceNum, trNumString, A,B,C,D,E,F,G,H,I,J))
+    surfaceString += toMCNP80String('%s %s GQ %.4f %.4f %.4f  %.4f %.4f %.4f %.4f  %.4f %.4f %.4f'%(surfaceNum, trNumString, A,B,C,D,E,F,G,H,I,J))
   
     self.collectedSurfaceStrings += surfaceString
     
@@ -330,19 +503,19 @@ class CardDeck:
     assert(len(pointList) in [2,4,6])
     assert(axis.lower() in ['x', 'y', 'z'])
     
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     pointString = ' '.join(map(str, pointList))
 
     surfaceString = ''
-    descrStr = '%s, surface:%d, trNum:%s, AxisSymByPoints %s %s'\
+    descrStr = '%s, surface:%s, trNum:%s, AxisSymByPoints %s %s'\
                      %(name, surfaceNum, trNumString, axis, pointString)
     # ----surface--------
     surfaceString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    surfaceString += toMCNP80String('%d %s %s %s' %(surfaceNum, trNumString, axis, pointString))
+    surfaceString += toMCNP80String('%s %s %s %s' %(surfaceNum, trNumString, axis, pointString))
   
     self.collectedSurfaceStrings += surfaceString
     
@@ -389,7 +562,21 @@ class CardDeck:
     latIndices - Range specifying Imin/Imax, Jmin/Jmax, Kmin/Kmax of the lattice range.
     fill can be a single universe number or a list of universes in case of a lattice.
     """
-    if cellNum == None: cellNum = self._getNextCN()
+    if surfaceList is not None:
+      for sn in surfaceList:
+        if (type(sn)!=SN):
+          print('surfaceList should have only surface numbers')
+          print('Got:', type(sn), sn)
+          assert(type(sn)==SN)
+
+    if cellComplementList is not None:
+      for cn in cellComplementList:
+        if (type(cn)!=CN):
+          print('cellComplementList should have only cell numbers')
+          assert(type(cn)==CN)
+
+    #if cellNum == None: cellNum = self._getNextCN()
+    cellNum = self._getNextCN() if cellNum is None else CN(cellNum)
     
     #cellString = ''
     matNum, defaultDensity = csmat.matLookup(matName)
@@ -410,10 +597,10 @@ class CardDeck:
     else:
       if surfaceList is not None: # inside of negative surfaces, outside of positive surfaces
         for sn in surfaceList:
-          surfacesString += " %d "%(sn)
+          surfacesString += " %s "%(sn)
       if cellComplementList is not None:
-        for c in cellComplementList:
-          surfacesString += " #%d "%(c)
+        for cn in cellComplementList:
+          surfacesString += " #%s "%(cn)
     #---------
     uniString = ''; fillString = ''; latString = ''
   
@@ -421,6 +608,8 @@ class CardDeck:
     if fill != 0:
       if latticeType is None:
         fillString = 'FILL=%d'%(fill)
+        # insert cell numbers of children by finding all cells where uni is current fill
+        # but there can be multi level nesting of universes
       else:
         latString = 'LAT={:d}'.format(latticeType)
         if isinstance(fill, list):
@@ -428,12 +617,14 @@ class CardDeck:
         else:
           t = '%d'%(fill)
         fillString = 'FILL= {:d}:{:d} {:d}:{:d} {:d}:{:d} \n      {:s}'.format(*latticeIndices, t)
-  
+        # insert all cell numbers inside each lattice position by finding all cells where uni is current fill
+        # two levels of indirection
+        # possibly even more with 
     #---------
     trclString = self.getTrclStringDeg(shift=shift, rotMatrix=rotMatrix)
     #---------
     if impString == '': impString = self.getImpString() #'imp:p,e=1'
-    cs = '%d %d %s %s %s %s %s %s %s'%(cellNum, matNum, densityStr, surfacesString, 
+    cs = '%s %d %s %s %s %s %s %s %s'%(cellNum, matNum, densityStr, surfacesString, 
                                  trclString, latString, impString, uniString, fillString)
     #---------
     cellString += toMCNP80String(cs)
@@ -458,14 +649,15 @@ class CardDeck:
 
     Looks like the newCell can be in any universe, but defaults to 0 as expected.    
     """
-    if newCellNum == None: newCellNum = self._getNextCN()
+    #if newCellNum == None: newCellNum = self._getNextCN()
+    newCellNum = self._getNextCN() if newCellNum is None else CN(newCellNum)
 
     trclString = self.getTrclStringDeg(shift=shift, rotMatrix=rotMatrix)
     if impString == '': impString = self.getImpString()
     uniString = ''
     if uni != 0: uniString = 'U=%d'%(uni)
     
-    cellString = '%d LIKE %d BUT %s %s %s'%(newCellNum, oldCellNum, trclString, \
+    cellString = '%s LIKE %d BUT %s %s %s'%(newCellNum, oldCellNum, trclString, \
                                          impString, uniString)
     #---------
     cellString = toMCNP80String(cellString)
@@ -485,17 +677,17 @@ class CardDeck:
     Insert a sphere macro at the given position and radius.
     Returns assigned macro surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, sphere macrobody:%d, trNum:%s, xPos:%.2f, yPos:%.2f, zPos:%.2f, radius:%.2f'\
+    descrStr = '%s, sphere macrobody:%s, trNum:%s, xPos:%.2f, yPos:%.2f, zPos:%.2f, radius:%.2f'\
                       %(name, surfaceNum, trNumString, *pos, radius)
   
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, rpp, x/y/z radius
     #801 1 sph 0 0 0  10 
-    macroString += toMCNP80String('%d %s SPH %.4f %.4f %.4f  %.4f'
+    macroString += toMCNP80String('%s %s SPH %.4f %.4f %.4f  %.4f'
                                   %(surfaceNum, trNumString, *pos, radius))
   
     self.collectedSurfaceStrings += macroString
@@ -519,7 +711,7 @@ class CardDeck:
                                      radius=radius,
                                      surfaceNum=surfaceNum)
     # ----cellNum is not defined at this point
-    descrStr = '%s, macrobody:%d, xPos:%.2f, yPos:%.2f, zPos:%.2f, radius:%.2f, matNum:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
+    descrStr = '%s, macrobody:%s, xPos:%.2f, yPos:%.2f, zPos:%.2f, radius:%.2f, matNum:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
                   %(name, surfaceNum, *pos, radius, matName, density, *shift) 
   
     impString = self.getImpString() #'imp:p=1'
@@ -536,7 +728,7 @@ class CardDeck:
                   pos=(0,0,0), radiusOuter=2, radiusInner=1,
                   matName='Void', density=0, 
                   shift=(0,0,0), rotMatrix=None,
-                  surfaceNum1=0, surfaceNum2=0, cellNum=None,uni=0):
+                  surfaceNum1=None, surfaceNum2=None, cellNum=None,uni=0):
     """
     Uses two sphere macros to generate a shell.
     Returns a list of the two assigned macro surface numbers and the assigned cell number.
@@ -548,7 +740,7 @@ class CardDeck:
     surfaceNum2 = self.insertMacroSphere(name=name, pos=pos,
                                   radius=radiusInner, surfaceNum=surfaceNum2)  
     # ----cell--------
-    descrStr = '%s, macrobody:%d, macrobody:%d,\
+    descrStr = '%s, macrobody:%s, macrobody:%s,\
     posX:%.2f, posY:%.2f, posZ:%.2f, radiusOuter:%.2f, radiusInner:%.2f,\
     matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
                   %(name, surfaceNum1, surfaceNum2,
@@ -577,17 +769,21 @@ class CardDeck:
     
     Returns assigned surface number.    
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
+    surfaceNum.facets = {'Cyl': SN(surfaceNum.sn+'.1'),
+                         'Top': SN(surfaceNum.sn+'.2'),
+                         'Base': SN(surfaceNum.sn+'.3')}
+    
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, cylinder macrobody:%d, trNum:%s, baseX:%.2f, baseY:%.2f, baseZ:%.2f, axisX:%.2f, axisY:%.2f, axisZ:%.2f, radius:%.2f'\
+    descrStr = '%s, cylinder macrobody:%s, trNum:%s, baseX:%.2f, baseY:%.2f, baseZ:%.2f, axisX:%.2f, axisY:%.2f, axisZ:%.2f, radius:%.2f'\
                   %(name, surfaceNum, trNumString, *base, *axis,radius)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    macroString += toMCNP80String('%d %s RCC %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f'\
+    macroString += toMCNP80String('%s %s RCC %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f'\
                              %(surfaceNum, trNumString, *base, *axis, radius))
   
     self.collectedSurfaceStrings += macroString
@@ -614,7 +810,7 @@ class CardDeck:
                                   radius=radius, surfaceNum=surfaceNum)  
   
     # ----cell--------
-    descrStr = '%s, macrobody:%d, baseX:%.2f, baseY:%.2f, baseZ:%.2f, axisX:%.2f, axisY:%.2f, axisZ:%.2f, radius:%.2f, matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
+    descrStr = '%s, macrobody:%s, baseX:%.2f, baseY:%.2f, baseZ:%.2f, axisX:%.2f, axisY:%.2f, axisZ:%.2f, radius:%.2f, matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
                   %(name, surfaceNum, *base, *axis,
                     radius, matName, density, *shift)
   
@@ -654,7 +850,7 @@ class CardDeck:
     surfaceNum2 = self.insertMacroRcc(name=name, base=base2, axis=axis2,
                                   radius=radiusInner, surfaceNum=surfaceNum2)  
     # ----cell--------
-    descrStr = '%s, macrobody1:%d, macrobody2:%d,\
+    descrStr = '%s, macrobody1:%s, macrobody2:%s,\
     baseX1:%.2f, baseY1:%.2f, baseZ1:%.2f, axisX1:%.2f, axisY1:%.2f, axisZ1:%.2f, radiusOuter:%.2f,\
     baseX2:%.2f, baseY2:%.2f, baseZ2:%.2f, axisX2:%.2f, axisY2:%.2f, axisZ2:%.2f, radiusInner:%.2f,\
     matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
@@ -685,17 +881,24 @@ class CardDeck:
 
     Returns assigned surface number.    
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
+    surfaceNum.facets = {'Xmax': SN(surfaceNum.sn+'.1'),
+                         'Xmin': SN(surfaceNum.sn+'.2'),
+                         'Ymax': SN(surfaceNum.sn+'.3'),
+                         'Ymin': SN(surfaceNum.sn+'.4'),
+                         'Zmax': SN(surfaceNum.sn+'.5'),
+                         'Zmin': SN(surfaceNum.sn+'.6')}
+
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, macrobody:%d, trNum:%s, xMin:%.2f, xMax:%.2f, yMin:%.2f, yMax:%.2f, zMin:%.2f, zMax:%.2f'\
+    descrStr = '%s, macrobody:%s, trNum:%s, xMin:%.2f, xMax:%.2f, yMin:%.2f, yMax:%.2f, zMin:%.2f, zMax:%.2f'\
                   %(name, surfaceNum, trNumString, *xMinMax, *yMinMax, *zMinMax)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, rpp, xmin/xmax,    ymin/ymax, zmin/zmax'
     #801 1 rpp -0.0728   0.0728    -0.32      0.32     -3 3 
-    macroString += toMCNP80String('%d %s RPP %.6f %.6f   %.6f %.6f    %.6f %.6f'\
+    macroString += toMCNP80String('%s %s RPP %.6f %.6f   %.6f %.6f    %.6f %.6f'\
                              %(surfaceNum, trNumString, *xMinMax, *yMinMax, *zMinMax))
   
     self.collectedSurfaceStrings += macroString
@@ -716,7 +919,7 @@ class CardDeck:
     surfaceNum = self.insertMacroRpp(name=name, xMinMax=xMinMax, yMinMax=yMinMax, 
                                   zMinMax=zMinMax, surfaceNum=surfaceNum)
     # ----cell--------
-    descrStr = '%s, Rect PPiped macrobody:%d, xMin:%.2f, xMax:%.2f, yMin:%.2f, yMax:%.2f, zMin:%.2f, zMax:%.2f, matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
+    descrStr = '%s, Rect PPiped macrobody:%s, xMin:%.2f, xMax:%.2f, yMin:%.2f, yMax:%.2f, zMin:%.2f, zMax:%.2f, matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
                   %(name, surfaceNum, *xMinMax, *yMinMax, *zMinMax, matName, density, *shift)
     
     impString = self.getImpString() #'imp:p=1'
@@ -759,7 +962,7 @@ class CardDeck:
                                   surfaceNum=surfaceNum2)
   
     # ----cell--------
-    descrStr = '%s, macrobody1:%d, macrobody2:%d, outerXWidth:%.3f, innerXWidth:%.3f, outerYWidth:%.3f, innerYWidth:%.3f, outerZWidth:%.3f, innerZWidth:%.3f, xShift:%.2f, yShift:%.2f, zShift:%.2f, matName:%s, density:%.4f'\
+    descrStr = '%s, macrobody1:%s, macrobody2:%s, outerXWidth:%.3f, innerXWidth:%.3f, outerYWidth:%.3f, innerYWidth:%.3f, outerZWidth:%.3f, innerZWidth:%.3f, xShift:%.2f, yShift:%.2f, zShift:%.2f, matName:%s, density:%.4f'\
                   %(name, surfaceNum1, surfaceNum2, outerXWidth,innerXWidth, outerYWidth,innerYWidth, outerZWidth,innerZWidth, *shift, matName, density)
             
     impString = self.getImpString() #'imp:p=1'
@@ -797,7 +1000,7 @@ class CardDeck:
                                   surfaceNum=surfaceNum2)
   
     # ----cell--------
-    descrStr = '%s, macrobody1:%d, macrobody2:%d, xMinOut:%.3f, xMaxOut:%.3f, yMinOut:%.3f, yMaxOut:%.3f, zMinOut:%.3f, zMaxOut:%.3f, xMinIn:%.3f, xMaxIn:%.3f, yMinIn:%.3f, yMaxIn:%.3f, zMinIn:%.3f, zMaxIn:%.3f,  xShift:%.2f, yShift:%.2f, zShift:%.2f, matName:%s, density:%.4f'\
+    descrStr = '%s, macrobody1:%s, macrobody2:%s, xMinOut:%.3f, xMaxOut:%.3f, yMinOut:%.3f, yMaxOut:%.3f, zMinOut:%.3f, zMaxOut:%.3f, xMinIn:%.3f, xMaxIn:%.3f, yMinIn:%.3f, yMaxIn:%.3f, zMinIn:%.3f, zMaxIn:%.3f,  xShift:%.2f, yShift:%.2f, zShift:%.2f, matName:%s, density:%.4f'\
                   %(name, surfaceNum1, surfaceNum2, *xMinMaxOut, *yMinMaxOut, *zMinMaxOut, *xMinMaxIn, *yMinMaxIn, *zMinMaxIn, *shift, matName, density)
             
     impString = self.getImpString() #'imp:p=1'
@@ -823,17 +1026,26 @@ class CardDeck:
 
     Returns assigned surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
+    surfaceNum.facets = {'Rend': SN(surfaceNum.sn+'.1'),
+                         'Rbegin': SN(surfaceNum.sn+'.2'),
+                         'Send': SN(surfaceNum.sn+'.3'),
+                         'Sbegin': SN(surfaceNum.sn+'.4'),
+                         'Tend': SN(surfaceNum.sn+'.5'),
+                         'Tbegin': SN(surfaceNum.sn+'.6'),
+                         'Hend': SN(surfaceNum.sn+'.7'),
+                         'Hbegin': SN(surfaceNum.sn+'.8')}
+                         
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, Rhp/Hex macrobody:%d, trNum:%s, base:%.2f,%.2f,%.2f, axis:%.2f,:%.2f,%.2f, radius:%.2f,%.2f,%.2f'\
+    descrStr = '%s, Rhp/Hex macrobody:%s, trNum:%s, base:%.2f,%.2f,%.2f, axis:%.2f,:%.2f,%.2f, radius:%.2f,%.2f,%.2f'\
                   %(name, surfaceNum, trNumString, *base, *axis, *r)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    macroString += toMCNP80String('%d %s RHP %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f %.4f %.4f'\
+    macroString += toMCNP80String('%s %s RHP %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f %.4f %.4f'\
                              %(surfaceNum, trNumString, *base, *axis, *r))
   
     self.collectedSurfaceStrings += macroString
@@ -854,7 +1066,7 @@ class CardDeck:
     surfaceNum = self.insertMacroRhpHex(name=name, base=base, axis=axis, 
                                   r=r, surfaceNum=surfaceNum)  
     # ----cell--------
-    descrStr = '%s, macrobody:%d, base:%.2f,%.2f,%.2f, axis:%.2f,%.2f,%.2f, radius:%.2f,%.2f,%.2f, matName:%s, density:%.4f, shift:%.2f,%.2f,%.2f'\
+    descrStr = '%s, macrobody:%s, base:%.2f,%.2f,%.2f, axis:%.2f,%.2f,%.2f, radius:%.2f,%.2f,%.2f, matName:%s, density:%.4f, shift:%.2f,%.2f,%.2f'\
                   %(name, surfaceNum, *base, *axis,
                     *r, matName, density, *shift)
   
@@ -887,7 +1099,7 @@ class CardDeck:
                                            base=base2, axis=axis2, r=r2,
                                            surfaceNum=surfaceNum2)
     # ----cell--------
-    descrStr = '%s, macrobody1:%d, macrobody2:%d,\
+    descrStr = '%s, macrobody1:%s, macrobody2:%s,\
     base1:%.2f,%.2f,%.2f, axis1:%.2f,%.2f,%.2f, r1:%.2f,%.2f,%.2f,\
     base2:%.2f,%.2f,%.2f, axis2:%.2f,%.2f,%.2f, r2:%.2f,%.2f,%.2f,\
     matName:%s, density:%.4f, shift:%.2f,%.2f,%.2f'\
@@ -921,17 +1133,21 @@ class CardDeck:
 
     Returns assigned surface number.    
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
+    surfaceNum.facets = {'Cone': SN(surfaceNum.sn+'.1'),
+                         'Top': SN(surfaceNum.sn+'.2'),
+                         'Base': SN(surfaceNum.sn+'.3')}
+    
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, cone macrobody:%d, trNum:%s, baseX:%.4f, baseY:%.4f, baseZ:%.4f, heightX:%.4f, heightY:%.4f, heightZ:%.4f, radiusTop:%.4f, radiusBase:%.4f'\
+    descrStr = '%s, cone macrobody:%s, trNum:%s, baseX:%.4f, baseY:%.4f, baseZ:%.4f, heightX:%.4f, heightY:%.4f, heightZ:%.4f, radiusTop:%.4f, radiusBase:%.4f'\
                   %(name, surfaceNum, trNumString, *base, *height, radiusBase, radiusTop)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    macroString += toMCNP80String('%d %s TRC %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f'\
+    macroString += toMCNP80String('%s %s TRC %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f'\
                              %(surfaceNum, trNumString, *base, *height, radiusBase, radiusTop))
   
     self.collectedSurfaceStrings += macroString
@@ -960,7 +1176,7 @@ class CardDeck:
     # ----cell--------
     impString = self.getImpString() #'imp:p=1'
   
-    descrStr = '%s, macrobody:%d, baseX:%.2f, baseY:%.2f, baseZ:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, radiusBase:%.2f, radiusTop:%.2f, matName:%s, density:%.4f'\
+    descrStr = '%s, macrobody:%s, baseX:%.2f, baseY:%.2f, baseZ:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, radiusBase:%.2f, radiusTop:%.2f, matName:%s, density:%.4f'\
                   %(name, surfaceNum, *base, *height,
                     radiusBase, radiusTop, matName, density)
   
@@ -992,18 +1208,24 @@ class CardDeck:
 
     Returns assigned surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
+    surfaceNum.facets = {'SlantPlane': SN(surfaceNum.sn+'.1'),
+                         'V2V3': SN(surfaceNum.sn+'.2'),
+                         'V1V3': SN(surfaceNum.sn+'.2'),
+                         'TopTri': SN(surfaceNum.sn+'.2'),
+                         'BottomTri': SN(surfaceNum.sn+'.3')}
+    
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, wedge macrobody:%d, trNum:%s, vertexX:%.2f, vertexY:%.2f, vertexZ:%.2f, base1X:%.2f, base1Y:%.2f, base1Z:%.2f, base2X:%.2f, base2Y:%.2f, base2Z:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f,'\
+    descrStr = '%s, wedge macrobody:%s, trNum:%s, vertexX:%.2f, vertexY:%.2f, vertexZ:%.2f, base1X:%.2f, base1Y:%.2f, base1Z:%.2f, base2X:%.2f, base2Y:%.2f, base2Z:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f,'\
                   %(name, surfaceNum, trNumString, *vertex, *base1,
                     *base2, *height)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    macroString += toMCNP80String('%d %s WED %.4f %.4f %.4f   %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f'\
+    macroString += toMCNP80String('%s %s WED %.4f %.4f %.4f   %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f'\
                              %(surfaceNum, trNumString, *vertex, *base1, *base2, *height))
   
     self.collectedSurfaceStrings += macroString
@@ -1031,7 +1253,7 @@ class CardDeck:
     # ----cell--------
     impString = self.getImpString() #'imp:p=1'
   
-    descrStr = '%s, macrobody:%d, vertexX:%.2f, vertexY:%.2f, vertexZ:%.2f, base1X:%.2f, base1Y:%.2f, base1Z:%.2f, base2X:%.2f, base2Y:%.2f, base2Z:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, matName:%s, density:%.4f'\
+    descrStr = '%s, macrobody:%s, vertexX:%.2f, vertexY:%.2f, vertexZ:%.2f, base1X:%.2f, base1Y:%.2f, base1Z:%.2f, base2X:%.2f, base2Y:%.2f, base2Z:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, matName:%s, density:%.4f'\
                   %(name, surfaceNum, *vertex, *base1,
                     *base2, *height, matName, density)
   
@@ -1057,17 +1279,24 @@ class CardDeck:
 
     Returns assigned surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
+    surfaceNum.facets = {'Xmax': SN(surfaceNum.sn+'.1'),
+                         'Xmin': SN(surfaceNum.sn+'.2'),
+                         'Ymax': SN(surfaceNum.sn+'.3'),
+                         'Ymin': SN(surfaceNum.sn+'.4'),
+                         'Zmax': SN(surfaceNum.sn+'.5'),
+                         'Zmin': SN(surfaceNum.sn+'.6')}
+    
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, wedge macrobody:%d, trNum:%s, vX:%.2f, vY:%.2f, vZ:%.2f, a1X:%.2f, a1Y:%.2f, a1Z:%.2f, a2X:%.2f, a2Y:%.2f, a2Z:%.2f, a3X:%.2f, a3Y:%.2f, a3Z:%.2f,'\
+    descrStr = '%s, wedge macrobody:%s, trNum:%s, vX:%.2f, vY:%.2f, vZ:%.2f, a1X:%.2f, a1Y:%.2f, a1Z:%.2f, a2X:%.2f, a2Y:%.2f, a2Z:%.2f, a3X:%.2f, a3Y:%.2f, a3Z:%.2f,'\
                   %(name, surfaceNum, trNumString, *v, *a1, *a2, *a3)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    macroString += toMCNP80String('%d %s BOX %.4f %.4f %.4f   %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f'\
+    macroString += toMCNP80String('%s %s BOX %.4f %.4f %.4f   %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f'\
                              %(surfaceNum, trNumString, *v, *a1, *a2, *a3))
   
     self.collectedSurfaceStrings += macroString
@@ -1095,17 +1324,21 @@ class CardDeck:
 
     Returns assigned surface number.    
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
+    surfaceNum.facets = {'Cyl': SN(surfaceNum.sn+'.1'),
+                         'Top': SN(surfaceNum.sn+'.2'),
+                         'Base': SN(surfaceNum.sn+'.3')}
+    
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, Right ellip cyl macrobody:%d, trNum:%s, vX:%.4f, vY:%.4f, vZ:%.4f, hX:%.4f, hY:%.4f, hZ:%.4f, v1X:%.4f, v1Y:%.4f, v1Z:%.4f, Rm:%.4f'\
+    descrStr = '%s, Right ellip cyl macrobody:%s, trNum:%s, vX:%.4f, vY:%.4f, vZ:%.4f, hX:%.4f, hY:%.4f, hZ:%.4f, v1X:%.4f, v1Y:%.4f, v1Z:%.4f, Rm:%.4f'\
                   %(name, surfaceNum, trNumString, *v, *h, *v1, Rm)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    macroString += toMCNP80String('%d %s REC %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f'\
+    macroString += toMCNP80String('%s %s REC %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f'\
                              %(surfaceNum, trNumString, *v, *h, *v1, Rm))
   
     self.collectedSurfaceStrings += macroString
@@ -1131,17 +1364,17 @@ class CardDeck:
 
     Returns assigned surface number.    
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, ellipsoid macrobody:%d, trNum:%s, v1X:%.4f, v1Y:%.4f, v1Z:%.4f, v2X:%.4f, v2Y:%.4f, v2Z:%.4f, Rm:%.4f'\
+    descrStr = '%s, ellipsoid macrobody:%s, trNum:%s, v1X:%.4f, v1Y:%.4f, v1Z:%.4f, v2X:%.4f, v2Y:%.4f, v2Z:%.4f, Rm:%.4f'\
                   %(name, surfaceNum, trNumString, *v1, *v2, Rm)
     # ----macro--------
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    macroString += toMCNP80String('%d %s ELL %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f'\
+    macroString += toMCNP80String('%s %s ELL %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f'\
                              %(surfaceNum, trNumString, *v1, *v2, Rm))
   
     self.collectedSurfaceStrings += macroString
@@ -1172,11 +1405,18 @@ class CardDeck:
     
     Returns assigned surface number.
     """
-    if surfaceNum == None: surfaceNum = self._getNextSN()
+    surfaceNum = self._getNextSN() if surfaceNum == None else SN(surfaceNum)
+    surfaceNum.facets = {'N1': SN(surfaceNum.sn+'.1'),
+                         'N2': SN(surfaceNum.sn+'.2'),
+                         'N3': SN(surfaceNum.sn+'.3'),
+                         'N4': SN(surfaceNum.sn+'.4'),
+                         'N5': SN(surfaceNum.sn+'.5'),
+                         'N6': SN(surfaceNum.sn+'.6')}
+    
     trNumString = '' if trNum==None else '%d'%(trNum)
     
     macroString = ''
-    descrStr = '%s, ARB macrobody:%d, trNum:%s, \
+    descrStr = '%s, ARB macrobody:%s, trNum:%s, \
                      aX:%.2f,aY:%.2f,aZ:%.2f, bX:%.2f,bY:%.2f,bZ:%.2f, \
                      cX:%.2f,cY:%.2f,cZ:%.2f, dX:%.2f,dY:%.2f,dZ:%.2f, \
                      eX:%.2f,eY:%.2f,eZ:%.2f, fX:%.2f,fY:%.2f,fZ:%.2f, \
@@ -1188,7 +1428,7 @@ class CardDeck:
     macroString += toMCNP80String('c ---%s'%(descrStr))  
     #c surface/macrobody number, transformation number optional, RCC, xPos,yPos,zPos, axisX, axisY, axisZ, radius'
     #801 1 rcc 0  0  0  1  1  1  5
-    macroString += toMCNP80String('%d %s ARB %.4f %.4f %.4f   %.4f %.4f %.4f \
+    macroString += toMCNP80String('%s %s ARB %.4f %.4f %.4f   %.4f %.4f %.4f \
                                   %.4f %.4f %.4f  %.4f %.4f %.4f  %.4f %.4f %.4f \
                                   %.4f %.4f %.4f   %.4f %.4f %.4f  %.4f %.4f %.4f  \
                                   %d  %d  %d  %d  %d  %d'\
@@ -1223,10 +1463,14 @@ class CardDeck:
     but If the # is omitted, the cell number will be treated as a macro/surface
     number leading to unexpected results if such a macro/surface exists!!!
     """
-    if worldSurfaceNum == None: worldSurfaceNum = self._getNextSN()
-    if worldCellNum == None: worldCellNum = self._getNextCN()
-    if graveyardCellNum == None: graveyardCellNum = self._getNextCN()
-    
+#    if worldSurfaceNum == None: worldSurfaceNum = self._getNextSN()
+#    if worldCellNum == None: worldCellNum = self._getNextCN()
+#    if graveyardCellNum == None: graveyardCellNum = self._getNextCN()
+
+    worldSurfaceNum = self._getNextSN() if worldSurfaceNum is None else SN(worldSurfaceNum)
+    worldCellNum = self._getNextCN() if worldCellNum is None else CN(worldCellNum)
+    graveyardCellNum = self._getNextCN() if graveyardCellNum is None else CN(graveyardCellNum)
+
     # ----macro--------
     # c -------World sphere macrobody-------------------------------------
     # 900   so 120  $ sphere at origin
@@ -1294,7 +1538,7 @@ class CardDeck:
     print('CellNum, name, UniNum')
     numName = sorted(self.cellNumNameList, key=lambda tup: tup[0])
     for n in numName:
-      print(n)
+      print(str(n[0]), n[1], n[2])
     print('------------------------------')
   ### !!!----------TRANSLATE ROTATE FUNCTIONS----------
   def insertTRString(self, name, shift=(0,0,0), rotMatrix=None, trNum=None):
@@ -1676,7 +1920,7 @@ ERG=d{ergDistNum:d} {dirDistNumString} PAR={par} {trNumString} $ energy distribu
     if rejCell == None:
       rejCellString = ''
     else:
-      rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
+      rejCellString = ' CEL=%s EFF=.0001'%(rejCell)
 
     if dirDistrib is None:
       dirString = ''
@@ -1783,7 +2027,7 @@ sp{radDistNum:d}   -21  2          $ Source Prob: sampling 0 is constant for lin
     if rejCell == None:
       rejCellString = ''
     else:
-      rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
+      rejCellString = ' CEL=%s EFF=.0001'%(rejCell)
   
     if dirDistrib is None:
       dirString = ''
@@ -1869,7 +2113,7 @@ SP{extDistNum:d}    0    1         $ Source Probability uniform distribution bet
     if rejCell == None:
       rejCellString = ''
     else:
-      rejCellString = ' CEL=%d EFF=.0001'%(rejCell)
+      rejCellString = ' CEL=%s EFF=.0001'%(rejCell)
   
     if dirDistrib is None:
       dirString = ''
@@ -2330,11 +2574,13 @@ FT{tallyNumWType} {treatmentKeyword} {argsStr}
     tallyNumWType = t = tallyNum*10 + tallyType #'%d5'%(tallyNum)
   
     cellString = ''
-    if type(cellSurfInfo) is str: 
+    if type(cellSurfInfo) in [CN, SN]: 
+      cellString += '%s '%(cellSurfInfo)
+    elif type(cellSurfInfo) is str: 
       cellString += '%s '%(cellSurfInfo)
       # single cell or surface 
     elif type(cellSurfInfo) is int:
-        cellString += '%d '%(cellSurfInfo)
+        cellString += '%s '%(cellSurfInfo)
       # Surface numbers can be given as 5.1
     elif type(cellSurfInfo) is float: 
         cellString += '%.1f '%(cellSurfInfo)
@@ -2579,7 +2825,7 @@ C{t}   {tMin:.3f} {tbins-1}i {tMax:.3f}  $ T axis, tmin, bins-1, tmax numCols
     """
     debugTallyString = \
 """c -- Debug tally --
-F1011:p %d              $ debug tally with universe surface to see if all particles come out
+F1011:p %s              $ debug tally with universe surface to see if all particles come out
 """%(worldSurfaceNum)
   
     self.collectedTallyStrings += debugTallyString
@@ -2760,6 +3006,9 @@ PHYS:e 100 {ides} 0 0 0 1 1 1 1 0
     But Mat has its own method. TR section is too simple to need one.
     """
     self.collectedSrcStrings += toMCNP80String(s)
+  def insertIntoMaterialSection(self, s):
+    """  """
+    self.collectedMatStrings += toMCNP80String(s)
   def insertIntoTallySection(self, s):
     """  """
     self.collectedTallyStrings += toMCNP80String(s)
