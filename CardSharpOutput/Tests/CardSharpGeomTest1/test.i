@@ -7,7 +7,7 @@ c ---Cylinder----
 1 6 -2.7000  -1  -2  3    IMP:p,e=1
 c World cells---Air inside------------------
 c ---World----
-2 412 -0.0012  1  -4    IMP:p,e=1
+2 412 -0.0012  -4  #1    IMP:p,e=1
 c ---Graveyard----
 3 0        4    IMP:p,e=0
 c =============Cells end: Next line must be completely blank==================
