@@ -3,37 +3,47 @@ c ====================Cells======================
 c (cell #, material #, density, macrobody, importance)                      
 c density: negative is g/cc, positive is atoms/barn-cm                        
 c -----------------------------------------------------------------
-c source, macrobody:1, xPos:-10.00, yPos:0.00, zPos:0.00, radius:0.40, matNum:Void, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
+c source, macrobody:1, xPos:-10.00, yPos:0.00, zPos:0.00, radius:0.10, matNum:Void, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---source----
 1 0        -1    IMP:p=1
 c detector, Rect PPiped macrobody:2, xMin:-0.20, xMax:0.20, yMin:-3.50, yMax:3.50, zMin:-3.50, zMax:3.50, matName:Void, density:0.0000, xShift:10.00, yShift:0.00, zShift:0.00
 c ---detector----
 2 0        -2  *TRCL (10.000000 0.000000 0.000000)  IMP:p=1
-c cone, macrobody:3, baseX:0.00, baseY:0.00, baseZ:0.00, heightX:0.00, heightY:0.00, heightZ:0.80, radiusBase:0.60, radiusTop:0.10, matName:Aluminum, density:0.0000
-c ---cone----
-3 6 -2.7000  -3    IMP:p=1
+c eye1, macrobody:6, baseX:-1.00, baseY:0.00, baseZ:0.00, axisX:2.00, axisY:0.00, axisZ:0.00, radius:0.10, matName:Air, density:0.0000, xShift:0.00, yShift:0.20, zShift:-0.40
+c ---eye1----
+3 412 -0.0012  -6  *TRCL (0.000000 0.200000 -0.400000)  IMP:p=1
+c ---object----
+4 6 -2.7000  (-3:-4) 5 #3    IMP:p=1
 c World cells---Void inside------------------
 c ---World----
-4 0        -4  #1  #2  #3    IMP:p=1
+5 0        -7  #1  #2  #3  #4    IMP:p=1
 c ---Graveyard----
-5 0        4    IMP:p=0
+6 0        7    IMP:p=0
 c =============Cells end: Next line must be completely blank==================
 
 c ====================Surfaces/Macrobodies=======
 c surface/macrobody number, transformation number optional, surf/macro type, surface parameters
 c --------------------------
-c ---source, sphere macrobody:1, trNum:, xPos:-10.00, yPos:0.00, zPos:0.00, radius:0.40
-1  SPH -10.0000 0.0000 0.0000  0.4000
+c ---source, sphere macrobody:1, trNum:, xPos:-10.00, yPos:0.00, zPos:0.00, radius:0.10
+1  SPH -10.0000 0.0000 0.0000  0.1000
 c ---detector, macrobody:2, trNum:, xMin:-0.20, xMax:0.20, yMin:-3.50, yMax:3.50, zMin:-3.50, zMax:3.50
 2  RPP -0.200000 0.200000   -3.500000 3.500000    -3.500000 3.500000
-c ---cone, cone macrobody:3, trNum:, baseX:0.0000, baseY:0.0000, baseZ:0.0000, heightX:0.0000, heightY:0.0000, heightZ:0.8000, radiusTop:0.6000, radiusBase:0.1000
-3  TRC 0.0000 0.0000 0.0000   0.0000 0.0000 0.8000  0.6000 0.1000
-c ---Universe, sphere macrobody:4, trNum:, xPos:0.00, yPos:0.00, zPos:0.00, radius:150.00
-4  SPH 0.0000 0.0000 0.0000  150.0000
+c ---cone, cone macrobody:3, trNum:, baseX:0.0000, baseY:0.0000, baseZ:0.2000, heightX:0.0000, heightY:0.0000, heightZ:0.8000, radiusTop:0.6000, radiusBase:0.1000
+3  TRC 0.0000 0.0000 0.2000   0.0000 0.0000 0.8000  0.6000 0.1000
+c ---body, sphere macrobody:4, trNum:, xPos:0.00, yPos:0.00, zPos:-0.60, radius:0.60
+4  SPH 0.0000 0.0000 -0.6000  0.6000
+c ---eye1, cylinder macrobody:5, trNum:1, baseX:-1.00, baseY:0.00, baseZ:0.00, axisX:2.00, axisY:0.00, axisZ:0.00, radius:0.12
+5 1 RCC -1.0000 0.0000 0.0000  2.0000 0.0000 0.0000  0.1200
+c ---eye1, cylinder macrobody:6, trNum:, baseX:-1.00, baseY:0.00, baseZ:0.00, axisX:2.00, axisY:0.00, axisZ:0.00, radius:0.10
+6  RCC -1.0000 0.0000 0.0000  2.0000 0.0000 0.0000  0.1000
+c ---Universe, sphere macrobody:7, trNum:, xPos:0.00, yPos:0.00, zPos:0.00, radius:150.00
+7  SPH 0.0000 0.0000 0.0000  150.0000
 c =============Surfaces/Macros end: Next line must be completely blank=========
 
 c =================Data cards=================
 c -----------------Transformations(* for degrees)--
+c ---eye1 shift, shift: 0.00 -0.20 -0.40
+*TR1  0.000 -0.200 -0.400
 c -----------------Materials------------------
 c --['Aluminum', 'Air']--
 c      Aluminum
@@ -68,13 +78,8 @@ F15:p    $ Point detectors
      -10.00 0.00 0.00 1.00 $ x y z r
 c Energy bins
 E15  1.0000E-02 1.2550E+00 2.5000E+00
-c -- F1 Tally --
-F11:p         $ pulse height tally
-     ( 1 (1, 1))   $ cell/surface String
-c Energy bins
-E11  0.0000E+00 1.0000E+00 2.0000E+00
 c -- Debug tally --
-F1011:p 4              $ debug tally with universe surface to see if all particles come out
+F1011:p 7              $ debug tally with universe surface to see if all particles come out
 c -----------------Physics -------------------
 c --mode, cut, phys --
 MPHYS  OFF $ needed only when particles other than N P E are run                      
@@ -88,13 +93,13 @@ c -----------------Output Control-------------
 c --MCTAL nps --
   c NOTRN                $ uncomment then you get ray tracing only, not scatter
   c PRDMP NDP NDM MCT NDMP DMMP
-  PRDMP   j   1000    1    1    j  $ write MCTAL file                                 
+  PRDMP   j   100    1    1    j  $ write MCTAL file                                 
   PRINT
   c PRINT 40 $ For material normalization check, see .io file
   c RAND  gen=2 seed=19539353113317 stride=751313 $ Bad ... and this was recommended!!!
   c RAND  gen=1 seed=19073486328125 $ These are defaults, must end in Odd.
-  c DBCN j 1000 $ nj is jump over n options, debug print and multitasking are incompatible
-  NPS 10000     $ stop after number of source particles have been run                 
+  c DBCN j 100 $ nj is jump over n options, debug print and multitasking are incompatible
+  NPS 1000     $ stop after number of source particles have been run                 
   c CTME 2.0 $ stop run after number of minutes
   c VOID     $ make all materials void (VisEd particle tracking) (still need xsdir)
 
