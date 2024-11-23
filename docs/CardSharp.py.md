@@ -9,15 +9,39 @@ MOST ARGUMENTS TO THE FUNCTIONS HAVE SENSIBLE DEFAULT VALUES AND CAN BE IGNORED.
 
 -----------------
 -----------------
+## Class: SN
+A class to hold the surface number (and its facets if a macro)
+But should be as transparent to use as an integer or string.
+And support unary negative.
+
+-----------------
+## Class: CN
+A class to support cellNumbers.
+
+Not yet implemented:
+Eventually should support, children from multi level nested universes.
+A simple cellNumber is an integer, say 1.
+A cellNumber inside a universe is still an integer like object inside another 
+integer like object: 1<2
+But with lattices, a cellNumber needs to be treated as a complex object,
+or possibly a string: 1<3(1,2,3)<4
+
+-----------------
+## Function: testSNCN
+():
+
+  
+
+-----------------
 ## Class: CardDeck
 Class representing an MCNP input deck/file.
 Instantiate an object of this class, then call methods to add surfaces, cell, materials,
 source, tallies, physics and output control cards. Finally write out the deck.
 
 ### Method: CardDeck::insertSurface_CylinderAligned
-(self, name, axis='X', offset=(0,0,0), radius=1.0, surfaceNum=None, trNum=None):
+(self, name, axis='X', xyz=(0,0,0), radius=1.0, surfaceNum=None, trNum=None):
 
-Define a cylinder parallel to one of the three axes.
+Define an infinitely long cylindrical surface parallel to one of the three axes.
 If parallel to X axes, the YZ offsets are used.
 If parallel to Y axes, the XZ offsets are used and so on.
 
@@ -149,7 +173,7 @@ Sphere is different from other macrobodies in not ever needing an orientation ma
 Returns assigned macro surface number and cell number.
 
 ### Method: CardDeck::insertMacroAndCellSphereShell
-(self, name, pos=(0,0,0), radiusOuter=2, radiusInner=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum1=0, surfaceNum2=0, cellNum=None,uni=0):
+(self, name, pos=(0,0,0), radiusOuter=2, radiusInner=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum1=None, surfaceNum2=None, cellNum=None,uni=0):
 
 Uses two sphere macros to generate a shell.
 Returns a list of the two assigned macro surface numbers and the assigned cell number.
@@ -742,6 +766,11 @@ Use this function to insert manually generated/unsupported cards into the macros
 
 Use this function to insert manually generated/unsupported cards into the data section. Could have gone into any of: collectedMatStrings, collectedTrStrings, collectedSrcStrings, collectedTallyStrings, collectedPhysicsStrings,  collectedOutputControlStrings which together comprise the data section.
 But Mat has its own method. TR section is too simple to need one.
+
+### Method: CardDeck::insertIntoMaterialSection
+(self, s):
+
+
 
 ### Method: CardDeck::insertIntoTallySection
 (self, s):
