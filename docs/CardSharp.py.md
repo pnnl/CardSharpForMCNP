@@ -2,7 +2,7 @@
 This file provides a class/methods for creating MCNP decks.
 See the test scripts in the CardSharpTests folder for usage.
 
-Most refereces to MCNP manual are to version 6.1. Some to 5.1 Vol II.
+Most references to MCNP manual are to version 6.1. Some to 5.1 Vol II.
 The two have a different style in terms of upper/lower case.
 
 MOST ARGUMENTS TO THE FUNCTIONS HAVE SENSIBLE DEFAULT VALUES AND CAN BE IGNORED.
@@ -593,16 +593,18 @@ Use FUn card to specify the details.
 ### Method: CardDeck::getFXTallySTring
 (self, tallyNum, tallyType, cellSurfInfo, eList=None, mList=None, par='p'):
 
-Used for F1/2/4/6/7/8.
-The cellDescriptor has too many options according to the MCNP manual.
+Don't call this function. Call the functions named with F1/2/4/6/7/8.
+The cell or surface information can be provided in many different ways,  according to the MCNP manual.
 The string is the most generic way to handle anything that MCNP supports.
-An int or float can also be passed in.
+An int or float can also be passed in for simpler cases.
 If a list/tuple is passed, each element in it is converted to a string and wrapped with parentheses.
 
 See Chapter 4, page 4–48, for a CAUTION when tallying a union of overlapping  regions. For unnormalized tallies (type 1, 8), the union is a sum. For  normalized tallies (type 2, 4, 6, 7), the union is an average.
 
 When cell is given from another universe, (1<4), it is a string The string case can actually take care of the int/float also Page 3-19, MCNP 6.1: "Parentheses indicate that the tally is for the union  of the items within the parentheses.
 Nested lists can get complicated so it is best to just use the string.
+
+eList and mList can be a list of floats in MeV, or a string in MCNP format, possibly with the i operator. 0 10i 1 gives ten equi spaced numbers between 0 and 1 MeV.
 
 ### Method: CardDeck::insertF1Tally
 (self, tallyNum, surfInfo, eList=None, mList=None, par='p'):
