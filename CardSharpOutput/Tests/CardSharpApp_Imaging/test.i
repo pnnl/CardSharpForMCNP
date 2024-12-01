@@ -1,4 +1,4 @@
-Generated using CardSharp:Imaging App
+Generated using CardSharp:Radiography Imaging App, simple
 c ====================Cells======================
 c (cell #, material #, density, macrobody, importance)                      
 c density: negative is g/cc, positive is atoms/barn-cm                        
@@ -77,7 +77,7 @@ c -- F5 Tally --
 F15:p    $ Point detectors
      -10.00 0.00 0.00 1.00 $ x y z r
 c Energy bins
-E15  1.0000E-02 1.2550E+00 2.5000E+00
+E15  1.0000000E-02 1.2550000E+00 2.5000000E+00
 c -- Debug tally --
 F1011:p 7              $ debug tally with universe surface to see if all particles come out
 c -----------------Physics -------------------
@@ -91,15 +91,14 @@ PHYS:p 100 0 0 0 0 $ Physics card for photons emcpf ides nocoh ispn nodop J fism
 PHYS:e 100 0 0 0 0 1 1 1 1 0
 c -----------------Output Control-------------                     
 c --MCTAL nps --
-  c NOTRN                $ uncomment then you get ray tracing only, not scatter
-  c PRDMP NDP NDM MCT NDMP DMMP
-  PRDMP   j   100    1    1    j  $ write MCTAL file                                 
-  PRINT
-  c PRINT 40 $ For material normalization check, see .io file
-  c RAND  gen=2 seed=19539353113317 stride=751313 $ Bad ... and this was recommended!!!
-  c RAND  gen=1 seed=19073486328125 $ These are defaults, must end in Odd.
-  c DBCN j 100 $ nj is jump over n options, debug print and multitasking are incompatible
-  NPS 1000     $ stop after number of source particles have been run                 
-  c CTME 2.0 $ stop run after number of minutes
-  c VOID     $ make all materials void (VisEd particle tracking) (still need xsdir)
-
+c NOTRN                $ uncomment then you get ray tracing only, not scatter
+c PRDMP NDP NDM MCT NDMP DMMP                                                   
+PRDMP   j   1000    1    1    j  $ write MCTAL file                                 
+PRINT
+c PRINT 40 $ For material normalization check, see .io file
+c RAND  gen=2 seed=19539353113317 stride=751313 $ Bad ... and this was recommended!!!
+c RAND  gen=1 seed=19073486328125 $ These are defaults, must end in Odd.
+c DBCN j 1000 $ nj is jump over n options, debug print and multitasking are incompatible
+NPS 10000     $ stop after number of source particles have been run                 
+c CTME 2.0 $ stop run after number of minutes
+c VOID     $ make all materials void (VisEd particle tracking) (still need xsdir)
