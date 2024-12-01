@@ -5,7 +5,7 @@
 This file provides a class/methods for creating MCNP decks.
 See the test scripts in the CardSharpTests folder for usage.
 
-Most refereces to MCNP manual are to version 6.1. Some to 5.1 Vol II.
+Most references to MCNP manual are to version 6.1. Some to 5.1 Vol II.
 The two have a different style in terms of upper/lower case.
 
 MOST ARGUMENTS TO THE FUNCTIONS HAVE SENSIBLE DEFAULT VALUES AND CAN BE IGNORED.
@@ -564,16 +564,19 @@ class CardDeck:
     """
     if surfaceList is not None:
       for sn in surfaceList:
-        if (type(sn)!=SN):
+        if (type(sn) not in [SN, int, str]):
           print('surfaceList should have only surface numbers')
           print('Got:', type(sn), sn)
+          #print("use returned sn variable or cs.SN(42) or cs.SN('42') instead of int or str")
           assert(type(sn)==SN)
 
     if cellComplementList is not None:
       for cn in cellComplementList:
-        if (type(cn)!=CN):
+        if (type(cn) not in [CN, int, str]):
           print('cellComplementList should have only cell numbers')
-          assert(type(cn)==CN)
+          print('Got:', type(cn), cn)
+          #print("use returned cn or cs.CN(42) or cs.CN('42') instead of int or str")
+          assert(type(cn)==CN) # cs.CN(42) or cs.CN('42')  instead of int or str
 
     #if cellNum == None: cellNum = self._getNextCN()
     cellNum = self._getNextCN() if cellNum is None else CN(cellNum)
@@ -2435,8 +2438,11 @@ SP%d    0.     0.     1.0      $ Source *probability* for each bin, integrated
     t = tallyNumWType
   
     eStr = ''
-    for e in eList:
-      eStr += '%.4E '%(e)
+    if type(eList) is str:
+      eStr = eList
+    elif type(eList) in [list, np.ndarray]:
+      for e in eList:
+        eStr += '%.7E '%(e)
   
     enCardString = f"""\
 c Energy bins
@@ -2468,8 +2474,11 @@ E{t}  {eStr}
     t = tallyNumWType
   
     mStr = ''
-    for m in mList:
-      mStr += '%.4f '%(m)
+    if type(mList) is str:
+      mStr = mList
+    elif type(mList) in [list, np.ndarray]:
+      for m in mList:
+        mStr += '%.6f '%(m)
     
     enMultCardString = f"""\
 c Energy Multipliers
@@ -2554,10 +2563,11 @@ FT{tallyNumWType} {treatmentKeyword} {argsStr}
 
   def getFXTallySTring(self, tallyNum, tallyType, cellSurfInfo, eList=None, mList=None, par='p'):
     """
-    Used for F1/2/4/6/7/8.
-    The cellDescriptor has too many options according to the MCNP manual.
+    Don't call this function. Call the functions named with F1/2/4/6/7/8.
+    The cell or surface information can be provided in many different ways, 
+    according to the MCNP manual.
     The string is the most generic way to handle anything that MCNP supports.
-    An int or float can also be passed in.
+    An int or float can also be passed in for simpler cases.
     If a list/tuple is passed, each element in it is converted to a string and
     wrapped with parentheses.
     
@@ -2570,6 +2580,10 @@ FT{tallyNumWType} {treatmentKeyword} {argsStr}
     Page 3-19, MCNP 6.1: "Parentheses indicate that the tally is for the union 
     of the items within the parentheses.
     Nested lists can get complicated so it is best to just use the string.
+    
+    eList and mList can be a list of floats in MeV, or a string in MCNP format,
+    possibly with the i operator. 0 10i 1 gives ten equi spaced numbers between
+    0 and 1 MeV.
     """
     tallyNumWType = t = tallyNum*10 + tallyType #'%d5'%(tallyNum)
   
@@ -2609,13 +2623,6 @@ F{t}:{par}         $ pulse height tally
       fXTallyString += enMultCardString
   
     return tallyNumWType, fXTallyString
-
-#    The following tally functions use a parameter called cellListList
-#    Why cellListList? - List with possibly lists inside it, eg: (1, (2,3))
-#    This supports the following MCNP feature:    
-#    Page 3-19, MCNP 6.1: "Parentheses indicate that the tally is for the union 
-#    of the items within the parentheses."
-#    Depending on the tally used, it could be surfaces.
 
   ### !!!---Tallies
   def insertF1Tally(self, tallyNum, surfInfo, eList=None, mList=None, par='p'):
@@ -2964,19 +2971,19 @@ PHYS:e 100 {ides} 0 0 0 1 1 1 1 0
     else:
       notrn = ''
     outputControlString = \
-  """c --MCTAL nps --
-  {notrn:s}NOTRN                $ uncomment then you get ray tracing only, not scatter
-  c PRDMP NDP NDM MCT NDMP DMMP                                                   
-  PRDMP   j   {debugAfter:d}    1    1    j  $ write MCTAL file                                 
-  PRINT
-  c PRINT 40 $ For material normalization check, see .io file
-  c RAND  gen=2 seed=19539353113317 stride=751313 $ Bad ... and this was recommended!!!
-  c RAND  gen=1 seed=19073486328125 $ These are defaults, must end in Odd.
-  c DBCN j {debugAfter:d} $ nj is jump over n options, debug print and multitasking are incompatible
-  NPS {nps:d}     $ stop after number of source particles have been run                 
-  c CTME 2.0 $ stop run after number of minutes
-  c VOID     $ make all materials void (VisEd particle tracking) (still need xsdir)
-  """.format(notrn=notrn, debugAfter=debugAfter, nps=nps)
+"""c --MCTAL nps --
+{notrn:s}NOTRN                $ uncomment then you get ray tracing only, not scatter
+c PRDMP NDP NDM MCT NDMP DMMP                                                   
+PRDMP   j   {debugAfter:d}    1    1    j  $ write MCTAL file                                 
+PRINT
+c PRINT 40 $ For material normalization check, see .io file
+c RAND  gen=2 seed=19539353113317 stride=751313 $ Bad ... and this was recommended!!!
+c RAND  gen=1 seed=19073486328125 $ These are defaults, must end in Odd.
+c DBCN j {debugAfter:d} $ nj is jump over n options, debug print and multitasking are incompatible
+NPS {nps:d}     $ stop after number of source particles have been run                 
+c CTME 2.0 $ stop run after number of minutes
+c VOID     $ make all materials void (VisEd particle tracking) (still need xsdir)
+""".format(notrn=notrn, debugAfter=debugAfter, nps=nps)
   
     self.collectedOutputControlStrings = outputControlString
     return outputControlString  
