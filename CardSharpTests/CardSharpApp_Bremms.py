@@ -135,8 +135,9 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   #===========DETECTOR START==============================
   # Tx detector
   #eList = np.linspace(0.000, 0.180, 181)
-  eList = np.arange(0.000, gunVolt_kVp/1000+binSize, binSize) # 1 keV bins
-  
+  eList = np.arange(0.000, gunVolt_kVp/1000+binSize, binSize) # 1 keV bins, explicit list
+  numBins = gunVolt_kVp/1000/binSize
+  eList = '0  1E-5  0.001  %di  %.4f'%(numBins, gunVolt_kVp/1000) # zero/epsion bins and i notation
   cd.insertF5Tally(tallyNum=11, pos=(0,detToOrigin,0), r=1, eList=eList, par='p')
   cd.insertF5Tally(tallyNum=12, pos=(0,detToOrigin,5), r=1, eList=eList, par='p')
   cd.insertF5Tally(tallyNum=13, pos=(0,detToOrigin,10), r=1, eList=eList, par='p')
@@ -166,7 +167,7 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
 
   print('>>>>>> END DEBUG PRINTS >>>>>>>>>>\n\n')
   #=====================================================
-  titleCard = 'Bremms'
+  titleCard = 'Bremmstrahlung Xray source, simple model.'
   deckStr = cd.assembleDeck(titleCard=titleCard) #, matString=matString, 
                       #srcString=srcString, tallyString=tallyString, 
                       #physicsString=physicsString, outputControlString=outputControlString)
@@ -188,8 +189,10 @@ def doPlotsF5(modelFolder, tallyFile):
     plt.plot(e, s, drawstyle='steps', label='center', linewidth=2, alpha=.5)
     plt.plot(e, s2, drawstyle='steps', label='2', linewidth=.5)
     plt.plot(e, s3, drawstyle='steps', label='3', linewidth=.5)
-    plt.title('Tx Bremms '+specString); plt.grid(); plt.legend(); plt.show()
-    plt.plot(e, err); plt.grid(); plt.title('Rel Err'); plt.show()
+    plt.title('Tx Bremms '+specString); plt.grid(); plt.legend()
+    plt.semilogy()
+    plt.show()
+    plt.plot(e, err, drawstyle='steps'); plt.grid(); plt.title('Rel Err'); plt.show()
   else:
     t_or_d = 0 # 0 for total, 1 for direct/uncollided
     e, s, err = cstal.getTallyFromMctal(modelFolder+tallyFile, tallyNumWtype=215, objectNum=0, t_or_d=t_or_d)
@@ -198,8 +201,10 @@ def doPlotsF5(modelFolder, tallyFile):
     plt.plot(e, s, drawstyle='steps', label='center', linewidth=2, alpha=.5)
     plt.plot(e, s2, drawstyle='steps', label='2', linewidth=.5)
     plt.plot(e, s3, drawstyle='steps', label='3', linewidth=.5)
-    plt.title('Ref bremms '+specString);plt.grid(); plt.legend(); plt.show()
-    plt.plot(e, err); plt.grid(); plt.title('Rel Err'); plt.show()
+    plt.title('Ref bremms '+specString);plt.grid(); plt.legend()
+    plt.semilogy()
+    plt.show()
+    plt.plot(e, err, drawstyle='steps'); plt.grid(); plt.title('Rel Err'); plt.show()
 
   # save to file
   saveSpectrumToFile(e,s)

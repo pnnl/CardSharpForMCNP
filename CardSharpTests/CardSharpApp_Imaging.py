@@ -164,7 +164,7 @@ def imagingApp(modelFolder, modelFilename):
   outputControlString = cd.insertOutputControlCards(nps=1E4)
 
   #---------------------------
-  deckStr = cd.assembleDeck(titleCard='Imaging App')
+  deckStr = cd.assembleDeck(titleCard='Radiography Imaging App, simple')
 #  outputStr = cd.assembleDeck(titleCard, macroString='Auto', cellString='Auto', trString='Auto', matString='Auto',  
 #                 srcString='Auto', tallyString='Auto', physicsString='Auto', outputControlString='Auto')
 
