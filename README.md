@@ -20,9 +20,9 @@ Installation
 ------------
 CardSharp does not need to be installed.
 
-Simply copy the CardSharp folder and the CardSharpTests folder to your hard drive and browse/run the tests to become familiar with CardSharp. The generated MCNP input decks go into the CardSharpOutput folder which is at the same level as the other two folders.
+Simply download the zip file from the latest release and copy the CardSharp folder and the CardSharpTests folder to your hard drive and browse/run the tests to become familiar with CardSharp. The generated MCNP input decks go into the CardSharpOutput folder which is at the same level as the other two folders.
 
-To develop your own MCNP simulations using CardSharp, create a folder to hold your scripts at the same level as the CardSharp folder, copy a test that is similar to what you want to do and modify it.
+To develop your own MCNP simulations using CardSharp, create a folder to hold your scripts at the same level as the CardSharpTests folder, copy a test that is similar to what you want to do and modify it.
 
 How to cite
 -----------
