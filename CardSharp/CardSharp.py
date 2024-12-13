@@ -634,7 +634,7 @@ class CardDeck:
   
     self.collectedCellStrings += cellString
     
-    self.cellNumNameList.append((cellNum, name, uni))
+    self.cellNumNameList.append((cellNum, name, matNum, uni))
   
     printIfShow(cellString)
     return cellNum
@@ -667,7 +667,7 @@ class CardDeck:
   
     self.collectedCellStrings += cellString
     
-    self.cellNumNameList.append((newCellNum, name, uni))
+    self.cellNumNameList.append((newCellNum, name, matNum, uni))
   
     printIfShow(cellString)
     return newCellNum
@@ -1446,7 +1446,8 @@ class CardDeck:
 #############################################################################
   ### !!!-----
   # ??? another function or parameter option to describe the world without
-  # ??? using complements? Using only surfaces???
+  # using complements? Using only surfaces?
+  # User can do that themselves?
   def insertWorldMacroAndCell(self, pos=(0,0,0), radius=50, surfaceList=None,
                                  worldMat='Void',  worldDensity=0, 
                                  worldSurfaceNum=None, worldCellNum=None, graveyardCellNum=None):
@@ -1496,7 +1497,7 @@ class CardDeck:
       surfaceList = [-worldSurfaceNum]
       uniZeroCellList = []
       for c in self.cellNumNameList:
-        if c[2] == 0:
+        if c[3] == 0:
           uniZeroCellList.append(c[0])
       if len(uniZeroCellList) > 0: # incase there are no cells other than the universe
         cellsToComplement = uniZeroCellList
@@ -1538,17 +1539,18 @@ class CardDeck:
     usually the last one to be instantiated.
     """
     print('---------Cell List------------')
-    print('CellNum, name, UniNum')
-    numName = sorted(self.cellNumNameList, key=lambda tup: tup[0])
+    print('CellNum, name, MatNum, UniNum')
+    numName = sorted(self.cellNumNameList, key=lambda tup: int(str(tup[0]))) # convert CN to int
     for n in numName:
-      print(str(n[0]), n[1], n[2])
+      print(str(n[0]), '"'+n[1]+'"', csmat.matLookupByNum(n[2]), n[3])
     print('------------------------------')
+    
   ### !!!----------TRANSLATE ROTATE FUNCTIONS----------
   def insertTRString(self, name, shift=(0,0,0), rotMatrix=None, trNum=None):
     """
     Used by insertMacro functions to insert a TRanslate/Rotate string.
     The rotation happens before the translate.
-    """  
+    """
     if trNum is None: trNum = self._getNextTRN()
     
     descrStr = '%s, shift: %.2f %.2f %.2f'%(name, *shift)
@@ -1732,10 +1734,9 @@ class CardDeck:
   AXS: Reference vector for EXT and RAD in vector notation. Default None
   EXT: For a volume source is the distance from POS along AXS.
   CEL: Starting cell for the particles, or cell rejection
-       (With this, why are POS/AXS/RAD/EXT needed???)
        When used as cell rejection, the space given by POS/AXS?RAD etc is sampled
        and then tested against CEL for rejection
-  CCC: Cookie cutter cell, works the same as cell rejection. Why duplication???
+  CCC: Cookie cutter cell, works the same as cell rejection. What's different???
   
   Only POS, gives a point source
   POS/RAD, gives a spherical source
@@ -1772,8 +1773,8 @@ class CardDeck:
   S allows sampling among distributions, one of which is chosen for further sampling
   
   There are two forms of the SP card. First letter after SP being positive or non numeric
-  means that a SI/SP define a distribution.
-  In this case, first entry of SP should always be zero. ??? Not for discrete
+  means that a SI/SP defines a distribution.
+  In this case, first entry of SP should be zero. (But not so for discrete?)
   
   First thing being a negative number means a mathematical distribution is specified
   
@@ -1792,7 +1793,7 @@ class CardDeck:
                            eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], 
                            par='P', trNum=None):
     """
-    First entry on SP card has to be zero for Continuous only ???
+    First entry on SP card has to be zero for Continuous distribution only ???
     """
     assert(len(eList) == len(relFq))
     trNumString = '' if trNum==None else 'TR=%d'%(trNum)    
@@ -2344,9 +2345,9 @@ SP%d    %s $ relative frequency of each energy
 
   def getAngularBiasingString(self, distNum, coneHalfAngleDeg):
     """
-    ??? Biasing speeds up convergence, but the results are the same as for
-    ??? a isotropic source.
-    ??? For an anisotropic source, see getAngularDirectingString.
+    Biasing speeds up convergence, but the results are the same as for
+    an isotropic source.
+    For an anisotropic source, see getAngularDirectingString.
     
     MCNP Primer page 13.
     SI - source information.
@@ -2705,10 +2706,7 @@ F{t}:{par}         $ pulse height tally
     The zero bin will catch non-analog knock-on electron negative scores. The epsilon
     bin will catch scores from particles that travel through the cell without depositing
     energy.
-  
-    ??? What is the score from a particle that travels through without depositing energy?
-    ??? How do we designate the first two are zero/epsilon or not?
-     
+       
     The asterisk on a tally type 8 converts from a pulse-height tally to an energy 
     deposition tally. All of the units are shown in the above table.
     Tally type 8 has many options. The standard F8 tally is a pulse-height tally 
@@ -2961,7 +2959,8 @@ PHYS:e 100 {ides} 0 0 0 1 1 1 1 0
     Random number generator does not repeat when period is exceeded, but longer
     period generation (gen2,3) are preferred. Page 3-328 (6.1)
     
-    ??? Use PRDMP to enble MCTAL output and RUNTPE size write intermittent dumps? vs DBCN
+    ??? Use PRDMP to enble MCTAL output and RUNTPE size to write intermittent dumps? 
+    vs DBCN
     """
     nps = int(nps)
     if debugN is None:

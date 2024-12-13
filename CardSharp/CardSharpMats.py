@@ -84,6 +84,24 @@ def matClearAllAliases():
   global matDict
   matDict.clearAllAliases()
 #############################################################################
+def matLookupByNum(matNum):
+  """
+  Use this function to lookup the material associated with the given matNum.
+  """
+  global matDict
+
+  if matNum == 0:
+    return 'Void'
+  
+  matKeys = matDict.keys()
+  for k in matKeys:
+    if matNum == matDict[k][1]:      
+#      print('Mat key: ', k)
+#      print('Mat num/density: ', matDict[k][1], matDict[k][2])
+#      print('--------------------------')
+      return k # if found, return key
+
+  return None
 def matLookup(matKey):
   """
   Use this function to lookup a specific material in the dictionary by it's key.
