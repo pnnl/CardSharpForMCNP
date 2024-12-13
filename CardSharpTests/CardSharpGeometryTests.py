@@ -69,7 +69,7 @@ def testGeomSNCN():
   #cnTest = cd.insertCellString(name='Test', surfaceList=[-cs.SN('1.1'), -cs.SN('1.2'),-snCyl])
   cnTest = cd.insertCellString(name='Test', surfaceList=[-snRpp.facets['Xmax'], 
                                   -snRpp.facets['Xmin'], -snCyl], cellNum='1')
-  # Universe macro number and all cells within are returned
+  # World macro number and all cells within are returned
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Void')
 
   cd.insertMaterialStrings(['Aluminum'])

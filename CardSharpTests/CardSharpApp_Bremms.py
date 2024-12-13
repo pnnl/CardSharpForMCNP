@@ -66,7 +66,7 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   """  
   Don't mix auto numbering with manual numbering, unless you know what you are
   doing. Use separate ranges for manual and auto and manage the cellNumList 
-  for the final Universe cell generation.
+  for the final world cell generation.
   """
   cd = cs.CardDeck()
   cd.setParticlesList(modeParticles)
@@ -78,7 +78,7 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
 #  csmat.reloadMatsDict()  
   #===========MATERIALS END==============================
  
-  universeRadius = 70
+  worldRadius = 70
   srcToOrigin = 5
   detToOrigin = 40
   #--------------------------------------------------
@@ -119,8 +119,8 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
                   matName='W', density=0, 
                   shift=(-0.5,0.5,-0.5), rotMatrix=None)
     
-  # universe-----------------------------------------------------------
-  sn, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=universeRadius,
+  # World-----------------------------------------------------------
+  sn, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=worldRadius,
               worldMat='Void', worldDensity=0, worldSurfaceNum=worldSurfaceNum)
 
   #===========GEOMETRY END==============================

@@ -75,7 +75,7 @@ Full Simulation volume option to debug the geometry.
 # Local Windows MCNP path
 mcnpCodePath="C:/MY_MCNP/MCNP_CODE/bin/"
 mcnpDataPath="C:/MY_MCNP/MCNP_DATA/"
-numTasks = 4
+numTasks = 12
 ###############################################################################
 def main():
   """ """
@@ -138,11 +138,10 @@ def imagingApp(modelFolder, modelFilename):
 #                matName='Aluminum', density=0,
 #                shift=(0,0,0))
   
-  # universe-----------------------------------------------------------
-  #uniMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, uniMat='Void')
+  # World-----------------------------------------------------------
   worldSurfaceNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=150, worldMat='Void')
   
-#  srcString = cd.insertSource_PointIsotropicWithEnergyDistrib(pos=[-srcToOrigin,0,0], eList=[0, .2, .21], relFq=[0, .5, .5], distrib='Discrete')
+#  srcString = cd.insertSource_PointIsotropicWithEnergyDistrib(pos=[-srcToOrigin,0,0], eList=[0, .2, .21], relFq=[0, .5, .5], ergDistrib='Discrete')
 #  trNum = cd.insertTRString(shift=(0,0,0), rotMatrix=None)
   srcString = cd.insertSource_SphereWithAngularAndEnergyDistrib(pos=[-srcToOrigin,0,0],
                 radius=.2, vec=[1,0,0], coneHalfAngleDeg=5,
@@ -267,12 +266,15 @@ PHYS:e 100 0 0 0 0 1 1 1 1 0
 #############################################################################
 def doPlots(modelFolder, tallyFile):
   """ """
+  t_or_d = 0 # total
+  totalTallyArray, totalRelerr = cstal.getRadiographyTallyFromMctal(modelFolder+tallyFile, tallyNumWtype=5, t_or_d=t_or_d)
+
   t_or_d = 1 # direct
-  directTallyArray, directRelerr = cstal.getRadiographyTallyFromMctal(modelFolder+tallyFile, tallyNumWtype=5, t_or_d=t_or_d) # total
+  directTallyArray, directRelerr = cstal.getRadiographyTallyFromMctal(modelFolder+tallyFile, tallyNumWtype=5, t_or_d=t_or_d)
   
-  plt.imshow(directTallyArray)
-  plt.title('Direct')
-  plt.show()
+  plt.imshow(totalTallyArray); plt.title('Tally'); plt.show()
+  plt.imshow(totalRelerr); plt.title('RelErr'); plt.show()
+  print(np.max(totalRelerr))
 #############################################################################
 if __name__ == '__main__':
   main()
