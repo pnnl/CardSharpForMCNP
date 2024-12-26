@@ -30,8 +30,8 @@
   | PRIVATELY OWNED RIGHTS.                                             |
   +---------------------------------------------------------------------+
   
-1mcnp     version 6     ld=05/08/13                     11/30/24 23:11:05 
- *************************************************************************                 probid =  11/30/24 23:11:05 
+1mcnp     version 6     ld=05/08/13                     12/25/24 22:21:45 
+ *************************************************************************                 probid =  12/25/24 22:21:45 
  n=CZT_detector.i tasks 14                                                       
 
          1-       Generated using CardSharp:Modeling CZT detector                                 
@@ -4403,44 +4403,44 @@
  
       1 -3.652E-01  3.498E-01  2.848E-01        1          0 -2.116E-01  5.001E-01  8.397E-01  1.170E+00  1.000E+00  0.000E+00
       3 -1.326E-01 -1.724E-01 -5.508E-01        1          0 -6.357E-01 -6.383E-01 -4.341E-01  1.330E+00  1.000E+00  0.000E+00
-      4 -1.743E-01 -7.987E-03  3.750E-02        1          0 -3.029E-02  8.378E-01  5.451E-01  1.330E+00  1.000E+00  0.000E+00
-      5  9.731E-01 -4.039E-01 -1.752E-01        1          0 -6.819E-01  6.228E-01 -3.835E-01  1.170E+00  1.000E+00  0.000E+00
       8 -7.399E-01 -5.545E-01 -2.472E-01        1          0  1.902E-01 -6.074E-01 -7.713E-01  1.170E+00  1.000E+00  0.000E+00
       7 -1.281E+00  6.223E-01  4.998E-01        1          0 -9.772E-01 -1.777E-01  1.165E-01  1.170E+00  1.000E+00  0.000E+00
+      4 -1.743E-01 -7.987E-03  3.750E-02        1          0 -3.029E-02  8.378E-01  5.451E-01  1.330E+00  1.000E+00  0.000E+00
+      5  9.731E-01 -4.039E-01 -1.752E-01        1          0 -6.819E-01  6.228E-01 -3.835E-01  1.170E+00  1.000E+00  0.000E+00
       6 -4.626E-02  4.848E-01 -4.462E-01        1          0 -9.858E-01  6.334E-02  1.555E-01  1.330E+00  1.000E+00  0.000E+00
       9  5.083E-01 -4.304E-02  2.259E-01        1          0 -1.501E-02 -4.334E-01 -9.011E-01  1.330E+00  1.000E+00  0.000E+00
      11 -2.896E-01 -9.476E-02  3.217E-01        1          0  3.597E-02 -5.707E-01 -8.204E-01  1.330E+00  1.000E+00  0.000E+00
-      2  6.764E-02  7.815E-02 -2.255E-01        1          0 -7.826E-01  1.880E-02  6.222E-01  1.330E+00  1.000E+00  0.000E+00
-     12 -1.738E+00  6.016E-02 -5.240E-01        1          0  3.885E-01  3.487E-01  8.529E-01  1.330E+00  1.000E+00  0.000E+00
      10 -1.783E+00  7.885E-02 -2.617E-01        1          0 -8.468E-01 -3.652E-01 -3.868E-01  1.330E+00  1.000E+00  0.000E+00
+     12 -1.738E+00  6.016E-02 -5.240E-01        1          0  3.885E-01  3.487E-01  8.529E-01  1.330E+00  1.000E+00  0.000E+00
+      2  6.764E-02  7.815E-02 -2.255E-01        1          0 -7.826E-01  1.880E-02  6.222E-01  1.330E+00  1.000E+00  0.000E+00
      13 -7.981E-01 -1.406E-01  5.994E-01        1          0  9.061E-01 -1.196E-01  4.057E-01  1.330E+00  1.000E+00  0.000E+00
      14 -1.332E-01 -4.197E-01  3.507E-02        1          0 -9.205E-01 -1.636E-01  3.548E-01  1.330E+00  1.000E+00  0.000E+00
-     15  8.690E-01  4.309E-01 -3.810E-02        1          0 -1.287E-01 -9.254E-01  3.566E-01  1.170E+00  1.000E+00  0.000E+00
      17 -1.809E+00  3.325E-01 -7.127E-01        1          0 -9.929E-01 -1.165E-01 -2.391E-02  1.330E+00  1.000E+00  0.000E+00
+     15  8.690E-01  4.309E-01 -3.810E-02        1          0 -1.287E-01 -9.254E-01  3.566E-01  1.170E+00  1.000E+00  0.000E+00
      16 -8.778E-01  7.100E-01 -3.355E-01        1          0 -1.904E-01 -5.476E-01  8.148E-01  1.330E+00  1.000E+00  0.000E+00
      18 -1.948E+00 -8.124E-01  4.506E-01        1          0 -3.377E-01  9.329E-01  1.256E-01  1.330E+00  1.000E+00  0.000E+00
      19 -1.100E+00  4.602E-01 -9.001E-02        1          0 -1.939E-01 -8.695E-01  4.543E-01  1.170E+00  1.000E+00  0.000E+00
      20 -3.258E-01  3.485E-01 -2.962E-01        1          0 -3.818E-01  9.187E-01  1.007E-01  1.170E+00  1.000E+00  0.000E+00
+     21 -1.767E+00  5.196E-01  1.819E-01        1          0 -9.980E-03 -2.320E-01  9.727E-01  1.170E+00  1.000E+00  0.000E+00
      22 -8.967E-01  1.699E-01 -7.112E-02        1          0 -6.479E-01  6.657E-01 -3.702E-01  1.170E+00  1.000E+00  0.000E+00
      23 -9.930E-01 -3.772E-01  2.942E-02        1          0 -6.004E-01  7.339E-01  3.177E-01  1.170E+00  1.000E+00  0.000E+00
-     21 -1.767E+00  5.196E-01  1.819E-01        1          0 -9.980E-03 -2.320E-01  9.727E-01  1.170E+00  1.000E+00  0.000E+00
      24 -1.577E+00 -7.005E-01 -5.585E-01        1          0  7.365E-01 -6.750E-01  4.477E-02  1.330E+00  1.000E+00  0.000E+00
      25 -6.202E-01  3.338E-01  8.952E-02        1          0 -7.380E-01  5.968E-01  3.150E-01  1.170E+00  1.000E+00  0.000E+00
-     28 -3.253E-01  8.768E-02  3.042E-01        1          0 -2.617E-01 -3.695E-01 -8.916E-01  1.170E+00  1.000E+00  0.000E+00
-     29 -1.571E+00  2.685E-01 -7.953E-01        1          0 -4.353E-01  8.811E-01 -1.846E-01  1.330E+00  1.000E+00  0.000E+00
-     27 -2.579E-02  3.121E-01 -2.936E-01        1          0  7.245E-02  7.944E-01 -6.030E-01  1.170E+00  1.000E+00  0.000E+00
-     30 -6.729E-01  4.735E-01 -5.389E-01        1          0 -1.899E-01 -9.777E-01  8.955E-02  1.330E+00  1.000E+00  0.000E+00
      26 -6.453E-02  3.546E-01 -2.460E-02        1          0 -6.319E-01  4.820E-01 -6.070E-01  1.330E+00  1.000E+00  0.000E+00
-     32  7.146E-01 -4.767E-02 -2.679E-01        1          0 -1.261E-01 -3.796E-03 -9.920E-01  1.330E+00  1.000E+00  0.000E+00
+     27 -2.579E-02  3.121E-01 -2.936E-01        1          0  7.245E-02  7.944E-01 -6.030E-01  1.170E+00  1.000E+00  0.000E+00
+     29 -1.571E+00  2.685E-01 -7.953E-01        1          0 -4.353E-01  8.811E-01 -1.846E-01  1.330E+00  1.000E+00  0.000E+00
+     28 -3.253E-01  8.768E-02  3.042E-01        1          0 -2.617E-01 -3.695E-01 -8.916E-01  1.170E+00  1.000E+00  0.000E+00
+     30 -6.729E-01  4.735E-01 -5.389E-01        1          0 -1.899E-01 -9.777E-01  8.955E-02  1.330E+00  1.000E+00  0.000E+00
      31 -1.728E+00  7.622E-01 -4.965E-01        1          0 -1.606E-01 -4.818E-01 -8.615E-01  1.170E+00  1.000E+00  0.000E+00
+     32  7.146E-01 -4.767E-02 -2.679E-01        1          0 -1.261E-01 -3.796E-03 -9.920E-01  1.330E+00  1.000E+00  0.000E+00
      33 -1.954E+00 -6.297E-02  4.931E-01        1          0  2.902E-01 -8.457E-01 -4.479E-01  1.170E+00  1.000E+00  0.000E+00
      34  5.962E-01  2.341E-02  1.757E-01        1          0  8.623E-01  3.899E-01  3.232E-01  1.330E+00  1.000E+00  0.000E+00
      35 -1.065E+00  9.778E-02  4.060E-01        1          0  5.543E-01  2.744E-01  7.858E-01  1.330E+00  1.000E+00  0.000E+00
      36 -1.610E+00 -2.869E-01 -1.441E-01        1          0 -2.326E-01  2.109E-01 -9.494E-01  1.330E+00  1.000E+00  0.000E+00
-     37  2.984E-01  3.660E-01 -3.529E-01        1          0  8.728E-01  4.101E-01  2.646E-01  1.170E+00  1.000E+00  0.000E+00
      38 -1.220E+00  1.452E-01  2.653E-03        1          0  3.182E-01  8.694E-01 -3.781E-01  1.330E+00  1.000E+00  0.000E+00
-     39 -1.469E+00 -7.424E-01 -1.746E-01        1          0  2.613E-01 -9.293E-02  9.608E-01  1.330E+00  1.000E+00  0.000E+00
+     37  2.984E-01  3.660E-01 -3.529E-01        1          0  8.728E-01  4.101E-01  2.646E-01  1.170E+00  1.000E+00  0.000E+00
      40 -4.908E-01 -3.714E-01  2.679E-01        1          0  4.563E-01 -8.363E-01  3.038E-01  1.170E+00  1.000E+00  0.000E+00
+     39 -1.469E+00 -7.424E-01 -1.746E-01        1          0  2.613E-01 -9.293E-02  9.608E-01  1.330E+00  1.000E+00  0.000E+00
      41 -8.766E-01 -2.920E-02  1.056E-01        1          0  1.321E-01  9.492E-01  2.855E-01  1.170E+00  1.000E+00  0.000E+00
      42 -1.933E+00 -7.815E-01 -1.177E-01        1          0  6.987E-01  2.838E-02  7.149E-01  1.330E+00  1.000E+00  0.000E+00
      43 -1.454E+00 -7.515E-01  4.339E-02        1          0  3.998E-01  1.747E-01 -8.998E-01  1.170E+00  1.000E+00  0.000E+00
@@ -4448,59 +4448,59 @@
      45 -9.038E-01 -7.348E-02 -4.056E-01        1          0  1.087E-01  8.916E-01  4.396E-01  1.330E+00  1.000E+00  0.000E+00
      46 -1.435E+00 -7.641E-01  4.758E-01        1          0 -6.780E-01 -8.674E-02 -7.299E-01  1.170E+00  1.000E+00  0.000E+00
      47 -1.385E+00 -6.134E-01  1.458E-01        1          0 -8.985E-01  3.399E-01  2.778E-01  1.170E+00  1.000E+00  0.000E+00
-     49 -9.728E-01 -7.310E-01  1.398E-01        1          0 -4.904E-01 -3.225E-01 -8.097E-01  1.330E+00  1.000E+00  0.000E+00
      48 -4.690E-01 -5.954E-02  1.457E-01        1          0  1.488E-01 -1.593E-01  9.760E-01  1.330E+00  1.000E+00  0.000E+00
+     49 -9.728E-01 -7.310E-01  1.398E-01        1          0 -4.904E-01 -3.225E-01 -8.097E-01  1.330E+00  1.000E+00  0.000E+00
      50 -4.653E-02 -2.396E-01  2.834E-03        1          0  8.123E-01 -7.198E-02  5.788E-01  1.330E+00  1.000E+00  0.000E+00
 
  ***********************************************************************************************************************
 
- dump no.    2 on file CZT_detector.ir     nps =      100000     coll =          19660     ctm =        1.67   nrn =    
+ dump no.    2 on file CZT_detector.ir     nps =      100000     coll =          19660     ctm =        1.18   nrn =    
        4344477
 
  ***********************************************************************************************************************
 
- dump no.    3 on file CZT_detector.ir     nps =      200000     coll =          38633     ctm =        3.47   nrn =    
+ dump no.    3 on file CZT_detector.ir     nps =      200000     coll =          38633     ctm =        2.46   nrn =    
        8641157
 
  ***********************************************************************************************************************
 
- dump no.    4 on file CZT_detector.ir     nps =      300000     coll =          57947     ctm =        4.94   nrn =    
+ dump no.    4 on file CZT_detector.ir     nps =      300000     coll =          57947     ctm =        3.87   nrn =    
       12975021
 
  ***********************************************************************************************************************
 
- dump no.    5 on file CZT_detector.ir     nps =      400000     coll =          77309     ctm =        6.51   nrn =    
+ dump no.    5 on file CZT_detector.ir     nps =      400000     coll =          77309     ctm =        5.09   nrn =    
       17306299
 
  ***********************************************************************************************************************
 
- dump no.    6 on file CZT_detector.ir     nps =      500000     coll =          96242     ctm =        8.03   nrn =    
+ dump no.    6 on file CZT_detector.ir     nps =      500000     coll =          96242     ctm =        6.26   nrn =    
       21639497
 
  ***********************************************************************************************************************
 
- dump no.    7 on file CZT_detector.ir     nps =      600000     coll =         115501     ctm =        9.67   nrn =    
+ dump no.    7 on file CZT_detector.ir     nps =      600000     coll =         115501     ctm =        7.66   nrn =    
       25963867
 
  ***********************************************************************************************************************
 
- dump no.    8 on file CZT_detector.ir     nps =      700000     coll =         135105     ctm =       11.01   nrn =    
+ dump no.    8 on file CZT_detector.ir     nps =      700000     coll =         135105     ctm =        8.87   nrn =    
       30306738
 
  ***********************************************************************************************************************
 
- dump no.    9 on file CZT_detector.ir     nps =      800000     coll =         154342     ctm =       12.51   nrn =    
+ dump no.    9 on file CZT_detector.ir     nps =      800000     coll =         154342     ctm =       10.03   nrn =    
       34619898
 
  ***********************************************************************************************************************
 
- dump no.   10 on file CZT_detector.ir     nps =      900000     coll =         173773     ctm =       13.81   nrn =    
+ dump no.   10 on file CZT_detector.ir     nps =      900000     coll =         173773     ctm =       11.20   nrn =    
       38962484
 1problem summary                                                                                                           
 
       run terminated when     1000000  particle histories were done.
-+                                                                                                    11/30/24 23:11:12 
-      Generated using CardSharp:Modeling CZT detector                                      probid =  11/30/24 23:11:05 
++                                                                                                    12/25/24 22:21:51 
+      Generated using CardSharp:Modeling CZT detector                                      probid =  12/25/24 22:21:45 
 
  photon creation     tracks      weight        energy            photon loss         tracks      weight        energy
                                  (per source particle)                                           (per source particle)
@@ -4535,9 +4535,9 @@
    total photon collisions                    192685          capture or escape 1.5680E-01          wc1   0.0000E+00
                                                               any termination   1.5672E-01          wc2   0.0000E+00
 
- computer time so far in this run    15.46 minutes            maximum number ever in bank         4
- computer time in mcrun              15.27 minutes            bank overflows to backup file       0
- source particles per minute            6.5468E+04
+ computer time so far in this run    12.78 minutes            maximum number ever in bank         4
+ computer time in mcrun              12.58 minutes            bank overflows to backup file       0
+ source particles per minute            7.9518E+04
  random numbers generated                 43280491            most random numbers used was         479 in history      999441
 
  range of sampled source weights = 1.0000E+00 to 1.0000E+00
@@ -4545,8 +4545,8 @@
  source efficiency = 0.0859  in cell        1
 
  number of histories processed by each thread
-       74147       73088       73531       73233       72154       70609       70528       71047       71496       70727
-       70777       69188       69865       69610
+       76641       74423       74246       73827       73262       72427       72031       70577       70121       69489
+       69048       67734       67656       68518
 1source distribution frequency tables                                                                   print table 170
 
  the expected values below do not include the effect of the rejection loop which samples position.
@@ -5992,13 +5992,19 @@
  behavior    behavior      value   decrease   decrease rate      value   decrease   decrease rate       value     behavior     slope
 
  desired      random       <0.10      yes      1/sqrt(nps)       <0.10      yes        1/nps           constant    random      >3.00
- observed     random        0.01      yes          yes            0.00      yes         yes            increase    random      10.00
- passed?        yes          yes      yes          yes             yes      yes         yes                no        yes         yes
+ observed     random        0.01      yes          yes            0.00      yes         yes            constant    random      10.00
+ passed?        yes          yes      yes          yes             yes      yes         yes               yes        yes         yes
 
  ===================================================================================================================================
 
 
- warning.  the tally in the tally fluctuation chart bin did not pass  1 of the 10 statistical checks.
+ this tally meets the statistical criteria used to form confidence intervals: check the tally fluctuation chart to verify.
+ the results in other bins associated with this tally may not meet these statistical criteria.
+
+ ----- estimated confidence intervals:  -----
+
+ estimated asymmetric confidence interval(1,2,3 sigma): 1.5855E-02 to 1.6106E-02; 1.5730E-02 to 1.6231E-02; 1.5604E-02 to 1.6357E-02
+ estimated  symmetric confidence interval(1,2,3 sigma): 1.5855E-02 to 1.6105E-02; 1.5729E-02 to 1.6231E-02; 1.5604E-02 to 1.6356E-02
 
 1analysis of the results in the tally fluctuation chart bin (tfc) for tally       18 with nps =     1000000  print table 160
 
@@ -6008,7 +6014,7 @@
  relative error from zero tallies  = 0.0078               relative error from nonzero scores  = 0.0000
 
  number of nonzero history tallies =       15980          efficiency for the nonzero tallies  = 0.0160
- history number of largest  tally  =         252          largest  unnormalized history tally = 1.00000E+00
+ history number of largest  tally  =         308          largest  unnormalized history tally = 1.00000E+00
  (largest  tally)/(average tally)  = 6.25782E+01          (largest  tally)/(avg nonzero tally)= 1.00000E+00
 
  (confidence interval shift)/mean  = 0.0000               shifted confidence interval center  = 1.59805E-02
@@ -6022,12 +6028,12 @@
       relative error                  7.84718E-03             7.84693E-03                    -0.000032
       variance of the variance        5.95945E-05             5.95906E-05                    -0.000066
       shifted center                  1.59805E-02             1.59805E-02                     0.000000
-      figure of merit                 1.06316E+03             1.06323E+03                     0.000064
+      figure of merit                 1.29133E+03             1.29141E+03                     0.000064
 
  the 100 largest  history tallies appear to have a  maximum value of about 1.00000E+00
  the large score tail of the empirical history score probability density function appears to have no unsampled regions.
 
- fom = (histories/minute)*(f(x) signal-to-noise ratio)**2 = (6.547E+04)*( 1.274E-01)**2 = (6.547E+04)*(1.624E-02) = 1.063E+03
+ fom = (histories/minute)*(f(x) signal-to-noise ratio)**2 = (7.952E+04)*( 1.274E-01)**2 = (7.952E+04)*(1.624E-02) = 1.291E+03
  print table 161 cannot be done for this tally because all tallies were between 1.00000E+00 and 1.25893E+00 which is one tally bin.
 
 1status of the statistical checks used to form confidence intervals for the mean for each tally bin
@@ -6035,7 +6041,7 @@
 
  tally   result of statistical checks for the tfc bin (the first check not passed is listed) and error magnitude check for all bins
 
-       18   missed  1 of 10 tfc bin checks: the figure of merit does not appear to be a constant for the last half of the problem     
+       18   passed the 10 statistical checks for the tally fluctuation chart bin result               
          missed all bin error check:  1027 tally bins had   430 bins with zeros and   593 bins with relative errors exceeding 0.10
 
 
@@ -6043,40 +6049,39 @@
 
  the tally bins with zeros may or may not be correct: compare the source, cutoffs, multipliers, et cetera with the tally bins.
 
- warning.       1 of the     1 tally fluctuation chart bins did not pass all 10 statistical checks.
  warning.       1 of the     1 tallies had bins with relative errors greater than recommended.
 1tally fluctuation charts                              
 
                             tally       18
           nps      mean     error   vov  slope    fom
-        64000   1.5938E-02 0.0311 0.0009 10.0     961
-       128000   1.5750E-02 0.0221 0.0005 10.0     916
-       192000   1.5865E-02 0.0180 0.0003 10.0     925
-       256000   1.5859E-02 0.0156 0.0002 10.0     947
-       320000   1.5941E-02 0.0139 0.0002 10.0     992
-       384000   1.5932E-02 0.0127 0.0002 10.0    1001
-       448000   1.6025E-02 0.0117 0.0001 10.0    1005
-       512000   1.5969E-02 0.0110 0.0001 10.0    1014
-       576000   1.5951E-02 0.0103 0.0001 10.0    1005
-       640000   1.5959E-02 0.0098 0.0001 10.0    1009
-       704000   1.5964E-02 0.0094 0.0001 10.0    1033
-       768000   1.6009E-02 0.0089 0.0001 10.0    1035
-       832000   1.5993E-02 0.0086 0.0001 10.0    1045
-       896000   1.5989E-02 0.0083 0.0001 10.0    1058
-       960000   1.5970E-02 0.0080 0.0001 10.0    1054
-      1000000   1.5980E-02 0.0078 0.0001 10.0    1063
+        64000   1.5938E-02 0.0311 0.0009 10.0    1308
+       128000   1.5750E-02 0.0221 0.0005 10.0    1369
+       192000   1.5865E-02 0.0180 0.0003 10.0    1341
+       256000   1.5859E-02 0.0156 0.0002 10.0    1274
+       320000   1.5941E-02 0.0139 0.0002 10.0    1258
+       384000   1.5932E-02 0.0127 0.0002 10.0    1252
+       448000   1.6025E-02 0.0117 0.0001 10.0    1294
+       512000   1.5969E-02 0.0110 0.0001 10.0    1287
+       576000   1.5951E-02 0.0103 0.0001 10.0    1266
+       640000   1.5959E-02 0.0098 0.0001 10.0    1270
+       704000   1.5964E-02 0.0094 0.0001 10.0    1280
+       768000   1.6009E-02 0.0089 0.0001 10.0    1294
+       832000   1.5993E-02 0.0086 0.0001 10.0    1295
+       896000   1.5989E-02 0.0083 0.0001 10.0    1305
+       960000   1.5970E-02 0.0080 0.0001 10.0    1306
+      1000000   1.5980E-02 0.0078 0.0001 10.0    1291
 
  ***********************************************************************************************************************
 
- dump no.   11 on file CZT_detector.ir     nps =     1000000     coll =         192685     ctm =       15.27   nrn =    
+ dump no.   11 on file CZT_detector.ir     nps =     1000000     coll =         192685     ctm =       12.58   nrn =    
       43280491
  tally data written to file CZT_detector.im
 
-        10 warning messages so far.
+         8 warning messages so far.
 
 
  run terminated when     1000000  particle histories were done.
 
- computer time =   15.46 minutes
+ computer time =   12.79 minutes
 
- mcnp     version 6     05/08/13                     11/30/24 23:11:12                     probid =  11/30/24 23:11:05 
+ mcnp     version 6     05/08/13                     12/25/24 22:21:51                     probid =  12/25/24 22:21:45 
