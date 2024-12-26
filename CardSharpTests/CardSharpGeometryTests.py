@@ -45,7 +45,7 @@ def testGeom0():
   # Universe macro number and all cells within are returned
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Void')
 
-  cd.insertMaterialStrings(['Aluminum'])
+  cd.insertMaterials(['Aluminum'])
   deckStr = cd.assembleDeck(titleCard='Title card: Test 0')
   print(deckStr)
   # Save file ---------------------------------------------------------
@@ -67,12 +67,12 @@ def testGeomSNCN():
 
   #cnTest = cd.insertCellString(name='Test', surfaceList=[-snRpp, -snCyl])
   #cnTest = cd.insertCellString(name='Test', surfaceList=[-cs.SN('1.1'), -cs.SN('1.2'),-snCyl])
-  cnTest = cd.insertCellString(name='Test', surfaceList=[-snRpp.facets['Xmax'], 
+  cnTest = cd.insertCell(name='Test', surfaceList=[-snRpp.facets['Xmax'], 
                                   -snRpp.facets['Xmin'], -snCyl], cellNum='1')
   # World macro number and all cells within are returned
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Void')
 
-  cd.insertMaterialStrings(['Aluminum'])
+  cd.insertMaterials(['Aluminum'])
   deckStr = cd.assembleDeck(titleCard='Title card: Test 0')
   print(deckStr)
   # Save file ---------------------------------------------------------
@@ -95,7 +95,7 @@ def testGeom1():
 
   # -------------insert cell----------------
   # Auto assigned cell number is returned  
-  cn = cd.insertCellString(name='Cylinder', surfaceList=[-sCyl, -sPL1, sPL2], matName='Aluminum')
+  cn = cd.insertCell(name='Cylinder', surfaceList=[-sCyl, -sPL1, sPL2], matName='Aluminum')
 
   #--------------insert universe-----------
   # Universe macro number and world/graveyard cell numbers are returned
@@ -105,7 +105,7 @@ def testGeom1():
   # define world using user supplied surface list
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=25, worldMat='Air')
   # -------------insert materials----------  
-  cd.insertMaterialStrings(['Aluminum', 'Air'])
+  cd.insertMaterials(['Aluminum', 'Air'])
   deckStr = cd.assembleDeck(titleCard='Title card: Test 1')
   #print(deckStr)
   # Save file ---------------------------------------------------------
@@ -131,7 +131,7 @@ def testGeom2():
   cd.setParticlesList(['p', 'e']) # used for Mode card and IMP string
 
   csmat.matAddAlias('PolyethyleneNonborated', 'Poly')
-  cd.insertMaterialStrings(['Aluminum', 'Tungsten', 'Lead', 'Poly', 'Air', 'Copper'])  
+  cd.insertMaterials(['Aluminum', 'Tungsten', 'Lead', 'Poly', 'Air', 'Copper'])  
   #--------------------------------------------------
   # Instantiate a sphere (macro and cell) ---------------------------------
   # For auto assignment of surfaceNum and cellNum, set them to None
@@ -144,7 +144,7 @@ def testGeom2():
   plane1sn = cd.insertSurface_PlaneAligned('plane1', axis='X', D=0.7) #, surfaceNum=None)
   plane2sn = cd.insertSurface_PlaneAligned('plane2', axis='X', D=-0.7) #, surfaceNum=None)
 
-  cn = cd.insertCellString(name='sphere minus plane1/plane2', matName='Aluminum', 
+  cn = cd.insertCell(name='sphere minus plane1/plane2', matName='Aluminum', 
                          density=1, surfaceList=[-sphere_sn, -plane1sn, plane2sn], 
                          shift=(0,4,0)) # Will generating warning for positive density 
   #-----------------
@@ -210,17 +210,17 @@ def testGeom2():
                  surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0)
   #--------------insert surfaces/cells-----------
   snNum = cd.insertSurface_Torus(name='Torus 1', axis='Z', xyz=(11.5,3,0), ABC=(0.8,0.6,0.4))
-  cnNum = cd.insertCellString(name='Torus 1', surfaceList=[-snNum],  matName='Copper')
+  cnNum = cd.insertCell(name='Torus 1', surfaceList=[-snNum],  matName='Copper')
   #--------------insert surfaces/cells-----------
 #  snNum = cd.insertMacroBox(name='Box 1')
 #  cnNum = cd.insertCellString(name='Box 1', surfaceList=[-snNum])
   #--------------insert surfaces/cells-----------
   snNum = cd.insertMacroREC(name='Right Ellip Cyl 1', v=(3,-1,0), h=(0,1.5,0), v1=(1,0,0), Rm=.5)
-  cnNum = cd.insertCellString(name='Right Ellip Cyl 1', surfaceList=[-snNum], matName='Poly')
+  cnNum = cd.insertCell(name='Right Ellip Cyl 1', surfaceList=[-snNum], matName='Poly')
 
   #--------------insert surfaces/cells-----------
   snNum = cd.insertMacroEllipsoid(name='Ellipsoid 1', v1=(5.5,1,0), v2=(0,1.5,0), Rm=-0.9)
-  cnNum = cd.insertCellString(name='Ellipsoid 1', surfaceList=[-snNum], matName='Aluminum')
+  cnNum = cd.insertCell(name='Ellipsoid 1', surfaceList=[-snNum], matName='Aluminum')
 #
 #  snNum = cd.insertMacroEllipsoid(name='Ellipsoid 2', v1=(0,0,0), v2=(0,0,3), Rm=-2)
 #  cnNum = cd.insertCellString(name='Ellipsoid 2', surfaceList=[-snNum], shift=(10,0,0))
@@ -251,7 +251,7 @@ def testGeom3():
 
   csmat.matAddAlias('SteelStainless304', 'SS304')
   csmat.matAddAlias('PolyethyleneNonborated', 'Poly')
-  cd.insertMaterialStrings(['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly'])
+  cd.insertMaterials(['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly'])
   #--------------------------------------------------
   # Surfaces (and macros) are independent of universes
   # First define some surfaces to create some cells in uni=1 which fully define a 
@@ -273,18 +273,18 @@ def testGeom3():
                                                        zMinMax=(-6,6))
 
   # insert uncut sphere cell in uni=1
-  cn1 = cd.insertCellString(name='sphere uncut', surfaceList=[-msph],
+  cn1 = cd.insertCell(name='sphere uncut', surfaceList=[-msph],
                          matName='Lead', density=0, 
                          impString='', cellNum=None, uni=1)
 
   # insert cut sphere cell in uni=1
-  cn2 = cd.insertCellString(name='sphere cut by two planes and shifted',  
+  cn2 = cd.insertCell(name='sphere cut by two planes and shifted',  
                         surfaceList=[-msph, -mp1, mp2], matName='Lead', density=0, 
                          shift=(7,0,0), impString='', cellNum=None, uni=1)
   # rpp-----------------------------------------------------------
   # an rpp shaped cell with cn1 and cn2 removed
   # insert into uni=1, to completely define the rpp shaped region
-  cn3 = cd.insertCellString(name='rpp',  surfaceList=[-mrpp],
+  cn3 = cd.insertCell(name='rpp',  surfaceList=[-mrpp],
                          cellComplementList = [cn1, cn2],
                          matName='Air', density=0,
                          impString='', cellNum=None, uni=1)
@@ -301,7 +301,7 @@ def testGeom3():
   # insert cell into real world with stuff selected 
   # While bringing u=1 into real world, shift it up in y direction
   # The material of the cell using FILL is not used at all???
-  cn = cd.insertCellString(name='rpp', surfaceList=[-mrpp2], 
+  cn = cd.insertCell(name='rpp', surfaceList=[-mrpp2], 
                            matName='Poly', density=0, # Material with density 0 does not get used ??? 
                            shift=(0,5,0), rotMatrix=cs.identityRotMatrix, 
                            impString='', cellNum=None, uni=0, fill=1) # fill with uni=1
@@ -329,7 +329,7 @@ def testGeom4():
 
   csmat.matAddAlias('SteelStainless304', 'SS304')
   csmat.matAddAlias('PolyethyleneNonborated', 'Poly')
-  cd.insertMaterialStrings(['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly'])  
+  cd.insertMaterials(['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly'])  
   #---------------------------------
   # Define lattice cell in uni=1
   # Universe is basically a container and it should fully define the volume to be filled.
@@ -339,13 +339,13 @@ def testGeom4():
 #  mp1 = cd.insertSurface_PlaneAligned('plane1', surfaceNum=None, ori='X', D=2.0)
 #  mp2 = cd.insertSurface_PlaneAligned('plane2', surfaceNum=None, ori='X', D=-2.0)
   mrpp = cd.insertMacroRpp(name='rpp', xMinMax=(-5,5), yMinMax=(-5,5), zMinMax=(-5,5))
-  cn2 = cd.insertCellString(name='rpp_cell', surfaceList=[-mrpp, msph],
+  cn2 = cd.insertCell(name='rpp_cell', surfaceList=[-mrpp, msph],
                                   matName='Air',
                                   uni=1)  
   # Done with defining cell in uni=1 
   #----------------------------
   # A lattice must be the only thing in its universe, so using an in between universe, uni=2
-  cn = cd.insertCellString(name='rpp_lattice', surfaceList=[-mrpp], # surfaces giving boundary of one cell
+  cn = cd.insertCell(name='rpp_lattice', surfaceList=[-mrpp], # surfaces giving boundary of one cell
                            matName='Void', density=0, # this material is completely ignored
                            impString='', 
                            cellNum=None, uni=2, latticeType=1, 
@@ -356,7 +356,7 @@ def testGeom4():
   mrpp2 = cd.insertMacroRpp(name='rpp', xMinMax=(-5*3,5*3),
                                         yMinMax=(-5*3,5*3),
                                         zMinMax=(-5*3,5*3))
-  cn = cd.insertCellString(name='rpp', surfaceList=[-mrpp2], # surfaces giving outer limits of the full lattice
+  cn = cd.insertCell(name='rpp', surfaceList=[-mrpp2], # surfaces giving outer limits of the full lattice
                            fill=2) # fill with uni=2
   # universe-----------------------------------------------------------
   worldMacroNum, (cn1, cn2) = cd.insertWorldMacroAndCell(pos=(0,0,0),

@@ -70,7 +70,7 @@ m{}   60000   -1.0   $ CO"""
   csmat.matAddAlias('CZT_fixed', 'CZT')
   csmat.matAddAlias('Polycarbonate', 'PC') # 1.2 g/cc
   # insert material into card deck
-  cd.insertMaterialStrings(['Co60', 'Aluminum', 'CZT', 'Air', 'PC', 'FR4PCB'])
+  cd.insertMaterials(['Co60', 'Aluminum', 'CZT', 'Air', 'PC', 'FR4PCB'])
   #===========MATERIALS END/GEOMETRY START==============================
   worldRadius = 50
   # source cell cone------------------------------------------------------
@@ -82,7 +82,7 @@ m{}   60000   -1.0   $ CO"""
   cnDetList=[]
   for i in range(4): # insert it multiple times
     rotMatrix=cd.getRotationMatrix(rotationAxis='X', angleDeg=angles[i])
-    cn = cd.insertCellString(name='Detector from other uni', surfaceList=[-outerSurf], 
+    cn = cd.insertCell(name='Detector from other uni', surfaceList=[-outerSurf], 
                              fill=1, shift=shifts[i], rotMatrix=rotMatrix)    
     cnDetList.append(cn)
   # World-----------------------------------------------------------
@@ -202,7 +202,7 @@ def insertCZTDetector(cd, uni=1, shift=(0,0,0), rotMatrix=None):
   snFlangeHole = cd.insertMacroRcc(name='flange hole', base=(0,0,-flangeHeight/2), 
                                    axis=(0,0,flangeHeight), radius=flangeHoleDia/2)
   
-  cnPolyFlange = cd.insertCellString(name='flange of cup', surfaceList = [-snFlange, snFlangeHole],
+  cnPolyFlange = cd.insertCell(name='flange of cup', surfaceList = [-snFlange, snFlangeHole],
                     matName='PC', shift=(0,0,flangeHeight/2+flangeRecess), uni=uni)
 
   # Add aluminum wall separating crystal cavity 1.27 mm
@@ -248,7 +248,7 @@ def insertCZTDetector(cd, uni=1, shift=(0,0,0), rotMatrix=None):
                                xMinMax=(-worldWidth/2, worldWidth/2), 
                                yMinMax=(-worldWidth/2, worldWidth/2), 
                                zMinMax=(minZExtent-0.1, maxZExtent+0.1))
-  cn = cd.insertCellString(name='DetectorWorld', 
+  cn = cd.insertCell(name='DetectorWorld', 
                     #surfaceList=[-snWorld, snCryst],
                     cellComplementList = [cnOuter, cnFCap, cnCryst, cnPolyRing, 
                     cnPolyFlange, cnSep, cnBWall] + cnPcbList,

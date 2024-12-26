@@ -69,8 +69,9 @@ DEBUG TIPS:
 - Check for geometry leaks using gxsview. Use GXSView's check-overlap-tool with 
 Full Simulation volume option to debug the geometry.
 - Suspect F5 or FIR5 detector tallies if they are close to other objects.
-- Check Energy bins used
-
+- If tallies are zero, check Energy bins used will capture the right energies
+- If scatter signal is failing to register, check NOTRN, density could be very high, 
+  geometry is not appropriate (Large source to detector)
 """
 # Local Windows MCNP path
 mcnpCodePath="C:/MY_MCNP/MCNP_CODE/bin/"
@@ -108,7 +109,7 @@ def imagingApp(modelFolder, modelFilename):
   cd = cs.CardDeck()
   cd.setParticlesList(['p'])
 
-  cd.insertMaterialStrings(['Aluminum', 'Air'])
+  cd.insertMaterials(['Aluminum', 'Air'])
       
   srcToOrigin = 10; detToOrigin = 10
   detWidth = 5; detNumPixels = 100 
@@ -131,7 +132,7 @@ def imagingApp(modelFolder, modelFilename):
                                     matName='Air', shift=(0,.2,-0.4))
 
   manualSurfacesString='(%s:%s) %s #%s'%(-coneSn, -bodySn, eyeSn1, eyeCn2) # union, parentheses optional
-  objCn = cd.insertCellString(name='object', manualSurfacesString=manualSurfacesString,
+  objCn = cd.insertCell(name='object', manualSurfacesString=manualSurfacesString,
                               matName='Aluminum', density=0,)
 #  coneSn, coneCn = cd.insertMacroAndCellCone(name='cone',
 #                base=(0,0,0), height=(0,0,.8), radiusBase=.6, radiusTop=.1,

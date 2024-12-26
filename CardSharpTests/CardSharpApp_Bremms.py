@@ -71,11 +71,12 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   cd = cs.CardDeck()
   cd.setParticlesList(modeParticles)
   #===========MATERIALS START==============================
-  csmat.matAddAlias('Tungsten', 'W')
-  cd.insertMaterialStrings(['W'])
-  #csmat.matSearch('lanthanum'); return # search for material by partial name
+#  csmat.matSearch('tungsten'); return # search for material by partial name
 #  csmat.nextMatNum = 10 # if first few matNums need to be reserved
 #  csmat.reloadMatsDict()  
+
+  csmat.matAddAlias('Tungsten', 'W')
+  cd.insertMaterials(['W'])
   #===========MATERIALS END==============================
  
   worldRadius = 70
@@ -87,7 +88,6 @@ def bremmsModel(modelFolder, modelFilename, binSize=0.001): # 1 keV default
   # source debug cell-----------------------------------------------------------
   sn, cn = cd.insertMacroAndCellSphere(name='source', surfaceNum=None, cellNum=None, radius=0.5,
               pos=(0,-srcToOrigin,0), matName='Void', density=0)
-  #cellString += cs; macroString += ms; cellList.append(cn)
 
   # tally debug cell RCC-----------------------------------------------------------
   snA, cn = cd.insertMacroAndCellRcc(name='Tx detector', base=(0,detToOrigin,0),
