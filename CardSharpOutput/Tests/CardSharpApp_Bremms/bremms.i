@@ -1,4 +1,4 @@
-Generated using CardSharp:Bremms
+Generated using CardSharp:Bremmstrahlung Xray source, simple model.
 c ====================Cells======================
 c (cell #, material #, density, macrobody, importance)                      
 c density: negative is g/cc, positive is atoms/barn-cm                        
