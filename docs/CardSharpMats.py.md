@@ -42,8 +42,14 @@ Some of the material names in the dictionary/PNNL compendium are very long and c
 Remove all aliases. This is mainly needed if you are generating multiple MCNP decks from one scrip invocation, and the different decks use different aliases.
 
 -----------------
+## Function: matLookupByNum
+(matNum):
+
+Use this function to lookup the material associated with the given matNum.
+
+-----------------
 ## Function: matLookup
-(matKey):
+ByNum(matNum):
 
 Use this function to lookup a specific material in the dictionary by it's key.
 

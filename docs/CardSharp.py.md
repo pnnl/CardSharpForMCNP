@@ -11,20 +11,13 @@ MOST ARGUMENTS TO THE FUNCTIONS HAVE SENSIBLE DEFAULT VALUES AND CAN BE IGNORED.
 -----------------
 ## Class: SN
 A class to hold the surface number (and its facets if a macro)
-But should be as transparent to use as an integer or string.
-And support unary negative.
+It is as transparent to use as an integer or string and supports unary negative.
 
 -----------------
 ## Class: CN
-A class to support cellNumbers.
-
-Not yet implemented:
-Eventually should support, children from multi level nested universes.
-A simple cellNumber is an integer, say 1.
-A cellNumber inside a universe is still an integer like object inside another 
-integer like object: 1<2
-But with lattices, a cellNumber needs to be treated as a complex object,
-or possibly a string: 1<3(1,2,3)<4
+A class to support cellNumbers. Cell numbers are generally integers but with
+universes and lattices it can become complicated enough that it is treated as
+a string.
 
 -----------------
 ## Function: testSNCN
@@ -120,7 +113,7 @@ If three coordinate pairs are used, a quadratic surface (PX, PY, PZ,  SO, SX, SY
 
 Returns assigned surface number.    
 
-### Method: CardDeck::insertCellString
+### Method: CardDeck::insertCell
 (self, name, surfaceList=None, cellComplementList=None, manualSurfacesString=None, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', cellNum=None, uni=0, fill=0, latticeType=None, latticeIndices=None):
 
 This function is used to insert a cell using surfaces (and cells) that have already been defined.
@@ -398,15 +391,28 @@ Seems like it does it with matrix on right!
 axis is a tuple (x,y,z).
 angleDeg is in degrees.
 
-### Method: CardDeck::insertMaterialStrings
+### Method: CardDeck::insertMaterials
 (self, matList):
 
 These go in the data card section.
 
+### Method: CardDeck::insertKCODEcard
+(self, npsPerCycle=None, initialK=None, cyclesToSkip=None, totalCycles=None, storageFor=None, normBy=None, mrkp=None, avgOver=None):
+
+KCODE NSRCK RKK IKZ KCT MSRK KNRM MRKP KC8 
+NSRCK - Number of source histories per cycle RKK - initial guess for keff IKZ - number of cycles to skip before beginning tally accumulations KCT - number of cycles to be done MSRK - number of source points to allocate storage for KNRM - normalize tallies by 0=weight / 1=histories MRKP - maximum number of cycle values on MCTAL or RUNTPE KC8 - summary and tally information averaged over 0=all cycles/1=active cycles only Defaults: NSRCK=1000;  RKK=1.0; IKZ=30; KCT=IKZ+100;            MSRK=4500 or 2*NSRCK; KNRM=0; MRKP=6500; KC8=1 
+A criticality source is different from a fixed source because the fission  source locations change from cycle to cycle. A cycle is the completion of  the number of histories requested by the first entry on the kcode card. The  initial ksrc source is used only for the first keff cycle. A new spatial  fission source is generated during each cycle and is used as the source for  the next cycle.
+
+### Method: CardDeck::insertKSRCcard
+(self, xyzList=[(0,0,0)]):
+
+KSRC x1 y1 z1 x2 y2 z2 This card contains up to NSRCK (x,y,z) triplets that are locations of initial  source points for a KCODE calculation. At least one point must be in a cell  containing fissile material and points must be away from cell boundaries.  It is not necessary to input all NSRCK coordinate points. MCNP will start  approximately (NSRCK/number of points) particles at each point. Usually one  point in each fissile region is adequate, because MCNP will quickly calculate  and use the new fission source distribution. The energy of each particle in  the initial source is sampled from a Watt fission spectrum hardwired into  MCNP, with a = 0.965 MeV and b = 2.29 MeV−1.   
+An SDEF card also can be used to sample initial source points in fissile  material regions. The SDEF card parameters applicable to volume sampling  can be used: CEL, POS, RAD, EXT, AXS, X, Y, Z; and CCC, ERG, and EFF. If a  uniform volume distribution is chosen, the early values of keff will likely  be low because too many particles are put near where they can escape, just  the opposite of the usual situation with the KSRC card. Do not change the  default value of WGT for a KCODE calculation.
+
 ### Method: CardDeck::insertSource_PointIsotropicWithEnergyDistrib
 (self, pos=[0,0,0], ergDistrib='Discrete', # 'Histogram', 'Continuous' eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], par='P', trNum=None):
 
-First entry on SP card has to be zero for Continuous only ???
+First entry on SP card has to be zero for Continuous distribution only ???
 
 ### Method: CardDeck::insertSource_PointMonoDirWithEnergyDistrib
 (self, pos=[0,0,0], vec=[0,1,0], ergDistrib='Discrete', # 'Histogram', 'Continuous' eList=[.3, .5, 1.0, 2.5], relFq=[.2, .1, .3, .4], par='P', trNum=None):
@@ -513,8 +519,8 @@ Vertical with J to pad the second column??? Page 2-9 L blank : Error L J     : E
 ### Method: CardDeck::getAngularBiasingString
 (self, distNum, coneHalfAngleDeg):
 
-  ??? Biasing speeds up convergence, but the results are the same as for   ??? a isotropic source.
-  ??? For an anisotropic source, see getAngularDirectingString.
+  Biasing speeds up convergence, but the results are the same as for   an isotropic source.
+  For an anisotropic source, see getAngularDirectingString.
      MCNP Primer page 13.
   SI - source information.
   SP - source probability.
@@ -620,23 +626,25 @@ Depends on material behind the surface? Why?
 ### Method: CardDeck::insertF4Tally
 (self, tallyNum, cellInfo, eList=None, mList=None, par='p'):
 
-Flux averaged over a CELL. Units: particles/cm2 Depends on material in the cell.
+Track length estimate of flux averaged over a CELL. Units: particles/cm2 Depends on material in the cell.
 
 ### Method: CardDeck::insertF6Tally
 (self, tallyNum, cellInfo, eList=None, mList=None, par='p'):
 
-Energy deposition averaged over a CELL. Units: particles/cm2.
+Track length estimate of energy deposition averaged over a CELL.  Units: MeV/g.
 Cell material must not be void.
 
 ### Method: CardDeck::insertF7Tally
 (self, tallyNum, cellInfo, eList=None, mList=None):
 
-Fission energy deposition averaged over a CELL. Units: particles/cm2.
+Track length estimate of fission energy deposition averaged over a CELL.  Units: MeV/g.
 Only for neutrons.
 ??? Need to create a test case.
 
 ### Method: CardDeck::insertF8Tally
 (self, tallyNum, cellInfo, eList=None, mList=None, par='p,e'):
+
+Energy distribution of pulses created in a detector.
 
 For pulse-height tallies photons/electrons are a special case: F8:P,E is the same  as F8:P and F8:E. Also, F8 tallies may have particle combinations such as F8:N,H.   
 Pulse height tally in a cell. Energy deposited. Will depend upon material in cell.
@@ -649,10 +657,7 @@ One common application of the F8 tally is simulation of the energy distribution 
 The energy bins in the F8 pulse-height tally are different from those of all  other tallies. Rather the particle energy at the time of scoring, the number of pulses depositing energy within the bins are tallied. That is, the meaning of the energy  bins of a pulse-height tally is the energy deposited in a cell bin by all the  physically associated tracks of a history. Care must be taken when selecting  energy bins for a pulse-height tally. It is recommended that a zero bin and an  epsilon bin be included.
 
 The zero bin will catch non-analog knock-on electron negative scores. The epsilon bin will catch scores from particles that travel through the cell without depositing energy.
-
-??? What is the score from a particle that travels through without depositing energy?
-??? How do we designate the first two are zero/epsilon or not?
-  The asterisk on a tally type 8 converts from a pulse-height tally to an energy  deposition tally. All of the units are shown in the above table.
+    The asterisk on a tally type 8 converts from a pulse-height tally to an energy  deposition tally. All of the units are shown in the above table.
 Tally type 8 has many options. The standard F8 tally is a pulse-height tally  and the energy bins are no longer the energies of scoring events, but rather  the energy balance of all events in a history. In conjunction with the FT8 card  (Section 3.3.5.18), the F8 tally can be an anticoincidence pulse-height tally,  a neutron coincidence capture tally, or a residual nuclei production tally.
 
 F8 tallies always tally both p and e.
@@ -727,6 +732,17 @@ Get importance string based on the particles set in particle list.
 Used while inserting cells.
 IMP:p,e=1
 
+### Method: CardDeck::insertMTcard
+(self, matKey='WaterLiquid', sAlphaBetaList=['lwtr']):
+
+Insert a MT card to change the neutron cross section used for a particular material.
+
+matKey - The identifier used to insert a material into the CardDeck.
+Ex. 'WaterLiquid' or 'Beryllium'... use csmat.matSearch to find 
+sAlphaBetaList - A list of sAlphaBeta treatment strings.
+If the material has more than one element, you can provide more than one string.
+Ex. ['lwtr', 'GRPH.06T', 'BE.60T']
+
 ### Method: CardDeck::insertPhysicsCard
 (self, nocoh=0, ides=0, nodop=0, cutn=0.0, cutp=0.001, cute=0.001):
 
@@ -751,7 +767,7 @@ PHYS:e EMAX IDES IPHOT IBAD ISTRG BNUM XNUM RNOK ENUM NUMB Defaults: EMAX = 100 
 2) Dump to RUNTPE increment.  3) Create MCTAL file.
 4) Max No. of Dumps on RUNTPE.  5) Controls Rendezvous points.
    Random number generator does not repeat when period is exceeded, but longer period generation (gen2,3) are preferred. Page 3-328 (6.1) 
-??? Use PRDMP to enble MCTAL output and RUNTPE size write intermittent dumps? vs DBCN
+??? DBCN ??? Comment nps if running a KCODE problem.    
 
 ### Method: CardDeck::insertIntoCellSection
 (self, s):
