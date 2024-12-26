@@ -67,8 +67,7 @@ stopOnError = True
 class SN():
   """
   A class to hold the surface number (and its facets if a macro)
-  But should be as transparent to use as an integer or string.
-  And support unary negative.
+  It is as transparent to use as an integer or string and supports unary negative.
   """
   def __init__(self, sn, uneg=False):
     # check that sn is either a positive integer, >0 
@@ -133,15 +132,9 @@ class SN():
 
 class CN():
   """
-  A class to support cellNumbers.
-  
-  Not yet implemented:
-  Eventually should support, children from multi level nested universes.
-  A simple cellNumber is an integer, say 1.
-  A cellNumber inside a universe is still an integer like object inside another 
-  integer like object: 1<2
-  But with lattices, a cellNumber needs to be treated as a complex object,
-  or possibly a string: 1<3(1,2,3)<4
+  A class to support cellNumbers. Cell numbers are generally integers but with
+  universes and lattices it can become complicated enough that it is treated as
+  a string.
   """
   def __init__(self, cn):
     try:
@@ -522,7 +515,7 @@ class CardDeck:
     printIfShow(surfaceString)
     return surfaceNum
       
-  def insertCellString(self, name, surfaceList=None, cellComplementList=None,
+  def insertCell(self, name, surfaceList=None, cellComplementList=None,
                      manualSurfacesString=None,
                      matName='Void', density=0,
                      shift=(0,0,0), rotMatrix=None, 
@@ -720,7 +713,7 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], cellComplementList=None,
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], cellComplementList=None,
                                matName=matName, density=density,
                                shift=shift, rotMatrix=None,
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -753,7 +746,7 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
                                matName=matName, density=density, 
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -820,7 +813,7 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], #cellComplementList=None, 
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], #cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix, 
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -865,7 +858,7 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
                                matName=matName, density=density, 
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -928,7 +921,7 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], #cellComplementList=None,
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], #cellComplementList=None,
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -971,7 +964,7 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], #cellComplementList=None, 
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], #cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix, 
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -1009,7 +1002,7 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], #cellComplementList=None, 
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], #cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix, 
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -1076,7 +1069,7 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], #cellComplementList=None, 
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], #cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix, 
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -1114,7 +1107,7 @@ class CardDeck:
     impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
                                matName=matName, density=density, 
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -1184,7 +1177,7 @@ class CardDeck:
                     radiusBase, radiusTop, matName, density)
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], # cellComplementList=None, 
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], # cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -1261,7 +1254,7 @@ class CardDeck:
                     *base2, *height, matName, density)
   
     self.insertIntoCellSection('c '+descrStr)
-    cellNum = self.insertCellString(name=name, surfaceList=[-surfaceNum], # cellComplementList=None, 
+    cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], # cellComplementList=None, 
                                matName=matName, density=density,
                                shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
@@ -1520,11 +1513,11 @@ class CardDeck:
   #  cellString += toMCNP80String(universeCell)
   
     self.insertIntoCellSection('c '+descrStr)
-    cn1 = self.insertCellString(name='World', surfaceList=surfaceList, cellComplementList=cellsToComplement, 
+    cn1 = self.insertCell(name='World', surfaceList=surfaceList, cellComplementList=cellsToComplement, 
                    matName=worldMat, density=worldDensity, 
                    impString=imp1String, cellNum=worldCellNum)
   
-    cn2 = self.insertCellString(name='Graveyard', surfaceList=[worldSurfaceNum], 
+    cn2 = self.insertCell(name='Graveyard', surfaceList=[worldSurfaceNum], 
                            matName='Void', density=worldDensity, 
                            impString=imp0String, cellNum=graveyardCellNum)
     
@@ -1695,7 +1688,7 @@ class CardDeck:
     return m
 #############################################################################
   ### !!!---MATERIAL FUNCTIONS----------
-  def insertMaterialStrings(self, matList):
+  def insertMaterials(self, matList):
     """
     These go in the data card section.
     """
@@ -1711,6 +1704,77 @@ class CardDeck:
     return  
 #############################################################################
   ### !!!---SOURCE FUNCTIONS----------
+  def insertKCODEcard(self, npsPerCycle=None, initialK=None, cyclesToSkip=None, 
+                      totalCycles=None, storageFor=None, normBy=None, 
+                      mrkp=None, avgOver=None):
+    """
+    KCODE NSRCK RKK IKZ KCT MSRK KNRM MRKP KC8
+    
+    NSRCK - Number of source histories per cycle
+    RKK - initial guess for keff
+    IKZ - number of cycles to skip before beginning tally accumulations
+    KCT - number of cycles to be done
+    MSRK - number of source points to allocate storage for
+    KNRM - normalize tallies by 0=weight / 1=histories
+    MRKP - maximum number of cycle values on MCTAL or RUNTPE
+    KC8 - summary and tally information averaged over 0=all cycles/1=active cycles only
+    Defaults: NSRCK=1000;  RKK=1.0; IKZ=30; KCT=IKZ+100; 
+              MSRK=4500 or 2*NSRCK; KNRM=0; MRKP=6500; KC8=1
+    
+    A criticality source is different from a fixed source because the fission 
+    source locations change from cycle to cycle. A cycle is the completion of 
+    the number of histories requested by the first entry on the kcode card. The 
+    initial ksrc source is used only for the first keff cycle. A new spatial 
+    fission source is generated during each cycle and is used as the source for 
+    the next cycle.
+    """
+    kcodeStr = 'KCODE ' # 1000 1.0 15 115' # Criticality source
+  
+    if npsPerCycle is None: kcodeStr += ' j'
+    else: kcodeStr += ' %s '%npsPerCycle
+    
+    if initialK is None: kcodeStr += ' j'
+    else: kcodeStr += ' %.6f '%initialK
+  
+    if cyclesToSkip is None: kcodeStr += ' j'
+    else: kcodeStr += ' %s '%cyclesToSkip
+  
+    if totalCycles is None: kcodeStr += ' j'
+    else: kcodeStr += ' %s '%totalCycles
+  
+    self.insertIntoMaterialSection(kcodeStr)
+    return
+
+  def insertKSRCcard(self, xyzList=[(0,0,0)]):
+    """
+     KSRC x1 y1 z1 x2 y2 z2
+     This card contains up to NSRCK (x,y,z) triplets that are locations of initial 
+     source points for a KCODE calculation. At least one point must be in a cell 
+     containing fissile material and points must be away from cell boundaries. 
+     It is not necessary to input all NSRCK coordinate points. MCNP will start 
+     approximately (NSRCK/number of points) particles at each point. Usually one 
+     point in each fissile region is adequate, because MCNP will quickly calculate 
+     and use the new fission source distribution. The energy of each particle in 
+     the initial source is sampled from a Watt fission spectrum hardwired into 
+     MCNP, with a = 0.965 MeV and b = 2.29 MeV−1.  
+    
+     An SDEF card also can be used to sample initial source points in fissile 
+     material regions. The SDEF card parameters applicable to volume sampling 
+     can be used: CEL, POS, RAD, EXT, AXS, X, Y, Z; and CCC, ERG, and EFF. If a 
+     uniform volume distribution is chosen, the early values of keff will likely 
+     be low because too many particles are put near where they can escape, just 
+     the opposite of the usual situation with the KSRC card. Do not change the 
+     default value of WGT for a KCODE calculation.
+    """
+    
+    ksrcStr = 'KSRC ' # spherePos Source Points for KCODE Calculation 
+    for p in xyzList:
+      ksrcStr += '  %.6f %.6f %.6f  '%(p[0], p[1], p[2])
+      
+    self.insertIntoMaterialSection(ksrcStr) # anywhere in data section would work
+  
+    return
+  
   """    
   Only one SDEF card in a deck.
   The SDEF card is an extended source of weirdness.
@@ -1864,7 +1928,7 @@ SDEF POS=%.2f %.2f %.2f  VEC=%.2f %.2f %.2f DIR=1 ARA=0 ERG=d1 PAR=%s %s $ energ
     ergDistNum = 1
     dirDistNum = 2 # angular biasing distribution of particle initial direction
 
-    if dirDistrib is None:
+    if dirDistrib is None or dirDistrib=='None':
       dirString = ''
       dirDistNumString = ''
 
@@ -2647,7 +2711,7 @@ F{t}:{par}         $ pulse height tally
   
   def insertF4Tally(self, tallyNum, cellInfo, eList=None, mList=None, par='p'):
     """
-    Flux averaged over a CELL. Units: particles/cm2
+    Track length estimate of flux averaged over a CELL. Units: particles/cm2
     Depends on material in the cell.
     """
     tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=4, cellSurfInfo=cellInfo, eList=eList, mList=mList, par=par)
@@ -2657,7 +2721,8 @@ F{t}:{par}         $ pulse height tally
   
   def insertF6Tally(self, tallyNum, cellInfo, eList=None, mList=None, par='p'):
     """
-    Energy deposition averaged over a CELL. Units: particles/cm2.
+    Track length estimate of energy deposition averaged over a CELL. 
+    Units: MeV/g.
     Cell material must not be void.
     """
     tallyNumWType, s = self.getFXTallySTring(tallyNum=tallyNum, tallyType=6, cellSurfInfo=cellInfo, eList=eList, mList=mList, par=par)
@@ -2667,7 +2732,8 @@ F{t}:{par}         $ pulse height tally
   
   def insertF7Tally(self, tallyNum, cellInfo, eList=None, mList=None):
     """
-    Fission energy deposition averaged over a CELL. Units: particles/cm2.
+    Track length estimate of fission energy deposition averaged over a CELL. 
+    Units: MeV/g.
     Only for neutrons.
     ??? Need to create a test case.
     """
@@ -2679,6 +2745,8 @@ F{t}:{par}         $ pulse height tally
   
   def insertF8Tally(self, tallyNum, cellInfo, eList=None, mList=None, par='p,e'):
     """
+    Energy distribution of pulses created in a detector.
+    
     For pulse-height tallies photons/electrons are a special case: F8:P,E is the same 
     as F8:P and F8:E. Also, F8 tallies may have particle combinations such as F8:N,H.  
   
@@ -2877,8 +2945,27 @@ F1011:p %s              $ debug tally with universe surface to see if all partic
       s = 'IMP:%s=%d'%(s,imp) # ??? Don't put a space after :
       
     return s
+
+  def insertMTcard(self, matKey='WaterLiquid', sAlphaBetaList=['lwtr']):
+    """
+    Insert a MT card to change the neutron cross section used for a particular
+    material.
+
+    matKey - The identifier used to insert a material into the CardDeck.
+    Ex. 'WaterLiquid' or 'Beryllium'... use csmat.matSearch to find
+    
+    sAlphaBetaList - A list of sAlphaBeta treatment strings.
+    If the material has more than one element, you can provide more than one string.
+    Ex. ['lwtr', 'GRPH.06T', 'BE.60T']
+    """
+    matNum, density = csmat.matLookup(matKey)
+    
+    fullMTstring = 'MT%d'%(matNum)
+    for s in sAlphaBetaList:
+      fullMTstring += ' %s '%(s)
+    fullMTstring += ' $ %s'%(matKey)  
+    self.insertIntoMaterialSection(fullMTstring)
   
-  # PRDMP - Print and dump card
   def insertPhysicsCard(self, nocoh=0, ides=0, nodop=0, cutn=0.0, cutp=0.001, cute=0.001):
     """
     This function inserts physics and mode cards.
@@ -2958,9 +3045,9 @@ PHYS:e 100 {ides} 0 0 0 1 1 1 1 0
       
     Random number generator does not repeat when period is exceeded, but longer
     period generation (gen2,3) are preferred. Page 3-328 (6.1)
-    
-    ??? Use PRDMP to enble MCTAL output and RUNTPE size to write intermittent dumps? 
-    vs DBCN
+
+    ??? DBCN
+    ??? Comment nps if running a KCODE problem.    
     """
     nps = int(nps)
     if debugN is None:

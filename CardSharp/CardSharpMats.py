@@ -69,9 +69,11 @@ def matAddAlias(keyStr, aliasStr):
   """
   if aliasStr in matDict.keys():
     print('Error: The alias provided already exists in the dict.')
+    print(keyStr, aliasStr)
     sys.exit(0)
   if aliasStr in matDict.aliases.keys():
     print('Error: The alias provided already exists as an alias.')
+    print(keyStr, aliasStr)
     sys.exit(0)
     
   matDict.add_alias(keyStr, aliasStr)
@@ -119,7 +121,8 @@ def matLookup(matKey):
     except IndexError as e:
       print(e)
       sys.exit(1)
-    return matNum, density    
+
+  return matNum, density
 #############################################################################
 def matInsert(key, matString, defaultDensity, matNum=0):
   """
