@@ -31,9 +31,9 @@ def main():
   testGeom1(); #return
   testGeom2(); #return
   testGeom3(); #return
-  testGeom4(); return
+  testGeom4(); #return
   testGeom5(); #return
-  testGeomAxisSymmByPoints(); #return
+#  testGeomAxisSymmByPoints(); #return
 
 def testGeom0():
   """
@@ -350,7 +350,7 @@ def testGeom4():
                            impString='', 
                            cellNum=None, uni=2, latticeType=1, 
                            latticeIndices=(-1,1,-1,1,-1,1),
-                           fill=[1]*27) # fill with uni=1
+                           fill=[1]*27) # fill with uni=1 (3x3x3)
   #----------------------------
   # Now define a RPP surface to bring the lattice universe into uni=0 (the real world where particles run)
   mrpp2 = cd.insertMacroRpp(name='rpp', xMinMax=(-5*3,5*3),
@@ -388,7 +388,13 @@ def testGeom4():
 #                 mcnpDataPath="C:/MY_MCNP/MCNP_DATA/", numTasks=1); #return
 #  if ret:
 #    print('Run result:', ret)
-
+def insertHexagonBoundingPlanes2(cd, base=(0,0,0), hexSide=1, height=2):
+  """
+  """
+  sn = cd.insertMacroRhpHex('', base=base, axis=(0,0,height), r=(0,hexSide,0))
+  return -sn.facets['Rend'], -sn.facets['Rbegin'], -sn.facets['Send'], -sn.facets['Sbegin'],\
+         -sn.facets['Tend'], -sn.facets['Tbegin'], -sn.facets['Hend'], -sn.facets['Hbegin'],
+         
 def insertHexagonBoundingPlanes(cd, hexSide=1):
   """
   """
@@ -410,62 +416,59 @@ def testGeom5():
   Use PRINT to debug.
   """
   cd = cs.CardDeck()
-  cd.setParticlesList(['p', 'e'])
+  cd.setParticlesList(['n'])
 
   csmat.matAddAlias('SteelStainless304', 'SS304')
   csmat.matAddAlias('PolyethyleneNonborated', 'Poly')
-  cd.insertMaterialStrings(['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly'])  
+  cd.insertMaterials(['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly'])  
   #---------------------------------
   # Define lattice cell in uni=1
   # Universe is basically a container and it should fully define the volume to be filled.
   # UNI=1 contains lead sphere, in an Hexagonal prism shaped air region
-  mCyl, cn1 = cd.insertMacroAndCellRcc(name='Cyl', base=(0,0,-3), axis=(0,0,6),
-                                       radius=0.5, matName='Lead', uni=1)
+  pinUni = 1
+  snPin, cnPin = cd.insertMacroAndCellRcc(name='Cyl', base=(0,0,-0.5), axis=(0,0,1),
+                                       radius=0.3, matName='Lead', uni=pinUni)
   
-  # Insert hexagon bounding planes for cell
-  snTuple = insertHexagonBoundingPlanes(cd, hexSide=1.0)
+  # Insert hexagon bounding planes for cell (eight sides include top/bottom)
+  #snHexList = insertHexagonBoundingPlanes(cd, hexSide=1)
+  snHexList = insertHexagonBoundingPlanes2(cd, base=(0,0,-1), hexSide=0.866, height=2)
 
-  #mrpp = cd.insertMacroRpp(name='rpp', xMinMax=(-5,5), yMinMax=(-5,5), zMinMax=(-5,5))
-  cn2 = cd.insertCellString(name='hex_cell', surfaceList=[*snTuple, mCyl],
-                                  matName='Air',
-                                  uni=1)  
-  # Done with defining cell in uni=1
+  # complete uni=1 by putting air around pin, inside hexagonal prism
+  cn2 = cd.insertCell(name='hex_cell', surfaceList=[*snHexList, snPin],
+                                  matName='Air', uni=pinUni)
+  # Done with defining cell in uni=1 which will be replicated
   #----------------------------
+  latticeUni = 2
   # A lattice must be the only thing in its universe, so using an in between universe, uni=2
-  cn = cd.insertCellString(name='hex_lattice', surfaceList=[*snTuple], # surfaces giving boundary of one cell
+  cn = cd.insertCell(name='hex_lattice', surfaceList=[*snHexList], # surfaces giving boundary of one cell
                            matName='Void', density=0, # this material is completely ignored
-                           impString='', 
-                           cellNum=None, uni=2, latticeType=2,
-                           latticeIndices=(-2,2,-2,2,0,0),
-                           fill=[1]*25) # fill with uni=1
+                           cellNum=None, uni=latticeUni, latticeType=2,
+                           latticeIndices=(-1,1,-1,1,0,1),
+                           fill=[pinUni]*3*3*2) # fill with pinUni (3x3x2)
   #----------------------------
   # Now define a RPP surface to bring the lattice universe into uni=0 (the real world where particles run)
   snTuple = insertHexagonBoundingPlanes(cd, hexSide=4.0)
-  plusZPlane = cd.insertSurface_PlaneAligned('PlusZ', axis='Z', D=4)
-  minusZPlane = cd.insertSurface_PlaneAligned('MinusZ', axis='Z', D=-4)
-  cn = cd.insertCellString(name='hex_lattice_to_Uni', surfaceList=[*snTuple, -plusZPlane, minusZPlane], # surfaces giving outer limits of the full lattice
-                           fill=2) # fill with uni=2
+  plusZPlane = cd.insertSurface_PlaneAligned('PlusZ', axis='Z', D=3)
+  minusZPlane = cd.insertSurface_PlaneAligned('MinusZ', axis='Z', D=-3)
+  cn = cd.insertCell(name='hex_lattice_to_Uni', surfaceList=[*snTuple, -plusZPlane, minusZPlane], # surfaces giving outer limits of the full lattice
+                           fill=latticeUni) # fill with uni=2
   # universe-----------------------------------------------------------
   worldMacroNum, (cn1, cn2) = cd.insertWorldMacroAndCell(pos=(0,0,0),
                             radius=200, worldMat='Air')
   #===========================
-  srcToOrigin = 50; #detToOrigin = 50
-  #detWidth = 5; detNumPixels = 100 
-
-  # source debug cell-----------------------------------------------------------
-#  srcString = cd.insertSource_SphereWithAngularBiasingAndEnergyDistrib(pos=[-srcToOrigin,0,0],
+  # Add source/tally so that MCNP will run it. For debuggin
+#  srcToOrigin = 50
+#  srcString = cd.insertSource_SphereWithAngularAndEnergyDistrib(pos=[-srcToOrigin,0,0],
 #                radius=.2, vec=[1,0,0], coneHalfAngleDeg=5,
-#                eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4]) #, trNum=trNum)
+#                eList=[.3, .5, 1.0, 2.5], relFq=[0, .1, .3, .4], par='P') #, trNum=trNum)
 #
-#  cd.insertF5Tally(tallyNum=1, xPos=-srcToOrigin,yPos=0,zPos=0, r=1, eList=np.linspace(.01, .35, 5))
+#  cd.insertF5Tally(tallyNum=1, pos=(srcToOrigin,0,0), r=1, eList=np.linspace(.01, .35, 5))
 #
-#  physicsString = cd.insertPhysicsString(nocoh=0, ides=0, nodop=0)
-#  outputControlString = cd.insertOutputControlString(nps=1E1)
+#  physicsString = cd.insertPhysicsCard(nocoh=0, ides=0, nodop=0)
+#  outputControlString = cd.insertOutputControlCards(nps=1E1)
   #===========================
   deckStr = cd.assembleDeck(titleCard='Title card: Test 5')
-#  outputStr = assembleDeck(titleCard, cellString='', macroString='', matString='', trString='', 
-#                 srcString='', tallyString='', physicsString='', outputControlString='')
-  #print(deckStr)
+
   # Save file ...
   modelFolder = '../CardSharpOutput/Tests/CardSharpGeomTest5/'
   modelFilename = "test.i"
@@ -473,6 +476,7 @@ def testGeom5():
 
 #  csrun.runMcnpModel(modelFolder, modelFilename, mcnpCodePath="C:/MY_MCNP/MCNP_CODE/bin/", 
 #                 mcnpDataPath="C:/MY_MCNP/MCNP_DATA/", numTasks=1); #return
+
 def testGeomAxisSymmByPoints():
   """
   Test specifically for AxisSymmetric surfaces defined by points.
@@ -488,7 +492,7 @@ def testGeomAxisSymmByPoints():
   #--------------insert surfaces/cells-----------
   snGq = cd.insertSurface_SQ(name='SQ 1')
   snP1 = cd.insertSurface_PlaneAligned(name='P1', axis='X', D=15)
-  cn = cd.insertCellString(name='SQ 1', surfaceList=[-snGq, -snP1])
+  cn = cd.insertCell(name='SQ 1', surfaceList=[-snGq, -snP1])
   #--------------insert surfaces/cells-----------
 #  snGq = cd.insertSurface_GQ(name='GQ 1')
 #  snP1 = cd.insertSurface_PlaneAligned(name='P1', axis='Y', D=5)
@@ -523,7 +527,7 @@ def testGeomAxisSymmByPoints():
   # Universe macro number and all cells within are returned
   worldMacroNum, cellList = cd.insertWorldMacroAndCell(pos=(0,0,0), radius=50, worldMat='Void')
 
-  cd.insertMaterialStrings(['Aluminum'])
+  cd.insertMaterials(['Aluminum'])
   deckStr = cd.assembleDeck(titleCard='Title card: Test 0')
   print(deckStr)
   # Save file ---------------------------------------------------------
