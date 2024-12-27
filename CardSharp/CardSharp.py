@@ -74,9 +74,9 @@ class SN():
     # or a string with valid characters convertible to integer? (leading negative sign okay)
     try:
       if type(sn) is SN:
-        self.sn = sn.sn # ******
+        self.sn = sn.sn
         self.uneg = sn.uneg
-        self.facets = None
+        self.facets = None # dictionary holding facets if a macro with facets
       elif type(sn) is str:
         # Don't check by casting to float, we don't want 1. (one dot)
         pcs = sn.split('.')
