@@ -3,58 +3,50 @@ c ====================Cells======================
 c (cell #, material #, density, macrobody, importance)                      
 c density: negative is g/cc, positive is atoms/barn-cm                        
 c -----------------------------------------------------------------
-c Cyl, macrobody:1, baseX:0.00, baseY:0.00, baseZ:-3.00, axisX:0.00, axisY:0.00, axisZ:6.00, radius:0.50, matName:Lead, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
+c Cyl, macrobody:1, baseX:0.00, baseY:0.00, baseZ:-0.50, axisX:0.00, axisY:0.00, axisZ:1.00, radius:0.30, matName:Lead, density:0.0000, xShift:0.00, yShift:0.00, zShift:0.00
 c ---Cyl----
-1 189 -11.3500  -1    IMP:p,e=1 U=1
+1 189 -11.3500  -1    IMP:n=1 U=1
 c ---hex_cell----
-2 412 -0.0012  -2  -3  -4  -5  -6  -7  1    IMP:p,e=1 U=1
+2 412 -0.0012  -2.1  -2.2  -2.3  -2.4  -2.5  -2.6  -2.7  -2.8  1    &
+         IMP:n=1 U=1
 c ---hex_lattice----
-3 0        -2  -3  -4  -5  -6  -7   LAT=2 IMP:p,e=1 U=2 FILL= -2:2 -2:2 0:0
-      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+3 0        -2.1  -2.2  -2.3  -2.4  -2.5  -2.6  -2.7  -2.8   LAT=2 IMP:n=1 &
+         U=2 FILL= -1:1 -1:1 0:1
+      1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
 c ---hex_lattice_to_Uni----
-4 0        -8  -9  -10  -11  -12  -13  -14  15    IMP:p,e=1  FILL=2
+4 0        -3  -4  -5  -6  -7  -8  -9  10    IMP:n=1  FILL=2
 c World cells---Air inside------------------
 c ---World----
-5 412 -0.0012  -16  #4    IMP:p,e=1
+5 412 -0.0012  -11  #4    IMP:n=1
 c ---Graveyard----
-6 0        16    IMP:p,e=0
+6 0        11    IMP:n=0
 c =============Cells end: Next line must be completely blank==================
 
 c ====================Surfaces/Macrobodies=======
 c surface/macrobody number, transformation number optional, surf/macro type, surface parameters
 c --------------------------
-c ---Cyl, cylinder macrobody:1, trNum:, baseX:0.00, baseY:0.00, baseZ:-3.00, axisX:0.00, axisY:0.00, axisZ:6.00, radius:0.50
-1  RCC 0.0000 0.0000 -3.0000  0.0000 0.0000 6.0000  0.5000
-c ---HexPlane1, surface:2, trNum:1, plane Y D:0.87
-2 1 PY 0.8660
-c ---HexPlane2, surface:3, trNum:2, plane Y D:0.87
-3 2 PY 0.8660
-c ---HexPlane3, surface:4, trNum:3, plane Y D:0.87
-4 3 PY 0.8660
-c ---HexPlane4, surface:5, trNum:4, plane Y D:0.87
-5 4 PY 0.8660
-c ---HexPlane5, surface:6, trNum:5, plane Y D:0.87
-6 5 PY 0.8660
-c ---HexPlane6, surface:7, trNum:6, plane Y D:0.87
-7 6 PY 0.8660
-c ---HexPlane1, surface:8, trNum:7, plane Y D:3.46
-8 7 PY 3.4640
-c ---HexPlane2, surface:9, trNum:8, plane Y D:3.46
-9 8 PY 3.4640
-c ---HexPlane3, surface:10, trNum:9, plane Y D:3.46
-10 9 PY 3.4640
-c ---HexPlane4, surface:11, trNum:10, plane Y D:3.46
-11 10 PY 3.4640
-c ---HexPlane5, surface:12, trNum:11, plane Y D:3.46
-12 11 PY 3.4640
-c ---HexPlane6, surface:13, trNum:12, plane Y D:3.46
-13 12 PY 3.4640
-c ---PlusZ, surface:14, trNum:, plane Z D:4.00
-14  PZ 4.0000
-c ---MinusZ, surface:15, trNum:, plane Z D:-4.00
-15  PZ -4.0000
-c ---Universe, sphere macrobody:16, trNum:, xPos:0.00, yPos:0.00, zPos:0.00, radius:200.00
-16  SPH 0.0000 0.0000 0.0000  200.0000
+c ---Cyl, cylinder macrobody:1, trNum:, baseX:0.00, baseY:0.00, baseZ:-0.50, axisX:0.00, axisY:0.00, axisZ:1.00, radius:0.30
+1  RCC 0.0000 0.0000 -0.5000  0.0000 0.0000 1.0000  0.3000
+c ---, Rhp/Hex macrobody:2, trNum:, base:0.00,0.00,-1.00, axis:0.00,:0.00,2.00, radius:0.00,0.87,0.00
+2  RHP 0.0000 0.0000 -1.0000  0.0000 0.0000 2.0000  0.0000 0.8660 0.0000
+c ---HexPlane1, surface:3, trNum:1, plane Y D:3.46
+3 1 PY 3.4640
+c ---HexPlane2, surface:4, trNum:2, plane Y D:3.46
+4 2 PY 3.4640
+c ---HexPlane3, surface:5, trNum:3, plane Y D:3.46
+5 3 PY 3.4640
+c ---HexPlane4, surface:6, trNum:4, plane Y D:3.46
+6 4 PY 3.4640
+c ---HexPlane5, surface:7, trNum:5, plane Y D:3.46
+7 5 PY 3.4640
+c ---HexPlane6, surface:8, trNum:6, plane Y D:3.46
+8 6 PY 3.4640
+c ---PlusZ, surface:9, trNum:, plane Z D:3.00
+9  PZ 3.0000
+c ---MinusZ, surface:10, trNum:, plane Z D:-3.00
+10  PZ -3.0000
+c ---Universe, sphere macrobody:11, trNum:, xPos:0.00, yPos:0.00, zPos:0.00, radius:200.00
+11  SPH 0.0000 0.0000 0.0000  200.0000
 c =============Surfaces/Macros end: Next line must be completely blank=========
 
 c =================Data cards=================
@@ -76,24 +68,6 @@ c ---Hex5, shift: 0.00 0.00 0.00
          90.000 90.000 0.000
 c ---Hex6, shift: 0.00 0.00 0.00
 *TR6 0.000 0.000 0.000  60.000 30.000 90.000   150.000 60.000 90.000   &
-         90.000 90.000 0.000
-c ---Hex1, shift: 0.00 0.00 0.00
-*TR7 0.000 0.000 0.000  0.000 90.000 90.000   90.000 0.000 90.000   90.000 &
-         90.000 0.000
-c ---Hex2, shift: 0.00 0.00 0.00
-*TR8 0.000 0.000 0.000  180.000 90.000 90.000   90.000 180.000 90.000   &
-         90.000 90.000 0.000
-c ---Hex3, shift: 0.00 0.00 0.00
-*TR9 0.000 0.000 0.000  60.000 150.000 90.000   30.000 60.000 90.000   &
-         90.000 90.000 0.000
-c ---Hex4, shift: 0.00 0.00 0.00
-*TR10 0.000 0.000 0.000  120.000 30.000 90.000   150.000 120.000 90.000   &
-         90.000 90.000 0.000
-c ---Hex5, shift: 0.00 0.00 0.00
-*TR11 0.000 0.000 0.000  120.000 150.000 90.000   30.000 120.000 90.000   &
-         90.000 90.000 0.000
-c ---Hex6, shift: 0.00 0.00 0.00
-*TR12 0.000 0.000 0.000  60.000 30.000 90.000   150.000 60.000 90.000   &
          90.000 90.000 0.000
 c -----------------Materials------------------
 c --['Aluminum', 'Copper', 'Lead', 'Tungsten', 'Air', 'SS304', 'Poly']--
