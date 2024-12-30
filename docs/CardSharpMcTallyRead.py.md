@@ -29,6 +29,7 @@ A tally in MCNP can have 9 possible dimensions.
 ## Function: getTallyFromMctal
 (filepath, tallyNumWtype, objectNum, t_or_d):
 
+??? What if we only want the total and not the spectrum?
 tallyNumWtype - tally number with type. For tally numbers 15, 25, the tally type is 5.
 objectNum corresponds to a facet. (cell, surface, point ???).
 A given tally can have multiple tally objects in it, say corresponding to different points. These are t.object_bins.

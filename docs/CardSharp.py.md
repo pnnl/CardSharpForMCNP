@@ -158,7 +158,7 @@ Insert a sphere macro at the given position and radius.
 Returns assigned macro surface number.
 
 ### Method: CardDeck::insertMacroAndCellSphere
-(self, name, pos=(0,0,0), radius=1, matName='Void', density=0, shift=(0,0,0), surfaceNum=None, cellNum=None, uni=0):
+(self, name, pos=(0,0,0), radius=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum=None, cellNum=None, uni=0):
 
 Insert a sphere macro and a cell based on that macro.
 Sphere is different from other macrobodies in not ever needing an orientation matrix.
@@ -166,7 +166,7 @@ Sphere is different from other macrobodies in not ever needing an orientation ma
 Returns assigned macro surface number and cell number.
 
 ### Method: CardDeck::insertMacroAndCellSphereShell
-(self, name, pos=(0,0,0), radiusOuter=2, radiusInner=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum1=None, surfaceNum2=None, cellNum=None,uni=0):
+(self, name, pos=(0,0,0), radiusOuter=2, radiusInner=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum1=None, surfaceNum2=None, cellNum=None,uni=0):
 
 Uses two sphere macros to generate a shell.
 Returns a list of the two assigned macro surface numbers and the assigned cell number.
@@ -182,7 +182,7 @@ hx/hy/hz - provide orientation and height of top (not the coordinates of center 
 Returns assigned surface number.    
 
 ### Method: CardDeck::insertMacroAndCellRcc
-(self, name, base=(0,0,0), axis=(0,0,1), radius=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum=None, cellNum=None, uni=0):
+(self, name, base=(0,0,0), axis=(0,0,1), radius=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum=None, cellNum=None, uni=0):
 
 Generates a RCC Right Circular Cylinder macro and a cell based on that macro.
 axisX/axisY/axisZ together given orientation and height of cyl.
@@ -191,7 +191,7 @@ The cylinder is first instantiated at base, then optionally rotate by rotMatrix,
 Returns assigned surface number and cell number.
 
 ### Method: CardDeck::insertMacroAndCellRccShell
-(self, name, base1=(0,0,0), axis1=(0,0,1), radiusOuter=2, base2=(0,0,0), axis2=(0,0,1), radiusInner=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum1=None, surfaceNum2=None, cellNum=None,uni=0):
+(self, name, base1=(0,0,0), axis1=(0,0,1), radiusOuter=2, base2=(0,0,0), axis2=(0,0,1), radiusInner=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum1=None, surfaceNum2=None, cellNum=None,uni=0):
 
 Uses two RCC macros to generate an annulus. FIRST one is the OUTER one.
 As it is currently, the center of the axis won't be at the origin unless the user makes it so.
@@ -211,21 +211,21 @@ xMinMax, yMinMax, zMinMax are tuples giving the upper/lower bounds of the RPP.
 Returns assigned surface number.    
 
 ### Method: CardDeck::insertMacroAndCellRpp
-(self, name, xMinMax, yMinMax, zMinMax, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum=None, cellNum=None, uni=0):
+(self, name, xMinMax, yMinMax, zMinMax, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum=None, cellNum=None, uni=0):
 
 Generates a RPP Rect Parallelopipded macro and a cell based on that macro.
 
 Returns assigned surface number and cell number.    
 
 ### Method: CardDeck::insertMacroAndCellRppShell
-(self, name, innerXWidth,outerXWidth, innerYWidth,outerYWidth, innerZWidth,outerZWidth, matName, density=0, shift=(0,0,0), rotMatrix=None, surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
+(self, name, innerXWidth,outerXWidth, innerYWidth,outerYWidth, innerZWidth,outerZWidth, matName, density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
 
 Inserts two RPP macros to generate shell.
 Both macros are symmetrically placed around the origin before being shifted/rotated together.
 Returns a list of the assigned macro numbers and the assigned cell number.
 
 ### Method: CardDeck::insertMacroAndCellRppShell2
-(self, name, xMinMaxOut, yMinMaxOut, zMinMaxOut, xMinMaxIn, yMinMaxIn, zMinMaxIn, matName, density=0, shift=(0,0,0), rotMatrix=None, surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
+(self, name, xMinMaxOut, yMinMaxOut, zMinMaxOut, xMinMaxIn, yMinMaxIn, zMinMaxIn, matName, density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
 
 Inserts two RPP macros to generate shell.
 This version allows you to place the two surfaces at arbitrary locations, whereas the other verison placed both surfaces symmetrically about the origin in all three directions.
@@ -242,13 +242,13 @@ Only the 9 arguments version is currently supported in CardSharp. This means tha
 Returns assigned surface number.
 
 ### Method: CardDeck::insertMacroAndCellRhpHex
-(self, name, base=(0,0,0), axis=(0,0,1), r=(0,1,0), matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum=None, cellNum=None, uni=0):
+(self, name, base=(0,0,0), axis=(0,0,1), r=(0,1,0), matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum=None, cellNum=None, uni=0):
 
 Generates a RHP macro and a cell based on that macro.
 Returns assigned surface number and cell number.    
 
 ### Method: CardDeck::insertMacroAndCellRhpHexShell
-(self, name, base1=(0,0,0), axis1=(0,0,1), r1=(0,1,0), base2=(0,0,0), axis2=(0,0,1), r2=(0,1,0), matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
+(self, name, base1=(0,0,0), axis1=(0,0,1), r1=(0,1,0), base2=(0,0,0), axis2=(0,0,1), r2=(0,1,0), matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
 
 Uses two RHP macros to generate a shell.
 
@@ -268,7 +268,7 @@ r1 > r2 (base radius and top radius).
 Returns assigned surface number.    
 
 ### Method: CardDeck::insertMacroAndCellCone
-(self, name, base=(0,0,0), height=(0,0,1), radiusBase=2, radiusTop=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum=None, cellNum=None, uni=0):
+(self, name, base=(0,0,0), height=(0,0,1), radiusBase=2, radiusTop=1, matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum=None, cellNum=None, uni=0):
 
 Generates a TRC truncated right angle cone macro and a cell based on that macro.
 
@@ -292,7 +292,7 @@ But rotations generally need to be around the center of axis.
 Returns assigned surface number.
 
 ### Method: CardDeck::insertMacroAndCellWedge
-(self, name, vertex=(0,0,0), base1=(1,0,0), base2=(0,1,0), height=(0,0,1), matName='Void', density=0, shift=(0,0,0), rotMatrix=None, surfaceNum=None, cellNum=None, uni=0):
+(self, name, vertex=(0,0,0), base1=(1,0,0), base2=(0,1,0), height=(0,0,1), matName='Void', density=0, shift=(0,0,0), rotMatrix=None, impString='', surfaceNum=None, cellNum=None, uni=0):
 
 Generates a WED wedge macro and a cell based on that macro.
 
