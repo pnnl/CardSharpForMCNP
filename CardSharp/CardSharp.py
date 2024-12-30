@@ -604,8 +604,6 @@ class CardDeck:
     if fill != 0:
       if latticeType is None:
         fillString = 'FILL=%d'%(fill)
-        # insert cell numbers of children by finding all cells where uni is current fill
-        # but there can be multi level nesting of universes
       else:
         latString = 'LAT={:d}'.format(latticeType)
         if isinstance(fill, list):
@@ -613,9 +611,6 @@ class CardDeck:
         else:
           t = '%d'%(fill)
         fillString = 'FILL= {:d}:{:d} {:d}:{:d} {:d}:{:d} \n      {:s}'.format(*latticeIndices, t)
-        # insert all cell numbers inside each lattice position by finding all cells where uni is current fill
-        # two levels of indirection
-        # possibly even more with 
     #---------
     trclString = self.getTrclStringDeg(shift=shift, rotMatrix=rotMatrix)
     #---------
@@ -693,7 +688,7 @@ class CardDeck:
 
   def insertMacroAndCellSphere(self, name, pos=(0,0,0), radius=1, 
                        matName='Void', density=0,
-                       shift=(0,0,0),
+                       shift=(0,0,0), rotMatrix=None, impString='',
                        surfaceNum=None, cellNum=None, uni=0):
     """
     Insert a sphere macro and a cell based on that macro.
@@ -710,12 +705,13 @@ class CardDeck:
     descrStr = '%s, macrobody:%s, xPos:%.2f, yPos:%.2f, zPos:%.2f, radius:%.2f, matNum:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
                   %(name, surfaceNum, *pos, radius, matName, density, *shift) 
   
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
     cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], cellComplementList=None,
                                matName=matName, density=density,
-                               shift=shift, rotMatrix=None,
+                               shift=shift, rotMatrix=rotMatrix,
                                impString=impString, cellNum=cellNum, uni=uni)
   
     return surfaceNum, cellNum
@@ -723,7 +719,7 @@ class CardDeck:
   def insertMacroAndCellSphereShell(self, name,
                   pos=(0,0,0), radiusOuter=2, radiusInner=1,
                   matName='Void', density=0, 
-                  shift=(0,0,0), rotMatrix=None,
+                  shift=(0,0,0), rotMatrix=None, impString='',
                   surfaceNum1=None, surfaceNum2=None, cellNum=None,uni=0):
     """
     Uses two sphere macros to generate a shell.
@@ -743,7 +739,8 @@ class CardDeck:
                     *pos, radiusOuter, radiusInner, 
                     matName, density, *shift)
     
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
     cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
@@ -790,7 +787,7 @@ class CardDeck:
   def insertMacroAndCellRcc(self, name, base=(0,0,0), 
                  axis=(0,0,1), radius=1, 
                  matName='Void', density=0, 
-                 shift=(0,0,0), rotMatrix=None,
+                 shift=(0,0,0), rotMatrix=None, impString='',
                  surfaceNum=None, cellNum=None, uni=0):
     """
     Generates a RCC Right Circular Cylinder macro and a cell based on that macro.
@@ -810,7 +807,8 @@ class CardDeck:
                   %(name, surfaceNum, *base, *axis,
                     radius, matName, density, *shift)
   
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
     cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], #cellComplementList=None, 
@@ -824,7 +822,7 @@ class CardDeck:
                   base1=(0,0,0), axis1=(0,0,1), radiusOuter=2,
                   base2=(0,0,0), axis2=(0,0,1), radiusInner=1,
                   matName='Void', density=0, 
-                  shift=(0,0,0), rotMatrix=None,
+                  shift=(0,0,0), rotMatrix=None, impString='',
                   surfaceNum1=None, surfaceNum2=None, cellNum=None,uni=0):
     """
     Uses two RCC macros to generate an annulus. FIRST one is the OUTER one.
@@ -855,7 +853,8 @@ class CardDeck:
                     *base2, *axis2, radiusInner, 
                     matName, density, *shift)
     
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
     cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
@@ -904,7 +903,7 @@ class CardDeck:
 
   def insertMacroAndCellRpp(self, name, xMinMax, yMinMax, zMinMax,
                 matName='Void', density=0, 
-                shift=(0,0,0), rotMatrix=None, 
+                shift=(0,0,0), rotMatrix=None, impString='', 
                 surfaceNum=None, cellNum=None, uni=0):
     """
     Generates a RPP Rect Parallelopipded macro and a cell based on that macro.
@@ -918,7 +917,8 @@ class CardDeck:
     descrStr = '%s, Rect PPiped macrobody:%s, xMin:%.2f, xMax:%.2f, yMin:%.2f, yMax:%.2f, zMin:%.2f, zMax:%.2f, matName:%s, density:%.4f, xShift:%.2f, yShift:%.2f, zShift:%.2f'\
                   %(name, surfaceNum, *xMinMax, *yMinMax, *zMinMax, matName, density, *shift)
     
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
     cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], #cellComplementList=None,
@@ -929,12 +929,12 @@ class CardDeck:
     return surfaceNum, cellNum
 
   def insertMacroAndCellRppShell(self, name,
-                                 innerXWidth,outerXWidth, 
-                                 innerYWidth,outerYWidth, 
-                                 innerZWidth,outerZWidth,
-                                 matName, density=0,
-                                 shift=(0,0,0), rotMatrix=None, 
-                                 surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
+                 innerXWidth,outerXWidth, 
+                 innerYWidth,outerYWidth, 
+                 innerZWidth,outerZWidth,
+                 matName, density=0,
+                 shift=(0,0,0), rotMatrix=None, impString='',
+                 surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
     """
     Inserts two RPP macros to generate shell.
     Both macros are symmetrically placed around the origin before being shifted/rotated together.
@@ -961,7 +961,8 @@ class CardDeck:
     descrStr = '%s, macrobody1:%s, macrobody2:%s, outerXWidth:%.3f, innerXWidth:%.3f, outerYWidth:%.3f, innerYWidth:%.3f, outerZWidth:%.3f, innerZWidth:%.3f, xShift:%.2f, yShift:%.2f, zShift:%.2f, matName:%s, density:%.4f'\
                   %(name, surfaceNum1, surfaceNum2, outerXWidth,innerXWidth, outerYWidth,innerYWidth, outerZWidth,innerZWidth, *shift, matName, density)
             
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
     cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], #cellComplementList=None, 
@@ -972,11 +973,11 @@ class CardDeck:
     return (surfaceNum1, surfaceNum2), cellNum
 
   def insertMacroAndCellRppShell2(self, name,
-                                 xMinMaxOut, yMinMaxOut, zMinMaxOut,
-                                 xMinMaxIn, yMinMaxIn, zMinMaxIn,
-                                 matName, density=0,
-                                 shift=(0,0,0), rotMatrix=None, 
-                                 surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
+                xMinMaxOut, yMinMaxOut, zMinMaxOut,
+                xMinMaxIn, yMinMaxIn, zMinMaxIn,
+                matName, density=0,
+                shift=(0,0,0), rotMatrix=None, impString='',
+                surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
     """
     Inserts two RPP macros to generate shell.
     This version allows you to place the two surfaces at arbitrary locations, whereas
@@ -999,7 +1000,8 @@ class CardDeck:
     descrStr = '%s, macrobody1:%s, macrobody2:%s, xMinOut:%.3f, xMaxOut:%.3f, yMinOut:%.3f, yMaxOut:%.3f, zMinOut:%.3f, zMaxOut:%.3f, xMinIn:%.3f, xMaxIn:%.3f, yMinIn:%.3f, yMaxIn:%.3f, zMinIn:%.3f, zMaxIn:%.3f,  xShift:%.2f, yShift:%.2f, zShift:%.2f, matName:%s, density:%.4f'\
                   %(name, surfaceNum1, surfaceNum2, *xMinMaxOut, *yMinMaxOut, *zMinMaxOut, *xMinMaxIn, *yMinMaxIn, *zMinMaxIn, *shift, matName, density)
             
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
     cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], #cellComplementList=None, 
@@ -1052,7 +1054,7 @@ class CardDeck:
   def insertMacroAndCellRhpHex(self, name, base=(0,0,0), 
                  axis=(0,0,1), r=(0,1,0), 
                  matName='Void', density=0, 
-                 shift=(0,0,0), rotMatrix=None,
+                 shift=(0,0,0), rotMatrix=None, impString='',
                  surfaceNum=None, cellNum=None, uni=0):
     """
     Generates a RHP macro and a cell based on that macro.
@@ -1066,7 +1068,8 @@ class CardDeck:
                   %(name, surfaceNum, *base, *axis,
                     *r, matName, density, *shift)
   
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
     cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum], #cellComplementList=None, 
@@ -1080,7 +1083,7 @@ class CardDeck:
                  base1=(0,0,0), axis1=(0,0,1), r1=(0,1,0), 
                  base2=(0,0,0), axis2=(0,0,1), r2=(0,1,0), 
                  matName='Void', density=0, 
-                 shift=(0,0,0), rotMatrix=None,
+                 shift=(0,0,0), rotMatrix=None, impString='',
                  surfaceNum1=None, surfaceNum2=None, cellNum=None, uni=0):
     """
     Uses two RHP macros to generate a shell.
@@ -1104,7 +1107,8 @@ class CardDeck:
                     *base2, *axis2, *r2, 
                     matName, density, *shift)
   
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     self.insertIntoCellSection('c '+descrStr)
     cellNum = self.insertCell(name=name, surfaceList=[-surfaceNum1, surfaceNum2], # cellComplementList=None, 
@@ -1154,7 +1158,7 @@ class CardDeck:
   def insertMacroAndCellCone(self, name, base=(0,0,0), height=(0,0,1),
                     radiusBase=2, radiusTop=1,
                     matName='Void', density=0, 
-                    shift=(0,0,0), rotMatrix=None, 
+                    shift=(0,0,0), rotMatrix=None, impString='',
                     surfaceNum=None, cellNum=None, uni=0):
     """
     Generates a TRC truncated right angle cone macro and a cell based on that macro.
@@ -1170,7 +1174,8 @@ class CardDeck:
                                     radiusBase=radiusBase, radiusTop=radiusTop,
                                     surfaceNum=surfaceNum)  
     # ----cell--------
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     descrStr = '%s, macrobody:%s, baseX:%.2f, baseY:%.2f, baseZ:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, radiusBase:%.2f, radiusTop:%.2f, matName:%s, density:%.4f'\
                   %(name, surfaceNum, *base, *height,
@@ -1232,7 +1237,7 @@ class CardDeck:
   def insertMacroAndCellWedge(self, name, vertex=(0,0,0), base1=(1,0,0),
                     base2=(0,1,0), height=(0,0,1), 
                     matName='Void', density=0, 
-                    shift=(0,0,0), rotMatrix=None, 
+                    shift=(0,0,0), rotMatrix=None, impString='',
                     surfaceNum=None, cellNum=None, uni=0):
     """
     Generates a WED wedge macro and a cell based on that macro.
@@ -1247,7 +1252,8 @@ class CardDeck:
                                     base2=base2, height=height,
                                     surfaceNum=surfaceNum)  
     # ----cell--------
-    impString = self.getImpString() #'imp:p=1'
+    if impString == '':
+      impString = self.getImpString() #'imp:p=1'
   
     descrStr = '%s, macrobody:%s, vertexX:%.2f, vertexY:%.2f, vertexZ:%.2f, base1X:%.2f, base1Y:%.2f, base1Z:%.2f, base2X:%.2f, base2Y:%.2f, base2Z:%.2f, heightX:%.2f, heightY:%.2f, heightZ:%.2f, matName:%s, density:%.4f'\
                   %(name, surfaceNum, *vertex, *base1,
