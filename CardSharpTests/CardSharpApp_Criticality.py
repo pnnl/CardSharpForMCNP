@@ -95,11 +95,22 @@ def runJezebelModel():
     print(s)
   else:
     extractResult(modelFolder, outputFilename)
-    #doPlots(modelFolder, tallyFilename)
   
 #############################################################################
 def jezebelModel(modelFolder, modelFilename, reflectorMat='Ni', reflectorThickness = 0.0127): # cm 0.005 inch
   """
+  A neutron reflector is any material that reflects neutrons. This refers to 
+  elastic scattering rather than to a specular reflection. The material may be 
+  graphite, beryllium, steel, tungsten carbide, gold, or other materials. 
+  A neutron reflector can make an otherwise subcritical mass of fissile material 
+  critical, or increase the amount of nuclear fission that a critical or 
+  supercritical mass will undergo.
+  
+  Absorber - A neutron absorber (also called a neutron poison) is a substance 
+  with a large neutron absorption cross-section.
+  
+  MTm card is used for selecting different cross sections for a given material,
+  depending upon the state of the material.  
   """
   cd = cs.CardDeck()
   cd.setParticlesList(modeParticles)
@@ -158,22 +169,6 @@ def jezebelModel(modelFolder, modelFilename, reflectorMat='Ni', reflectorThickne
   print('----------------')
   return
 
-#############################################################################
-def modelWithReflector():
-  """
-  A neutron reflector is any material that reflects neutrons. This refers to 
-  elastic scattering rather than to a specular reflection. The material may be 
-  graphite, beryllium, steel, tungsten carbide, gold, or other materials. 
-  A neutron reflector can make an otherwise subcritical mass of fissile material 
-  critical, or increase the amount of nuclear fission that a critical or 
-  supercritical mass will undergo.
-  
-  Absorber - A neutron absorber (also called a neutron poison) is a substance 
-  with a large neutron absorption cross-section.
-  
-  MTm card for selecting different cross sections.  
-  """
-  pass
 #############################################################################
 def extractResult(modelFolder, outputFile):
   """
