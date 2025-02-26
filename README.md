@@ -27,5 +27,7 @@ To develop your own MCNP simulations using CardSharp, create a folder to hold yo
 How to cite
 -----------
 CardSharp: A python library for generating MCNP6 input decks
+
 https://doi.org/10.48550/arXiv.2502.16678
+
 https://arxiv.org/abs/2502.16678
